@@ -16,5 +16,8 @@
     "typescript": "^5.2.2",
     "vite": "^5.1.6",
     "vite-plugin-mkcert": "^1.17.4"
+  },
+  "dependencies": {
+    "playcanvas": "^1.69.2"
   }
 }
