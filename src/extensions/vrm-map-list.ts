@@ -1,7 +1,9 @@
-import type * as V0VRM from '../types-vrm-0.0';
+import type * as V0VRM from '../types/types-vrm-0.0';
+import type * as V1VRMSchema from '../types/types-vrmc-vrm-1.0';
 import { VRMExpressionNameType } from './vrm-expression/vrm-expression';
+import { VRMHumanBoneName } from './vrm-humanoid/vrm-humanoid';
 
-export const VRMHumanBoneList = [
+export const VRMHumanBoneList: VRMHumanBoneName[] = [
   'hips',
   'spine',
   'chest',
@@ -62,7 +64,7 @@ export const VRMHumanBoneList = [
   'rightLittleDistal',
 ];
 
-export const VRMHumanBoneParentMap = {
+export const VRMHumanBoneParentMap: { [bone in VRMHumanBoneName]: VRMHumanBoneName | null } = {
   hips: null,
   spine: 'hips',
   chest: 'spine',
@@ -123,7 +125,7 @@ export const VRMHumanBoneParentMap = {
   rightLittleDistal: 'rightLittleIntermediate',
 };
 
-export const VRMRigMap = {
+export const VRMRigMap: { [key: string]: VRMHumanBoneName } = {
   hips: 'hips',
   spine: 'spine',
   chest: 'chest',
@@ -181,7 +183,7 @@ export const VRMRigMap = {
   rightLittleDistal: 'rightLittleDistal',
 };
 
-export const thumbBoneNameMap = {
+export const thumbBoneNameMap: { [key: string]: V1VRMSchema.HumanoidHumanBoneName | undefined } = {
   leftThumbProximal: 'leftThumbMetacarpal',
   leftThumbIntermediate: 'leftThumbProximal',
   rightThumbProximal: 'rightThumbMetacarpal',

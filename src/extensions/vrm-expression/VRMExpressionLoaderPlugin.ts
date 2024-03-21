@@ -3,8 +3,8 @@ import { VRMExpressionPresetName, v0v1PresetNameMap } from '../vrm-map-list';
 import { VRMExpressionManager } from './VRMExpressionManager';
 import { VRMExpression } from './VRMExpression';
 import { VRMExpressionMorphTargetBind } from './VRMExpressionMorphTargetBind';
-import { ExpressionMorphTargetBind } from '../../types-vrmc-vrm-1.0/ExpressionMorphTargetBind';
-import type * as V0VRM from '../../types-vrm-0.0';
+import { ExpressionMorphTargetBind } from '../../types/types-vrmc-vrm-1.0/ExpressionMorphTargetBind';
+import type * as V0VRM from '../../types/types-vrm-0.0';
 import { VRMExpressionNameType, IGltfNode } from './vrm-expression';
 
 export class VRMExpressionLoaderPlugin {
