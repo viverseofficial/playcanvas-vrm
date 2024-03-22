@@ -21,7 +21,7 @@ interface IMorphCurvePath {
   propertyPath: string[];
 }
 
-export class AddVrmAnimations extends pc.ScriptType {
+export default class AddVrmAnimations extends pc.ScriptType {
   asset!: pc.Asset;
   humanoid?: VRMHumanoid;
   vrmHipsHeight: number = 0;

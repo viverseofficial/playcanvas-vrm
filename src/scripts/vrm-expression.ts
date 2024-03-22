@@ -6,7 +6,7 @@ import { VRMExpressionLoaderPlugin } from '../extensions/vrm-expression/VRMExpre
 import { collectMeshInstances } from '../entity-util';
 import { IAnimatedMorphConfig } from '../extensions/vrm-expression/vrm-expression';
 
-export class VrmExpression extends pc.ScriptType {
+export default class VrmExpression extends pc.ScriptType {
   expressionManager!: VRMExpressionManager | null;
   asset!: pc.Asset;
   blinkTimer!: Timer;

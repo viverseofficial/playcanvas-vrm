@@ -1,3 +1,2 @@
-export type ExtensionType = 'VRMExpression';
-
-export type ExtensionManagerNameType = 'expression';
+export type ExtensionType = 'VRMExpression' | 'VRMSpringBone';
+export type ExtensionManagerNameType = 'expression' | 'springBone';
