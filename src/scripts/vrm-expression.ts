@@ -6,11 +6,8 @@ import { VRMExpressionLoaderPlugin } from '../extensions/vrm-expression/VRMExpre
 import { collectMeshInstances } from '../entity-util';
 import { IAnimatedMorphConfig } from '../extensions/vrm-expression/vrm-expression';
 
-export const importScript = (
-  scriptType: typeof pc.ScriptType,
-  registerScript: typeof pc.registerScript,
-) => {
-  class VrmExpression extends scriptType {
+export const importScript = (pcRef: typeof pc) => {
+  class VrmExpression extends pcRef.ScriptType {
     asset!: pc.Asset;
     expressionManager!: VRMExpressionManager | null;
     blinkTimer!: Timer;
@@ -129,7 +126,7 @@ export const importScript = (
     }
   }
 
-  registerScript(VrmExpression, 'vrmExpression');
+  pcRef.registerScript(VrmExpression, 'vrmExpression');
 
   VrmExpression.attributes.add('asset', {
     type: 'asset',

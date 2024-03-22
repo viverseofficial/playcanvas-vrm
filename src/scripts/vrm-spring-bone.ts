@@ -2,11 +2,8 @@ import * as pc from 'playcanvas';
 import { VRMSpringBoneLoaderPlugin } from '../extensions/vrm-spring-bone/VRMSpringBoneLoaderPlugin';
 import { VRMSpringBoneManager } from '../extensions/vrm-spring-bone/VRMSpringBoneManager';
 
-export const importScript = (
-  scriptType: typeof pc.ScriptType,
-  registerScript: typeof pc.registerScript,
-) => {
-  class VrmSpringBone extends scriptType {
+export const importScript = (pcRef: typeof pc) => {
+  class VrmSpringBone extends pcRef.ScriptType {
     asset!: pc.Asset;
     springBoneManager!: VRMSpringBoneManager | null;
     activeSpringBone: boolean = true;
@@ -41,7 +38,7 @@ export const importScript = (
     }
   }
 
-  registerScript(VrmSpringBone, 'vrmSpringBone');
+  pcRef.registerScript(VrmSpringBone, 'vrmSpringBone');
 
   VrmSpringBone.attributes.add('activeSpringBone', {
     type: 'boolean',

@@ -10,6 +10,8 @@ export default defineConfig({
       entry: resolve(__dirname, 'src/index.ts'),
       name: 'playcanvas-vrm',
       fileName: 'playcanvas-vrm',
-    }
+      formats: ['es']
+    },
+    minify: false
   }
 });
