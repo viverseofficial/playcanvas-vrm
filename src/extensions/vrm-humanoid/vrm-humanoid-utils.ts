@@ -84,7 +84,7 @@ export function createFormattedVRMHumanoid(vrmAsset: pc.Asset, renderEntity: pc.
 
   if (!VRM && !VRMC_vrm) {
     console.warn('CreateFormattedVRMHumanoid: Please check. It is not a vrm avatar.');
-    return;
+    return null;
   }
 
   let humanBones: Partial<VRMHumanBones> = {};
