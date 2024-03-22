@@ -24,7 +24,7 @@ export class GLTFLoader {
   ) {
     const plugins: any[] = [];
 
-    return new Promise((resolve, reject) => {
+    return new Promise<{ entity: pc.Entity; asset: pc.Asset }>((resolve, reject) => {
       const parsedCallBack = (err: Error | null, asset: pc.Asset) => {
         if (err) {
           this.loading = false;
