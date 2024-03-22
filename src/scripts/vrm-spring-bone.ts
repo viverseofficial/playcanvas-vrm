@@ -2,53 +2,54 @@ import * as pc from 'playcanvas';
 import { VRMSpringBoneLoaderPlugin } from '../extensions/vrm-spring-bone/VRMSpringBoneLoaderPlugin';
 import { VRMSpringBoneManager } from '../extensions/vrm-spring-bone/VRMSpringBoneManager';
 
-export default class VrmSpringBone extends pc.ScriptType {
-  asset!: pc.Asset;
-  springBoneManager!: VRMSpringBoneManager | null;
-  activeSpringBone: boolean = true;
-  isWalking: boolean = false;
+export const importScript = (
+  scriptType: typeof pc.ScriptType,
+  registerScript: typeof pc.registerScript,
+) => {
+  class VrmSpringBone extends scriptType {
+    asset!: pc.Asset;
+    springBoneManager!: VRMSpringBoneManager | null;
+    activeSpringBone: boolean = true;
+    isWalking: boolean = false;
 
-  initialize() {
-    const springBoneLoader = new VRMSpringBoneLoaderPlugin(this.asset, this.entity);
-    this.springBoneManager = springBoneLoader.import();
-    this.isWalking = false;
+    initialize() {
+      const springBoneLoader = new VRMSpringBoneLoaderPlugin(this.asset, this.entity);
+      this.springBoneManager = springBoneLoader.import();
+      this.isWalking = false;
 
-    this.entity.on('toggle-spring-bone', this.toggleSpringBone, this);
-    this.entity.on('toggle-is-walking', this.toggleIsWalking, this);
-
-    this.on('destroy', () => {
-      this.entity.off('toggle-spring-bone', this.toggleSpringBone, this);
+      this.entity.on('toggle-spring-bone', this.toggleSpringBone, this);
       this.entity.on('toggle-is-walking', this.toggleIsWalking, this);
-    });
+
+      this.on('destroy', () => {
+        this.entity.off('toggle-spring-bone', this.toggleSpringBone, this);
+        this.entity.on('toggle-is-walking', this.toggleIsWalking, this);
+      });
+    }
+
+    toggleSpringBone(isActive: boolean) {
+      this.activeSpringBone = isActive;
+    }
+
+    toggleIsWalking(isWalking: boolean) {
+      this.isWalking = isWalking;
+    }
+
+    update(dt: number) {
+      if (!this.springBoneManager || !this.activeSpringBone) return;
+
+      this.springBoneManager.update(dt, this.isWalking);
+    }
   }
 
-  toggleSpringBone(isActive: boolean) {
-    this.activeSpringBone = isActive;
-  }
+  registerScript(VrmSpringBone, 'vrmSpringBone');
 
-  toggleIsWalking(isWalking: boolean) {
-    this.isWalking = isWalking;
-  }
+  VrmSpringBone.attributes.add('activeSpringBone', {
+    type: 'boolean',
+    default: true,
+  });
 
-  update(dt: number) {
-    if (
-      !this.springBoneManager ||
-      !(this.entity.script && this.entity.script.has('vrm')) ||
-      !this.activeSpringBone
-    )
-      return;
-    this.springBoneManager.update(dt, this.isWalking);
-  }
-}
-
-pc.registerScript(VrmSpringBone, 'vrmSpringBone');
-
-VrmSpringBone.attributes.add('activeSpringBone', {
-  type: 'boolean',
-  default: true,
-});
-
-VrmSpringBone.attributes.add('asset', {
-  type: 'asset',
-  description: 'Set the container asset loaded from vrm avatar.',
-});
+  VrmSpringBone.attributes.add('asset', {
+    type: 'asset',
+    description: 'Set the container asset loaded from vrm avatar.',
+  });
+};
