@@ -4,8 +4,8 @@ export class VRMSpringBoneColliderShapeSphere {
   public offset: pc.Vec3;
   public radius: number;
 
-  constructor(params?: { radius?: number; offset?: pc.Vec3 }) {
-    this.offset = params?.offset ?? new pc.Vec3();
+  constructor(pcRef: typeof pc, params?: { radius?: number; offset?: pc.Vec3 }) {
+    this.offset = params?.offset ?? new pcRef.Vec3();
     this.radius = params?.radius ?? 0.0;
   }
 

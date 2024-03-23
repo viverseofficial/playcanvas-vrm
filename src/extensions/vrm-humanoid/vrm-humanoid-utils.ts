@@ -1,3 +1,4 @@
+import * as pc from 'playcanvas';
 import { thumbBoneNameMap } from '../vrm-map-list';
 import { VRMHumanoid } from './VRMHumanoid';
 import { VRMHumanBoneName, VRMHumanBones } from './vrm-humanoid';
@@ -78,7 +79,11 @@ export function createVRMCHumanBones(schemaHumanoid: any, glbAsset: pc.Asset, en
   return humanBones;
 }
 
-export function createFormattedVRMHumanoid(vrmAsset: pc.Asset, renderEntity: pc.Entity) {
+export function createFormattedVRMHumanoid(
+  pcRef: typeof pc,
+  vrmAsset: pc.Asset,
+  renderEntity: pc.Entity,
+) {
   const VRM = vrmAsset.resource.data.gltf?.extensions?.VRM;
   const VRMC_vrm = vrmAsset.resource.data.gltf?.extensions?.VRMC_vrm;
 
@@ -98,7 +103,7 @@ export function createFormattedVRMHumanoid(vrmAsset: pc.Asset, renderEntity: pc.
     if (VRMCHumanBones) humanBones = VRMCHumanBones;
   }
 
-  const humanoid = new VRMHumanoid(humanBones);
+  const humanoid = new VRMHumanoid(pcRef, humanBones);
   return humanoid;
 }
 

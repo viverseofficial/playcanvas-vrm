@@ -24,10 +24,10 @@ interface IMorphCurvePath {
   propertyPath: string[];
 }
 
-const createAnimTrack = (animTrack: pc.AnimTrack, pcRef: typeof pc) => {
-  const inputs = animTrack.inputs.map((input) => new pc.AnimData(input.components, input.data));
+const createAnimTrack = (pcRef: typeof pc, animTrack: pc.AnimTrack) => {
+  const inputs = animTrack.inputs.map((input) => new pcRef.AnimData(input.components, input.data));
   const outputs = animTrack.outputs.map(
-    (output) => new pc.AnimData(output.components, output.data),
+    (output) => new pcRef.AnimData(output.components, output.data),
   );
   const curves = animTrack.curves.map((curve) => {
     const curvePaths = curve.paths.map((path) => {
@@ -46,8 +46,8 @@ const createAnimTrack = (animTrack: pc.AnimTrack, pcRef: typeof pc) => {
 };
 
 const loadAnimation = (
-  animationAssets: IAnimationAsset[],
   pcRef: typeof pc,
+  animationAssets: IAnimationAsset[],
   entity: pc.Entity,
   humanoid: VRMHumanoid,
   {
@@ -64,12 +64,12 @@ const loadAnimation = (
 ) => {
   const hipPositionOutputIndexes: { [key: number]: boolean } = {};
   const scaleOutputIndexes: { [key: number]: boolean } = {};
-  const calcQuat = new pc.Quat();
+  const calcQuat = new pcRef.Quat();
 
   const hipsPositionScaleY = vrmHipsHeight / motionHipsHeight;
 
   return animationAssets.map((animationAsset) => {
-    const animTrack = createAnimTrack(animationAsset.asset.resource, pcRef);
+    const animTrack = createAnimTrack(pcRef, animationAsset.asset.resource);
 
     animTrack.curves.forEach((curve) => {
       curve.paths.forEach((graph) => {
@@ -164,7 +164,7 @@ const loadAnimation = (
         if (restRotationInverse && parentRestWorldRotation) {
           for (let i = 0; i < newData.length; i += 4) {
             const flatQuaternion = newData.slice(i, i + 4);
-            const _quatA = new pc.Quat(flatQuaternion);
+            const _quatA = new pcRef.Quat(flatQuaternion);
 
             const calParentRestWorldRotation = calcQuat.copy(parentRestWorldRotation);
             _quatA.copy(calParentRestWorldRotation.mul(_quatA));
@@ -196,10 +196,10 @@ const loadAnimation = (
 };
 
 export const createVRMAnimation = (
+  pcRef: typeof pc,
   animationAssets: IAnimationAsset[],
   asset: pc.Asset,
   entity: pc.Entity,
-  pcRef: typeof pc,
   humanoid?: VRMHumanoid | null,
   motionHipsHeight?: number,
 ) => {
@@ -208,7 +208,7 @@ export const createVRMAnimation = (
   if (humanoid) {
     humanoidResult = humanoid;
   } else if (asset && entity) {
-    humanoidResult = createFormattedVRMHumanoid(asset, entity);
+    humanoidResult = createFormattedVRMHumanoid(pcRef, asset, entity);
   }
 
   if (!humanoidResult) {
@@ -223,7 +223,8 @@ export const createVRMAnimation = (
   const hipBoneName = humanoidResult.getNormalizedBoneNode('hips')?.name || '';
   const referenceEntity = entity.clone();
   referenceEntity.setPosition(0, 0, 0);
-  const vrmHipsPosition = referenceEntity.findByName(hipBoneName)?.getPosition() || new pc.Vec3();
+  const vrmHipsPosition =
+    referenceEntity.findByName(hipBoneName)?.getPosition() || new pcRef.Vec3();
 
   const vrmHipsY = vrmHipsPosition.y;
   const vrmHipsHeight = Math.abs(vrmHipsY - 0);
@@ -233,7 +234,7 @@ export const createVRMAnimation = (
 
   referenceEntity.destroy();
 
-  return loadAnimation(animationAssets, pcRef, entity, humanoidResult, {
+  return loadAnimation(pcRef, animationAssets, entity, humanoidResult, {
     vrmHipsHeight,
     vrmHipsDeep,
     ...(motionHipsHeight && { motionHipsHeight }),

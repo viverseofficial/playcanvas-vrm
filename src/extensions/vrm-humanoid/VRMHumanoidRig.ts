@@ -6,22 +6,22 @@ import { VRMHumanBoneName, VRMHumanBones } from './vrm-humanoid';
 export class VRMHumanoidRig extends VRMRig {
   public root: pc.Entity;
 
-  static _setupTransforms(modelRig: VRMRig) {
+  static _setupTransforms(pcRef: typeof pc, modelRig: VRMRig) {
     const rigBones: Partial<VRMHumanBones> = {};
 
     const boneWorldPositions: { [key in VRMHumanBoneName]?: pc.Vec3 } = {};
     const boneWorldRotations: { [key in VRMHumanBoneName]?: pc.Quat } = {};
     const boneRotations: { [key in VRMHumanBoneName]?: pc.Quat } = {};
 
-    const root = new pc.Entity();
+    const root = new pcRef.Entity();
     root.name = 'VRMHumanoidRig';
 
     VRMHumanBoneList.forEach((boneName) => {
       const boneNode = modelRig.getBoneNode(boneName);
 
       if (boneNode) {
-        const boneWorldPosition = new pc.Vec3();
-        const boneWorldRotation = new pc.Quat();
+        const boneWorldPosition = new pcRef.Vec3();
+        const boneWorldRotation = new pcRef.Quat();
 
         const worldTransform = boneNode.getWorldTransform();
         worldTransform.getTranslation(boneWorldPosition);
@@ -60,7 +60,7 @@ export class VRMHumanoidRig extends VRMRig {
         }
 
         // add to hierarchy
-        const rigBoneNode = new pc.Entity();
+        const rigBoneNode = new pcRef.Entity();
         rigBoneNode.name = boneNode.name;
 
         const parentRigBoneNode = currentBoneName ? rigBones[currentBoneName]?.node : root;
@@ -78,7 +78,7 @@ export class VRMHumanoidRig extends VRMRig {
         rigBones[boneName] = { node: rigBoneNode };
 
         // store parentWorldRotation
-        parentWorldRotations[boneName] = parentWorldRotation ?? new pc.Quat();
+        parentWorldRotations[boneName] = parentWorldRotation ?? new pcRef.Quat();
       }
     });
 
@@ -88,8 +88,8 @@ export class VRMHumanoidRig extends VRMRig {
     };
   }
 
-  constructor(humanoid: VRMRig) {
-    const { rigBones, root } = VRMHumanoidRig._setupTransforms(humanoid);
+  constructor(pcRef: typeof pc, humanoid: VRMRig) {
+    const { rigBones, root } = VRMHumanoidRig._setupTransforms(pcRef, humanoid);
     super(rigBones);
 
     this.root = root;

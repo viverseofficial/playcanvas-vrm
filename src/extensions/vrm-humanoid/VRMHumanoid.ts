@@ -1,3 +1,4 @@
+import * as pc from 'playcanvas';
 import { VRMHumanoidRig } from './VRMHumanoidRig';
 import { VRMRig } from './VRMRig';
 import { VRMHumanBones, VRMHumanBoneName } from './vrm-humanoid';
@@ -7,10 +8,10 @@ export class VRMHumanoid {
   private _rawHumanBones: VRMRig;
   private _normalizedHumanBones: VRMHumanoidRig;
 
-  constructor(humanBones: Partial<VRMHumanBones>) {
+  constructor(pcRef: typeof pc, humanBones: Partial<VRMHumanBones>) {
     this._humanBones = humanBones;
     this._rawHumanBones = new VRMRig(humanBones);
-    this._normalizedHumanBones = new VRMHumanoidRig(this._rawHumanBones);
+    this._normalizedHumanBones = new VRMHumanoidRig(pcRef, this._rawHumanBones);
   }
 
   get humanBones() {

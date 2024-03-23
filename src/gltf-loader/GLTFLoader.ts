@@ -6,12 +6,12 @@ export class GLTFLoader {
 
   public app: pc.Application;
   public loading: boolean;
-  public pcRef: typeof pc;
+  private _pcRef: typeof pc;
 
-  constructor(app: pc.Application, pcRef: typeof pc) {
+  constructor(pcRef: typeof pc, app: pc.Application) {
     this.#pluginsCallbacks = new Map<string, (asset: pc.Asset) => any>();
     this.loading = false;
-    this.pcRef = pcRef;
+    this._pcRef = pcRef;
     this.app = app || pcRef.Application.getApplication('application-canvas');
   }
 
@@ -44,10 +44,10 @@ export class GLTFLoader {
         }
 
         const renderEntity = asset.resource.instantiateRenderEntity(setting);
-        const rootEntity = new this.pcRef.Entity(name, this.app);
+        const rootEntity = new this._pcRef.Entity(name, this.app);
 
         if (renderEntity.name !== 'Room Objects' && name === 'Objects') {
-          const rootObjectEntity = new this.pcRef.Entity('Room Objects');
+          const rootObjectEntity = new this._pcRef.Entity('Room Objects');
           rootObjectEntity.addChild(renderEntity);
           rootEntity.addChild(rootObjectEntity);
         } else {
@@ -67,7 +67,7 @@ export class GLTFLoader {
       }
 
       this.loading = true;
-      if (source instanceof this.pcRef.Asset) {
+      if (source instanceof this._pcRef.Asset) {
         if (source.type === 'container') {
           if (source.loaded) {
             parsedCallBack(null, source);
@@ -81,11 +81,11 @@ export class GLTFLoader {
           }
         } else if (source.type === 'binary') {
           loadGlbContainerFromAsset(
+            this._pcRef,
             source,
             options,
             name,
             parsedCallBack.bind(this),
-            this.pcRef,
             this.app,
           );
         } else {
@@ -93,11 +93,11 @@ export class GLTFLoader {
         }
       } else {
         loadGlbContainerFromUrl(
+          this._pcRef,
           source,
           options,
           name,
           parsedCallBack.bind(this),
-          this.pcRef,
           this.app,
         );
       }

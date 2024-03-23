@@ -7,12 +7,12 @@ export class VRMSpringBoneColliderShapeCapsule {
   private _v3A: pc.Vec3;
   private _v3B: pc.Vec3;
 
-  constructor(params: { radius?: number; offset?: pc.Vec3; tail?: pc.Vec3 }) {
-    this.offset = params?.offset ?? new pc.Vec3();
-    this.tail = params?.tail ?? new pc.Vec3();
+  constructor(pcRef: typeof pc, params: { radius?: number; offset?: pc.Vec3; tail?: pc.Vec3 }) {
+    this.offset = params?.offset ?? new pcRef.Vec3();
+    this.tail = params?.tail ?? new pcRef.Vec3();
     this.radius = params?.radius ?? 0.0;
-    this._v3A = new pc.Vec3();
-    this._v3B = new pc.Vec3();
+    this._v3A = new pcRef.Vec3();
+    this._v3B = new pcRef.Vec3();
   }
 
   get type() {

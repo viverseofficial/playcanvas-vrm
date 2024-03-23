@@ -26,12 +26,15 @@ export function localToWorld(vector: pc.Vec3, matrixWorld: pc.Mat4) {
 }
 
 export class Matrix4InverseCache {
+  private _pcRef: typeof pc;
   public matrix: pc.Mat4;
   private _inverseCache: pc.Mat4;
   private _shouldUpdateInverse: boolean;
   private _originalElements: Float32Array;
 
-  constructor(matrix: pc.Mat4) {
+  constructor(pcRef: typeof pc, matrix: pc.Mat4) {
+    this._pcRef = pcRef;
+
     /**
      * The target matrix.
      */
@@ -40,7 +43,7 @@ export class Matrix4InverseCache {
     /**
      * A cache of inverse of current matrix.
      */
-    this._inverseCache = new pc.Mat4();
+    this._inverseCache = new this._pcRef.Mat4();
 
     /**
      * A flag that makes it want to recalculate its {@link _inverseCache}.
@@ -70,7 +73,7 @@ export class Matrix4InverseCache {
   get inverse() {
     if (this._shouldUpdateInverse) {
       this._inverseCache.copy(this.matrix);
-      mat4InvertCompat(this._inverseCache);
+      mat4InvertCompat(this._pcRef, this._inverseCache);
       this._shouldUpdateInverse = false;
     }
 
@@ -82,8 +85,8 @@ export class Matrix4InverseCache {
   }
 }
 
-export function mat4InvertCompat<T extends pc.Mat4>(target: T): T {
-  const _matA = new pc.Mat4();
+export function mat4InvertCompat<T extends pc.Mat4>(pcRef: typeof pc, target: T): T {
+  const _matA = new pcRef.Mat4();
 
   if (target.invert) {
     target.invert();

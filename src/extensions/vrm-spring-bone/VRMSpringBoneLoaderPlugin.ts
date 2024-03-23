@@ -14,10 +14,12 @@ export class VRMSpringBoneLoaderPlugin {
   static EXTENSION_NAME = 'VRMC_springBone';
   public asset: pc.Asset;
   public entity: pc.Entity;
+  private _pcRef: typeof pc;
 
-  constructor(asset: pc.Asset, entity: pc.Entity) {
+  constructor(pcRef: typeof pc, asset: pc.Asset, entity: pc.Entity) {
     this.asset = asset;
     this.entity = entity;
+    this._pcRef = pcRef;
   }
 
   import() {
@@ -84,14 +86,17 @@ export class VRMSpringBoneLoaderPlugin {
       if (schemaShape) {
         if (schemaShape.sphere) {
           return this._importSphereCollider(node, {
-            offset: fromArray(new pc.Vec3(), schemaShape.sphere.offset ?? [0.0, 0.0, 0.0]),
+            offset: fromArray(new this._pcRef.Vec3(), schemaShape.sphere.offset ?? [0.0, 0.0, 0.0]),
             radius: schemaShape.sphere.radius ?? 0.0,
           });
         } else if (schemaShape.capsule) {
           return this._importCapsuleCollider(node, {
-            offset: fromArray(new pc.Vec3(), schemaShape.capsule.offset ?? [0.0, 0.0, 0.0]),
+            offset: fromArray(
+              new this._pcRef.Vec3(),
+              schemaShape.capsule.offset ?? [0.0, 0.0, 0.0],
+            ),
             radius: schemaShape.capsule.radius ?? 0.0,
-            tail: fromArray(new pc.Vec3(), schemaShape.capsule.tail ?? [0.0, 0.0, 0.0]),
+            tail: fromArray(new this._pcRef.Vec3(), schemaShape.capsule.tail ?? [0.0, 0.0, 0.0]),
           });
         }
       }
@@ -157,7 +162,7 @@ export class VRMSpringBoneLoaderPlugin {
             stiffness: prevSchemaJoint.stiffness,
             gravityDir:
               prevSchemaJoint.gravityDir != null
-                ? fromArray(new pc.Vec3(), prevSchemaJoint.gravityDir)
+                ? fromArray(new this._pcRef.Vec3(), prevSchemaJoint.gravityDir)
                 : undefined,
           };
 
@@ -217,7 +222,7 @@ export class VRMSpringBoneLoaderPlugin {
       }
 
       const colliders = (schemaColliderGroup.colliders ?? []).map((schemaCollider) => {
-        const offset = new pc.Vec3(0, 0, 0);
+        const offset = new this._pcRef.Vec3(0, 0, 0);
 
         if (schemaCollider.offset) {
           offset.set(
@@ -256,7 +261,7 @@ export class VRMSpringBoneLoaderPlugin {
         }
 
         // prepare setting
-        const gravityDir = new pc.Vec3();
+        const gravityDir = new this._pcRef.Vec3();
         if (schemaBoneGroup.gravityDir) {
           gravityDir.set(
             schemaBoneGroup.gravityDir.x ?? 0.0,
@@ -316,7 +321,7 @@ export class VRMSpringBoneLoaderPlugin {
     destination: pc.GraphNode,
     { offset, radius }: { offset: pc.Vec3; radius: number },
   ) {
-    const shape = new VRMSpringBoneColliderShapeSphere({ offset, radius });
+    const shape = new VRMSpringBoneColliderShapeSphere(this._pcRef, { offset, radius });
     const collider = new VRMSpringBoneCollider(shape);
     destination.addChild(collider);
 
@@ -327,7 +332,7 @@ export class VRMSpringBoneLoaderPlugin {
     destination: pc.GraphNode,
     { offset, radius, tail }: { offset: pc.Vec3; radius: number; tail: pc.Vec3 },
   ) {
-    const shape = new VRMSpringBoneColliderShapeCapsule({
+    const shape = new VRMSpringBoneColliderShapeCapsule(this._pcRef, {
       offset,
       radius,
       tail,
@@ -344,7 +349,13 @@ export class VRMSpringBoneLoaderPlugin {
     setting?: Partial<VRMSpringBoneJointSettings>,
     colliderGroupsForSpring?: VRMSpringBoneColliderGroup[],
   ) {
-    const springBone = new VRMSpringBoneJoint(node, child, setting, colliderGroupsForSpring);
+    const springBone = new VRMSpringBoneJoint(
+      this._pcRef,
+      node,
+      child,
+      setting,
+      colliderGroupsForSpring,
+    );
 
     return springBone;
   }

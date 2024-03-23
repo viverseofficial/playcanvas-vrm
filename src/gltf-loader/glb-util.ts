@@ -12,6 +12,7 @@ import * as pc from 'playcanvas';
  * @returns {pc.Asset} The asset that is created for the container resource.
  */
 export const loadGlbContainerFromAsset = function (
+  pcRef: typeof pc,
   glbBinAsset: pc.Asset,
   options:
     | {
@@ -20,7 +21,6 @@ export const loadGlbContainerFromAsset = function (
     | undefined,
   assetName: string,
   callback: (error: Error | null, asset: pc.Asset) => void,
-  pcRef: typeof pc,
   assignApp?: pc.Application | pc.AppBase,
 ) {
   const app = assignApp || pc.Application.getApplication('application-canvas');
@@ -34,6 +34,7 @@ export const loadGlbContainerFromAsset = function (
     const blob = new Blob([asset.resource]);
     const data = URL.createObjectURL(blob);
     return loadGlbContainerFromUrl(
+      pcRef,
       data,
       options,
       assetName,
@@ -41,7 +42,6 @@ export const loadGlbContainerFromAsset = function (
         callback(error, asset);
         URL.revokeObjectURL(data);
       },
-      pcRef,
       app,
     );
   };
@@ -66,6 +66,7 @@ export const loadGlbContainerFromAsset = function (
  * @returns {pc.Asset} The asset that is created for the container resource.
  */
 export const loadGlbContainerFromUrl = function (
+  pcRef: typeof pc,
   url: string,
   options:
     | {
@@ -74,7 +75,6 @@ export const loadGlbContainerFromUrl = function (
     | undefined,
   assetName: string,
   callback: (error: Error | null, asset: pc.Asset) => void,
-  pcRef: typeof pc,
   assignApp?: pc.Application | pc.AppBase,
 ) {
   const app = assignApp || pc.Application.getApplication('application-canvas');

@@ -10,7 +10,7 @@ export const importScript = (pcRef: typeof pc) => {
     isWalking: boolean = false;
 
     initialize() {
-      const springBoneLoader = new VRMSpringBoneLoaderPlugin(this.asset, this.entity);
+      const springBoneLoader = new VRMSpringBoneLoaderPlugin(pcRef, this.asset, this.entity);
       this.springBoneManager = springBoneLoader.import();
       this.isWalking = false;
 
