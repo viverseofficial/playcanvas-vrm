@@ -12,7 +12,7 @@ export class GLTFLoader {
     this.#pluginsCallbacks = new Map<string, (asset: pc.Asset) => any>();
     this.loading = false;
     this._pcRef = pcRef;
-    this.app = app || pcRef.Application.getApplication('application-canvas');
+    this.app = app;
   }
 
   async parse(

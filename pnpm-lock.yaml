@@ -28,6 +28,9 @@ devDependencies:
   vite:
     specifier: ^5.1.6
     version: 5.1.6
+  vite-plugin-banner:
+    specifier: ^0.7.1
+    version: 0.7.1
   vite-plugin-dts:
     specifier: ^3.7.3
     version: 3.7.3(typescript@5.4.2)(vite@5.1.6)
@@ -1903,6 +1906,10 @@ packages:
   /validator@13.11.0:
     resolution: {integrity: sha512-Ii+sehpSfZy+At5nPdnyMhx78fEoPDkR2XW/zimHEL3MyGJQOCQ7WeP20jPYRz7ZCpcKLB21NxuXHF3bxjStBQ==}
     engines: {node: '>= 0.10'}
+    dev: true
+
+  /vite-plugin-banner@0.7.1:
+    resolution: {integrity: sha512-Bww2Xd5tOGsZ1yZ9rQiGneryvsL1u86znPrqeQjCsXPsG72pnSdV5lcQA+cy8UNDguMqyTJiCevlNUbLnT85UA==}
     dev: true
 
   /vite-plugin-dts@3.7.3(typescript@5.4.2)(vite@5.1.6):

@@ -23,7 +23,7 @@ export const loadGlbContainerFromAsset = function (
   callback: (error: Error | null, asset: pc.Asset) => void,
   assignApp?: pc.Application | pc.AppBase,
 ) {
-  const app = assignApp || pc.Application.getApplication('application-canvas');
+  const app = assignApp;
 
   if (!app) {
     console.error('loadGlbContainerFromAsset: Can not find app.');
@@ -77,7 +77,7 @@ export const loadGlbContainerFromUrl = function (
   callback: (error: Error | null, asset: pc.Asset) => void,
   assignApp?: pc.Application | pc.AppBase,
 ) {
-  const app = assignApp || pc.Application.getApplication('application-canvas');
+  const app = assignApp;
 
   if (!app) {
     console.error('loadGlbContainerFromAsset: Can not find app.');
