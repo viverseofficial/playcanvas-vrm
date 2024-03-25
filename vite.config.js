@@ -1,15 +1,13 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import mkcert from 'vite-plugin-mkcert';
-import dts from 'vite-plugin-dts';
+// For npm typescript version
+// import dts from 'vite-plugin-dts';
 
 export default defineConfig({
   server: { https: true },
   plugins: [
     mkcert(),
-    dts({
-      insertTypesEntry: true,
-    }),
   ],
   build: {
     lib: {
