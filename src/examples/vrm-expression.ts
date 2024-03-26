@@ -33,3 +33,18 @@
 //   .catch((error: Error) => {
 //     console.error(error);
 //   });
+
+/**
+ * this.entity.on('vrm-expression:start-emotion', this.startEmotion, this);
+ * {
+      times: [0, 0.5, 1, 2],
+      values: [0, 0.5, 1, 0],
+    }
+ * You can control the emotion of the avatar through the setting.
+    The time will map to values to set the weight strength to each emotion.
+ */
+
+/**
+ * this.entity.on('audio:is-talking-change', this.onIsTalkingChange, this);
+ * You can set avatars start talking expression. It will play talking expression randomly.
+ */

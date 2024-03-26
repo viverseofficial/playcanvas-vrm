@@ -3,7 +3,7 @@ import { POSSIBLE_SPEC_VERSIONS } from '../vrm-map-list';
 import { fromArray } from '../../math-utils';
 import { VRMSpringBoneManager } from './VRMSpringBoneManager';
 import { VRMSpringBoneColliderShapeSphere } from './VRMSpringBoneColliderShapeSphere';
-import { VRMSpringBoneCollider } from './VRMSpringBoneCollider';
+import { createVRMSpringBoneCollider } from './VRMSpringBoneCollider';
 import { VRMSpringBoneColliderShapeCapsule } from './VRMSpringBoneColliderShapeCapsule';
 import { VRMSpringBoneJoint } from './VRMSpringBoneJoint';
 import type * as V1SpringBoneSchema from '../../types/types-vrmc-springbone-1.0';
@@ -322,6 +322,7 @@ export class VRMSpringBoneLoaderPlugin {
     { offset, radius }: { offset: pc.Vec3; radius: number },
   ) {
     const shape = new VRMSpringBoneColliderShapeSphere(this._pcRef, { offset, radius });
+    const VRMSpringBoneCollider = createVRMSpringBoneCollider(this._pcRef);
     const collider = new VRMSpringBoneCollider(shape);
     destination.addChild(collider);
 
@@ -337,6 +338,7 @@ export class VRMSpringBoneLoaderPlugin {
       radius,
       tail,
     });
+    const VRMSpringBoneCollider = createVRMSpringBoneCollider(this._pcRef);
     const collider = new VRMSpringBoneCollider(shape);
 
     destination.addChild(collider);

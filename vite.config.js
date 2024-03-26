@@ -25,6 +25,6 @@ export default defineConfig({
     rollupOptions: {
       external: ['playcanvas'], 
     },
-    minify: false,
+    minify: true,
   },
 });

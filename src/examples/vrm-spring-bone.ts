@@ -33,3 +33,17 @@
 //   .catch((error: Error) => {
 //     console.error(error);
 //   });
+
+/**
+ * Events: The event script provide.
+ */
+
+/**
+ * this.entity.on('toggle-spring-bone', this.toggleSpringBone, this);
+ * You can control the spring bone active or not.
+ */
+
+/**
+ * this.entity.on('toggle-is-walking', this.toggleIsWalking, this);
+ * You can control the avatar is walking or not. Default is false.
+ */
