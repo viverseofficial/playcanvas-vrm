@@ -2,6 +2,7 @@ import * as pc from 'playcanvas';
 import avatarUrl from '/blue.vrm?url';
 import idleAnimUrl from '/Idle_anim.glb?url';
 import runAnimUrl from '/Run_anim.glb?url';
+import mocapAnimUrl from '/mocap-animation.gltf?url';
 
 /**
  * Methods A:
@@ -50,8 +51,10 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 const AnimationIdle = new pc.Asset('Idle', 'animation', { url: idleAnimUrl });
 const AnimationRun = new pc.Asset('Run', 'animation', { url: runAnimUrl });
+const AnimationDance = new pc.Asset('Idle', 'container', { url: mocapAnimUrl });
 AnimationIdle.preload = true;
 AnimationRun.preload = true;
+AnimationDance.preload = true;
 
 const INPUT_SETTINGS = {
   useKeyboard: true,
@@ -83,6 +86,7 @@ const app = new pc.Application(canvas, {
 });
 app.assets.add(AnimationIdle);
 app.assets.add(AnimationRun);
+app.assets.add(AnimationDance);
 
 app.once('start', async () => {
   import('./orbit-camera');
@@ -153,8 +157,31 @@ const createAvatar = () => {
               rootEntity,
               humanoid,
             );
+
             if (loadedResources) {
               loadedResources.forEach((resource: any) => {
+                VRMLoader.VrmAnimation.assignAnimation(rootEntity, resource);
+              });
+            }
+
+            const mocapAnimationAssets = [
+              {
+                stateName: 'Dance',
+                asset: AnimationDance.resource.animations[0],
+              },
+            ];
+
+            const mocaLoadedResources = VRMLoader.VrmAnimation.createVRMAnimation(
+              pc,
+              mocapAnimationAssets,
+              convertedAsset,
+              rootEntity,
+              humanoid,
+              1.05, // You can set custom motionHipsHeight
+            );
+
+            if (mocaLoadedResources) {
+              mocaLoadedResources.forEach((resource: any) => {
                 VRMLoader.VrmAnimation.assignAnimation(rootEntity, resource);
               });
             }
@@ -215,6 +242,12 @@ window.addEventListener('resize', resize);
 
 app.on('destroy', () => {
   window.removeEventListener('resize', resize);
+});
+
+const plane = new pc.Entity('Plane');
+app.root.addChild(plane);
+plane.addComponent('render', {
+  type: 'plane',
 });
 
 app.start();
