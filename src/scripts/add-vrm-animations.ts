@@ -53,7 +53,7 @@ const loadAnimation = (
   {
     vrmHipsHeight,
     vrmHipsDeep,
-    motionHipsHeight = 0.855,
+    motionHipsHeight,
     version = 'v0',
   }: {
     vrmHipsHeight: number;
@@ -66,133 +66,159 @@ const loadAnimation = (
   const scaleOutputIndexes: { [key: number]: boolean } = {};
   const calcQuat = new pcRef.Quat();
 
-  const hipsPositionScaleY = vrmHipsHeight / motionHipsHeight;
+  return animationAssets
+    .map((animationAsset: IAnimationAsset) => {
+      const resource =
+        animationAsset.asset.type === 'container'
+          ? animationAsset.asset.resource.animations[0]?.resource
+          : animationAsset.asset.resource;
 
-  return animationAssets.map((animationAsset) => {
-    const animTrack = createAnimTrack(pcRef, animationAsset.asset.resource);
+      if (resource) {
+        const animTrack = createAnimTrack(pcRef, resource);
 
-    animTrack.curves.forEach((curve) => {
-      curve.paths.forEach((graph) => {
-        const morphCurvePath = graph as unknown as IMorphCurvePath;
-        const isPosition = morphCurvePath.propertyPath.find((path) => path === 'localPosition');
-        // Before transform bone name, so use original name Hips
-        const isHipsTarget =
-          morphCurvePath.entityPath[morphCurvePath.entityPath.length - 1] === VRMRigMap['hips'];
-
-        if (isPosition && isHipsTarget && !hipPositionOutputIndexes[curve.output]) {
-          hipPositionOutputIndexes[curve.output] = true;
-        }
-      });
-    });
-
-    animTrack.curves.forEach((curve) => {
-      let isLocalScale = false;
-
-      curve.paths.forEach((graph) => {
-        const morphCurvePath = graph as unknown as IMorphCurvePath;
-
-        // Revise bone name to vrm model bone name
-        const arrangedEntityPath = morphCurvePath.entityPath.map((path) => {
-          const originalRigName = path;
-          const vrmBoneName = VRMRigMap[originalRigName];
-          const vrmNodeName = humanoid.getNormalizedBoneNode(vrmBoneName)?.name;
-
-          if (!vrmBoneName || !vrmNodeName) {
-            return path;
+        // Try to get the animation hips node from asset
+        let nodeMotionHipsHeight = 0;
+        if (animationAsset.asset.type === 'container') {
+          const motionHipsNode = animationAsset.asset.resource.data.nodes.find(
+            (node: pc.GraphNode) => node.name === VRMRigMap.hips,
+          );
+          if (motionHipsNode) {
+            nodeMotionHipsHeight = motionHipsNode.getPosition().y;
           }
+        }
 
-          return vrmNodeName;
+        motionHipsHeight = motionHipsHeight || nodeMotionHipsHeight || 0.855;
+        const hipsPositionScaleY = vrmHipsHeight / motionHipsHeight;
+
+        animTrack.curves.forEach((curve) => {
+          curve.paths.forEach((graph) => {
+            const morphCurvePath = graph as unknown as IMorphCurvePath;
+            const isPosition = morphCurvePath.propertyPath.find((path) => path === 'localPosition');
+            // Before transform bone name, so use original name Hips
+            const isHipsTarget =
+              morphCurvePath.entityPath[morphCurvePath.entityPath.length - 1] === VRMRigMap['hips'];
+
+            if (isPosition && isHipsTarget && !hipPositionOutputIndexes[curve.output]) {
+              hipPositionOutputIndexes[curve.output] = true;
+            }
+          });
         });
 
-        morphCurvePath.entityPath = arrangedEntityPath;
+        animTrack.curves.forEach((curve) => {
+          let isLocalScale = false;
 
-        if (morphCurvePath.propertyPath.find((path) => path === 'localScale')) {
-          isLocalScale = true;
-        }
-      });
+          curve.paths.forEach((graph) => {
+            const morphCurvePath = graph as unknown as IMorphCurvePath;
 
-      // Store the localScale output index
-      if (isLocalScale && !scaleOutputIndexes[curve.output]) {
-        scaleOutputIndexes[curve.output] = true;
-      }
-    });
+            // Revise bone name to vrm model bone name
+            const arrangedEntityPath = morphCurvePath.entityPath.map((path) => {
+              const originalRigName = path;
+              const vrmBoneName = VRMRigMap[originalRigName];
+              const vrmNodeName = humanoid.getNormalizedBoneNode(vrmBoneName)?.name;
 
-    animTrack.outputs.forEach((output, outputIndex) => {
-      const isScaleOutput = scaleOutputIndexes[outputIndex];
-
-      const outputCurve = animTrack.curves.find((curve) => curve.output === outputIndex);
-
-      let entityPath = '';
-      if (outputCurve) {
-        const path = outputCurve.paths[0] as unknown as IMorphCurvePath;
-        const entityPaths = path.entityPath;
-        entityPath = entityPaths[entityPaths.length - 1];
-      }
-
-      if (output.components === 3) {
-        if (!isScaleOutput) {
-          const newData = output.data.map((v, index) => {
-            if (hipPositionOutputIndexes[outputIndex] && index % 3 === 1) {
-              if (animationAsset.removeY) {
-                return vrmHipsHeight;
+              if (!vrmBoneName || !vrmNodeName) {
+                return path;
               }
 
-              if (animationAsset.removeUpperY && v * hipsPositionScaleY > vrmHipsHeight) {
-                return vrmHipsHeight;
-              }
+              return vrmNodeName;
+            });
+
+            morphCurvePath.entityPath = arrangedEntityPath;
+
+            if (morphCurvePath.propertyPath.find((path) => path === 'localScale')) {
+              isLocalScale = true;
             }
-
-            if (hipPositionOutputIndexes[outputIndex] && index % 3 === 2) {
-              if (animationAsset.removeZ) {
-                return vrmHipsDeep;
-              }
-            }
-
-            return v * hipsPositionScaleY;
           });
 
-          output._data = newData;
-        }
-      } else if (version === 'v1') {
-        // Handle vrmc initial local rotation is not 0
-        // TODO: (yuni): Arm looks strange
-        const newData = [...output.data];
-        const mixamoRigNode = entity.findByName(entityPath);
-        const restRotationInverse = mixamoRigNode?.getRotation().invert();
-        const parentRestWorldRotation = mixamoRigNode?.parent?.getRotation();
-
-        if (restRotationInverse && parentRestWorldRotation) {
-          for (let i = 0; i < newData.length; i += 4) {
-            const flatQuaternion = newData.slice(i, i + 4);
-            const _quatA = new pcRef.Quat(flatQuaternion);
-
-            const calParentRestWorldRotation = calcQuat.copy(parentRestWorldRotation);
-            _quatA.copy(calParentRestWorldRotation.mul(_quatA));
-            _quatA.mul(restRotationInverse);
-
-            flatQuaternion[0] = _quatA.x;
-            flatQuaternion[1] = _quatA.y;
-            flatQuaternion[2] = _quatA.z;
-            flatQuaternion[3] = _quatA.w;
-
-            flatQuaternion.forEach((v, index) => {
-              newData[index + i] = v;
-            });
+          // Store the localScale output index
+          if (isLocalScale && !scaleOutputIndexes[curve.output]) {
+            scaleOutputIndexes[curve.output] = true;
           }
-        }
+        });
 
-        output._data = newData;
+        animTrack.outputs.forEach((output, outputIndex) => {
+          const isScaleOutput = scaleOutputIndexes[outputIndex];
+
+          const outputCurve = animTrack.curves.find((curve) => curve.output === outputIndex);
+
+          let entityPath = '';
+          if (outputCurve) {
+            const path = outputCurve.paths[0] as unknown as IMorphCurvePath;
+            const entityPaths = path.entityPath;
+            entityPath = entityPaths[entityPaths.length - 1];
+          }
+
+          if (output.components === 3) {
+            if (!isScaleOutput) {
+              const newData = output.data.map((v, index) => {
+                if (hipPositionOutputIndexes[outputIndex] && index % 3 === 1) {
+                  if (animationAsset.removeY) {
+                    return vrmHipsHeight;
+                  }
+
+                  if (animationAsset.removeUpperY && v * hipsPositionScaleY > vrmHipsHeight) {
+                    return vrmHipsHeight;
+                  }
+                }
+
+                if (hipPositionOutputIndexes[outputIndex] && index % 3 === 2) {
+                  if (animationAsset.removeZ) {
+                    return vrmHipsDeep;
+                  }
+                }
+
+                return v * hipsPositionScaleY;
+              });
+
+              output._data = newData;
+            }
+          } else if (version === 'v1') {
+            // Handle vrmc initial local rotation is not 0
+            // TODO: (yuni): Arm looks strange
+            const newData = [...output.data];
+            const mixamoRigNode = entity.findByName(entityPath);
+            const restRotationInverse = mixamoRigNode?.getRotation().invert();
+            const parentRestWorldRotation = mixamoRigNode?.parent?.getRotation();
+
+            if (restRotationInverse && parentRestWorldRotation) {
+              for (let i = 0; i < newData.length; i += 4) {
+                const flatQuaternion = newData.slice(i, i + 4);
+                const _quatA = new pcRef.Quat(flatQuaternion);
+
+                const calParentRestWorldRotation = calcQuat.copy(parentRestWorldRotation);
+                _quatA.copy(calParentRestWorldRotation.mul(_quatA));
+                _quatA.mul(restRotationInverse);
+
+                flatQuaternion[0] = _quatA.x;
+                flatQuaternion[1] = _quatA.y;
+                flatQuaternion[2] = _quatA.z;
+                flatQuaternion[3] = _quatA.w;
+
+                flatQuaternion.forEach((v, index) => {
+                  newData[index + i] = v;
+                });
+              }
+            }
+
+            output._data = newData;
+          }
+        });
+
+        return {
+          name: animationAsset.stateName,
+          resource: animTrack,
+          ...(animationAsset.setting && {
+            setting: animationAsset.setting,
+          }),
+        };
+      } else {
+        console.error(
+          `AddVrmAnimation: loadAnimation can't find available resource from ${animationAsset.stateName} asset.`,
+        );
+        return null;
       }
-    });
-
-    return {
-      name: animationAsset.stateName,
-      resource: animTrack,
-      ...(animationAsset.setting && {
-        setting: animationAsset.setting,
-      }),
-    };
-  });
+    })
+    .filter((animationAsset) => animationAsset);
 };
 
 export const createVRMAnimation = (

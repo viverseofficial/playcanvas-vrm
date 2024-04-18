@@ -15,7 +15,7 @@ import mocapAnimUrl from '/mocap-animation.gltf?url';
 //   VrmAnimation,
 //   createFormattedVRMHumanoid,
 //   GLTFLoader,
-// } from 'https://world-dev.viverse.com/assets/js/playcanvas-vrm@1.0.1/playcanvas-vrm.js';
+// } from 'https://world-dev.viverse.com/assets/js/playcanvas-vrm@{version}/playcanvas-vrm.js';
 
 /**
  * Methods B:
@@ -27,7 +27,8 @@ const loadScript = () =>
   new Promise<void>((resolve, reject) => {
     const script = document.createElement('script');
     script.type = 'module';
-    script.src = 'https://world-dev.viverse.com/assets/js/playcanvas-vrm@1.0.1/playcanvas-vrm.js';
+    script.src = '/playcanvas-vrm.js';
+    // script.src = 'https://world-dev.viverse.com/assets/js/playcanvas-vrm@{version}/playcanvas-vrm.js';
     script.async = false;
     document.head.appendChild(script);
 
@@ -89,6 +90,7 @@ app.assets.add(AnimationRun);
 app.assets.add(AnimationDance);
 
 app.once('start', async () => {
+  // @ts-ignore
   import('./orbit-camera');
   VRMLoader.VrmExpression.importScript(pc);
   VRMLoader.VrmSpringBone.importScript(pc);
@@ -167,21 +169,20 @@ const createAvatar = () => {
             const mocapAnimationAssets = [
               {
                 stateName: 'Dance',
-                asset: AnimationDance.resource.animations[0],
+                asset: AnimationDance,
               },
             ];
 
-            const mocaLoadedResources = VRMLoader.VrmAnimation.createVRMAnimation(
+            const mocapLoadedResources = VRMLoader.VrmAnimation.createVRMAnimation(
               pc,
               mocapAnimationAssets,
               convertedAsset,
               rootEntity,
               humanoid,
-              1.05, // You can set custom motionHipsHeight
             );
 
-            if (mocaLoadedResources) {
-              mocaLoadedResources.forEach((resource: any) => {
+            if (mocapLoadedResources) {
+              mocapLoadedResources.forEach((resource: any) => {
                 VRMLoader.VrmAnimation.assignAnimation(rootEntity, resource);
               });
             }
@@ -190,7 +191,8 @@ const createAvatar = () => {
           app.root.addChild(rootEntity);
           app.on('update', (dt) => {
             timer += dt;
-            rootEntity.setPosition(Math.sin(timer), 0, 0);
+            // Open when you want model move to test spring bone
+            // rootEntity.setPosition(Math.sin(timer), 0, 0);
           });
 
           resolve(rootEntity);
