@@ -1,17 +1,17 @@
 /**
  * name: playcanvas-vrm
- * version: v1.0.2
+ * version: v1.0.3
  */
-var z = (r, t, e) => {
+var H = (r, t, e) => {
   if (!t.has(r))
     throw TypeError("Cannot " + e);
 };
-var E = (r, t, e) => (z(r, t, "read from private field"), e ? e.call(r) : t.get(r)), C = (r, t, e) => {
+var k = (r, t, e) => (H(r, t, "read from private field"), e ? e.call(r) : t.get(r)), C = (r, t, e) => {
   if (t.has(r))
     throw TypeError("Cannot add the same private member more than once");
   t instanceof WeakSet ? t.add(r) : t.set(r, e);
-}, F = (r, t, e, i) => (z(r, t, "write to private field"), i ? i.call(r, e) : t.set(r, e), e);
-var H = (r, t, e) => (z(r, t, "access private method"), e);
+}, F = (r, t, e, i) => (H(r, t, "write to private field"), i ? i.call(r, e) : t.set(r, e), e);
+var z = (r, t, e) => (H(r, t, "access private method"), e);
 const J = [
   "hips",
   "spine",
@@ -252,15 +252,15 @@ class $ extends tt {
       var d;
       const h = e.getBoneNode(l), c = n[l];
       if (h && c) {
-        let a = l, p, M;
+        let a = l, p, _;
         for (; p == null && (a = lt[a], a != null); )
-          p = n[a], M = s[a];
+          p = n[a], _ = s[a];
         const g = new t.Entity();
         if (g.name = h.name, ((a ? (d = i[a]) == null ? void 0 : d.node : o) || o).addChild(g), g.setLocalPosition(c), p) {
           const f = g.getLocalPosition().clone();
           f.sub(p), g.setLocalPosition(f);
         }
-        i[l] = { node: g }, M ?? new t.Quat();
+        i[l] = { node: g }, _ ?? new t.Quat();
       }
     }), {
       rigBones: i,
@@ -367,17 +367,17 @@ function gt(r, t, e) {
   return i;
 }
 function et(r, t, e) {
-  var l, h, c, d, a, p, M, g, m, f;
+  var l, h, c, d, a, p, _, g, m, f;
   const i = (h = (l = t.resource.data.gltf) == null ? void 0 : l.extensions) == null ? void 0 : h.VRM, n = (d = (c = t.resource.data.gltf) == null ? void 0 : c.extensions) == null ? void 0 : d.VRMC_vrm;
   if (!i && !n)
     return console.warn("CreateFormattedVRMHumanoid: Please check. It is not a vrm avatar."), null;
   let s = {};
   if (i) {
-    const u = (M = (p = (a = t.resource.data.gltf) == null ? void 0 : a.extensions) == null ? void 0 : p.VRM) == null ? void 0 : M.humanoid;
+    const u = (_ = (p = (a = t.resource.data.gltf) == null ? void 0 : a.extensions) == null ? void 0 : p.VRM) == null ? void 0 : _.humanoid;
     s = ft(u, t, e);
   } else if (n) {
-    const u = (f = (m = (g = t.resource.data.gltf) == null ? void 0 : g.extensions) == null ? void 0 : m.VRMC_vrm) == null ? void 0 : f.humanoid, _ = gt(u, t, e);
-    _ && (s = _);
+    const u = (f = (m = (g = t.resource.data.gltf) == null ? void 0 : g.extensions) == null ? void 0 : m.VRMC_vrm) == null ? void 0 : f.humanoid, x = gt(u, t, e);
+    x && (s = x);
   }
   return new ut(r, s);
 }
@@ -404,57 +404,57 @@ const mt = (r, t) => {
 }) => {
   const h = {}, c = {}, d = new r.Quat();
   return t.map((a) => {
-    var M;
-    const p = a.asset.type === "container" ? (M = a.asset.resource.animations[0]) == null ? void 0 : M.resource : a.asset.resource;
+    var _;
+    const p = a.asset.type === "container" ? (_ = a.asset.resource.animations[0]) == null ? void 0 : _.resource : a.asset.resource;
     if (p) {
       const g = mt(r, p);
       let m = 0;
       if (a.asset.type === "container") {
         const u = a.asset.resource.data.nodes.find(
-          (_) => _.name === O.hips
+          (x) => x.name === O.hips
         );
         u && (m = u.getPosition().y);
       }
       o = o || m || 0.855;
       const f = n / o;
       return g.curves.forEach((u) => {
-        u.paths.forEach((_) => {
-          const x = _, y = x.propertyPath.find((v) => v === "localPosition"), R = x.entityPath[x.entityPath.length - 1] === O.hips;
-          y && R && !h[u.output] && (h[u.output] = !0);
+        u.paths.forEach((x) => {
+          const M = x, T = M.propertyPath.find((v) => v === "localPosition"), R = M.entityPath[M.entityPath.length - 1] === O.hips;
+          T && R && !h[u.output] && (h[u.output] = !0);
         });
       }), g.curves.forEach((u) => {
-        let _ = !1;
-        u.paths.forEach((x) => {
-          const y = x, R = y.entityPath.map((v) => {
+        let x = !1;
+        u.paths.forEach((M) => {
+          const T = M, R = T.entityPath.map((v) => {
             var I;
             const w = O[v], b = (I = i.getNormalizedBoneNode(w)) == null ? void 0 : I.name;
             return !w || !b ? v : b;
           });
-          y.entityPath = R, y.propertyPath.find((v) => v === "localScale") && (_ = !0);
-        }), _ && !c[u.output] && (c[u.output] = !0);
-      }), g.outputs.forEach((u, _) => {
+          T.entityPath = R, T.propertyPath.find((v) => v === "localScale") && (x = !0);
+        }), x && !c[u.output] && (c[u.output] = !0);
+      }), g.outputs.forEach((u, x) => {
         var v;
-        const x = c[_], y = g.curves.find((T) => T.output === _);
+        const M = c[x], T = g.curves.find((y) => y.output === x);
         let R = "";
-        if (y) {
-          const w = y.paths[0].entityPath;
+        if (T) {
+          const w = T.paths[0].entityPath;
           R = w[w.length - 1];
         }
         if (u.components === 3) {
-          if (!x) {
-            const T = u.data.map((w, b) => h[_] && b % 3 === 1 && (a.removeY || a.removeUpperY && w * f > n) ? n : h[_] && b % 3 === 2 && a.removeZ ? s : w * f);
-            u._data = T;
+          if (!M) {
+            const y = u.data.map((w, b) => h[x] && b % 3 === 1 && (a.removeY || a.removeUpperY && w * f > n) ? n : h[x] && b % 3 === 2 && a.removeZ ? s : w * f);
+            u._data = y;
           }
         } else if (l === "v1") {
-          const T = [...u.data], w = e.findByName(R), b = w == null ? void 0 : w.getRotation().invert(), I = (v = w == null ? void 0 : w.parent) == null ? void 0 : v.getRotation();
+          const y = [...u.data], w = e.findByName(R), b = w == null ? void 0 : w.getRotation().invert(), I = (v = w == null ? void 0 : w.parent) == null ? void 0 : v.getRotation();
           if (b && I)
-            for (let S = 0; S < T.length; S += 4) {
-              const L = T.slice(S, S + 4), P = new r.Quat(L), U = d.copy(I);
-              P.copy(U.mul(P)), P.mul(b), L[0] = P.x, L[1] = P.y, L[2] = P.z, L[3] = P.w, L.forEach((A, at) => {
-                T[at + S] = A;
+            for (let S = 0; S < y.length; S += 4) {
+              const B = y.slice(S, S + 4), P = new r.Quat(B), U = d.copy(I);
+              P.copy(U.mul(P)), P.mul(b), B[0] = P.x, B[1] = P.y, B[2] = P.z, B[3] = P.w, B.forEach((A, at) => {
+                y[at + S] = A;
               });
             }
-          u._data = T;
+          u._data = y;
         }
       }), {
         name: a.stateName,
@@ -469,16 +469,14 @@ const mt = (r, t) => {
       ), null;
   }).filter((a) => a);
 }, xt = (r, t, e, i, n, s) => {
-  var u, _, x, y;
+  var m, f, u;
   let o = null;
   if (n ? o = n : e && i && (o = et(r, e, i)), !o)
     return console.error('CreateAnimation: Please provide "humanoid" or "asset and entity".'), null;
-  const l = (u = e.resource.data.gltf.extensions) == null ? void 0 : u.VRMC_vrm, h = (_ = e.resource.data.gltf.extensions) == null ? void 0 : _.VRM, c = l ? "v1" : h ? "v0" : null, d = ((x = o.getNormalizedBoneNode("hips")) == null ? void 0 : x.name) || "", a = i.clone();
-  a.setPosition(0, 0, 0);
-  const p = ((y = a.findByName(d)) == null ? void 0 : y.getPosition()) || new r.Vec3(), M = p.y, g = Math.abs(M - 0), m = p.z, f = Math.abs(m - 0);
-  return a.destroy(), _t(r, t, i, o, {
-    vrmHipsHeight: g,
-    vrmHipsDeep: f,
+  const l = (m = e.resource.data.gltf.extensions) == null ? void 0 : m.VRMC_vrm, h = (f = e.resource.data.gltf.extensions) == null ? void 0 : f.VRM, c = l ? "v1" : h ? "v0" : null, d = ((u = o.rawHumanBones.hips) == null ? void 0 : u.node.getPosition()) || new r.Vec3(), a = d.y, p = Math.abs(a - 0), _ = d.z, g = Math.abs(_ - 0);
+  return _t(r, t, i, o, {
+    vrmHipsHeight: p,
+    vrmHipsDeep: g,
     ...s && { motionHipsHeight: s },
     ...c && { version: c }
   });
@@ -811,10 +809,10 @@ class vt {
       a.isBinary = d.isBinary ?? !1, a.overrideBlink = d.overrideBlink ?? "none", a.overrideLookAt = d.overrideLookAt ?? "none", a.overrideMouth = d.overrideMouth ?? "none", d.morphTargetBinds && d.morphTargetBinds.forEach((p) => {
         if (p.node === void 0 || p.index === void 0)
           return;
-        const M = this.meshInstances.filter((m) => m.node.tags.has(`node_${p.node}`)), g = p.index;
+        const _ = this.meshInstances.filter((m) => m.node.tags.has(`node_${p.node}`)), g = p.index;
         a.addBind(
           new Z({
-            primitives: M,
+            primitives: _,
             targetIndex: g,
             weight: p.weight ?? 1
           })
@@ -837,34 +835,34 @@ class vt {
       return s;
     const l = /* @__PURE__ */ new Set();
     return o.map((d) => {
-      const a = d.presetName, M = (a != null && ct[a] || null) ?? d.name;
-      if (M == null) {
+      const a = d.presetName, _ = (a != null && ct[a] || null) ?? d.name;
+      if (_ == null) {
         console.warn(
           "VRMExpressionLoaderPlugin: One of custom expressions has no name. Ignoring the expression"
         );
         return;
       }
-      if (l.has(M)) {
+      if (l.has(_)) {
         console.warn(
           `VRMExpressionLoaderPlugin: An expression preset ${a} has duplicated entries. Ignoring the expression`
         );
         return;
       }
-      l.add(M);
-      const g = new Y(M);
+      l.add(_);
+      const g = new Y(_);
       g.isBinary = d.isBinary ?? !1, d.binds && (d.binds.forEach((m) => {
         if (m.mesh === void 0 || m.index === void 0)
           return;
         const f = [];
-        t.nodes.forEach((_, x) => {
-          _.mesh === m.mesh && f.push({ gltfNode: _, index: x });
+        t.nodes.forEach((x, M) => {
+          x.mesh === m.mesh && f.push({ gltfNode: x, index: M });
         });
         const u = m.index;
-        f.map((_) => {
-          const x = this.meshInstances.filter((y) => y.node.tags.has(`node_${_.index}`));
+        f.map((x) => {
+          const M = this.meshInstances.filter((T) => T.node.tags.has(`node_${x.index}`));
           g.addBind(
             new Z({
-              primitives: x,
+              primitives: M,
               targetIndex: u,
               weight: 0.01 * (m.weight ?? 100)
               // narrowing the range from [ 0.0 - 100.0 ] to [ 0.0 - 1.0 ]
@@ -899,7 +897,7 @@ function Pt(r, t) {
     t(n);
   });
 }
-const Bt = (r) => {
+const Lt = (r) => {
   class t extends r.ScriptType {
     constructor() {
       super(...arguments), this.previousTalkName = "";
@@ -954,9 +952,9 @@ const Bt = (r) => {
     type: "asset",
     description: "Set the container asset loaded from vrm avatar."
   });
-}, Lt = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, Bt = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  importScript: Bt
+  importScript: Lt
 }, Symbol.toStringTag, { value: "Module" }));
 class K {
   constructor() {
@@ -1078,7 +1076,7 @@ class St {
     return n.normalize(), h;
   }
 }
-class Et {
+class kt {
   constructor(t, e, i, n = {}, s = []) {
     var o;
     this._center = null, this._worldSpaceBoneLength = 0, this._pcRef = t, this._v3A = new this._pcRef.Vec3(), this._v3B = new this._pcRef.Vec3(), this._nextTail = new this._pcRef.Vec3(), this._quatA = new this._pcRef.Quat(), this._matA = new this._pcRef.Mat4(), this._matB = new this._pcRef.Mat4(), this._identityMat4 = new this._pcRef.Mat4(), this._worldSpacePosition = new this._pcRef.Vec3(), this._centerSpacePosition = new this._pcRef.Vec3(), this._matrixWorldToCenterTranslation = new this._pcRef.Vec3(), this._worldSpaceBoneLength = 0, this.bone = e, this.child = i, this.settings = {
@@ -1143,8 +1141,8 @@ class Et {
       this._v3A.copy(this._nextTail).copy(d.transformPoint(this._v3A)).normalize()
     ), p = a.getEulerAngles();
     a.setFromEulerAngles(p.x * e, p.y * e, p.z * e);
-    const M = this._initialLocalRotation.clone().mul(a);
-    this.bone.setLocalRotation(M);
+    const _ = this._initialLocalRotation.clone().mul(a);
+    this.bone.setLocalRotation(_);
   }
   _getMatrixCenterToWorld(t) {
     if (this._center) {
@@ -1173,7 +1171,7 @@ class Et {
     });
   }
 }
-const k = class k {
+const E = class E {
   constructor(t, e, i) {
     this.asset = e, this.entity = i, this._pcRef = t;
   }
@@ -1186,76 +1184,76 @@ const k = class k {
   }
   _v1Import(t, e) {
     var g, m;
-    if (!(((g = t.extensionsUsed) == null ? void 0 : g.indexOf(k.EXTENSION_NAME)) !== -1) || !((t == null ? void 0 : t.extensionsUsed.indexOf("VRMC_vrm")) !== -1))
+    if (!(((g = t.extensionsUsed) == null ? void 0 : g.indexOf(E.EXTENSION_NAME)) !== -1) || !((t == null ? void 0 : t.extensionsUsed.indexOf("VRMC_vrm")) !== -1))
       return null;
-    const s = new K(), o = t == null ? void 0 : t.nodes, l = (m = t.extensions) == null ? void 0 : m[k.EXTENSION_NAME];
+    const s = new K(), o = t == null ? void 0 : t.nodes, l = (m = t.extensions) == null ? void 0 : m[E.EXTENSION_NAME];
     if (!l)
       return null;
     const h = l.specVersion;
     if (!pt.has(h))
       return console.warn(
-        `VRMSpringBoneLoaderPlugin: Unknown ${k.EXTENSION_NAME} specVersion "${h}"`
+        `VRMSpringBoneLoaderPlugin: Unknown ${E.EXTENSION_NAME} specVersion "${h}"`
       ), null;
     const c = l.colliders, d = c == null ? void 0 : c.map((f, u) => {
-      var y;
-      const _ = (y = this.entity.findByTag(`node_${f.node}`)) == null ? void 0 : y[0], x = f.shape;
-      if (!_) {
+      var T;
+      const x = (T = this.entity.findByTag(`node_${f.node}`)) == null ? void 0 : T[0], M = f.shape;
+      if (!x) {
         console.error(
           "VRMSpringBoneLoaderPlugin Error: Did not find the node map to schemaColliderGroup"
         );
         return;
       }
-      if (x) {
-        if (x.sphere)
-          return this._importSphereCollider(_, {
-            offset: N(new this._pcRef.Vec3(), x.sphere.offset ?? [0, 0, 0]),
-            radius: x.sphere.radius ?? 0
+      if (M) {
+        if (M.sphere)
+          return this._importSphereCollider(x, {
+            offset: N(new this._pcRef.Vec3(), M.sphere.offset ?? [0, 0, 0]),
+            radius: M.sphere.radius ?? 0
           });
-        if (x.capsule)
-          return this._importCapsuleCollider(_, {
+        if (M.capsule)
+          return this._importCapsuleCollider(x, {
             offset: N(
               new this._pcRef.Vec3(),
-              x.capsule.offset ?? [0, 0, 0]
+              M.capsule.offset ?? [0, 0, 0]
             ),
-            radius: x.capsule.radius ?? 0,
-            tail: N(new this._pcRef.Vec3(), x.capsule.tail ?? [0, 0, 0])
+            radius: M.capsule.radius ?? 0,
+            tail: N(new this._pcRef.Vec3(), M.capsule.tail ?? [0, 0, 0])
           });
       }
       throw new Error(`VRMSpringBoneLoaderPlugin: The collider #${u} has no valid shape`);
     }), a = l.colliderGroups, p = a == null ? void 0 : a.map((f, u) => ({
-      colliders: (f.colliders ?? []).map((x) => {
-        const y = d == null ? void 0 : d[x];
-        if (y == null)
+      colliders: (f.colliders ?? []).map((M) => {
+        const T = d == null ? void 0 : d[M];
+        if (T == null)
           throw new Error(
-            `VRMSpringBoneLoaderPlugin: The colliderGroup #${u} attempted to use a collider #${x} but not found`
+            `VRMSpringBoneLoaderPlugin: The colliderGroup #${u} attempted to use a collider #${M} but not found`
           );
-        return y;
+        return T;
       }),
       name: f.name
     }));
     return l.springs.forEach((f, u) => {
       var v;
-      const _ = f.joints, x = (v = f.colliderGroups) == null ? void 0 : v.map((T) => {
-        const w = p == null ? void 0 : p[T];
+      const x = f.joints, M = (v = f.colliderGroups) == null ? void 0 : v.map((y) => {
+        const w = p == null ? void 0 : p[y];
         if (w == null)
           throw new Error(
-            `VRMSpringBoneLoaderPlugin: The spring #${u} attempted to use a colliderGroup ${T} but not found`
+            `VRMSpringBoneLoaderPlugin: The spring #${u} attempted to use a colliderGroup ${y} but not found`
           );
         return w;
-      }), y = f.center != null ? e.nodes[f.center] : void 0;
+      }), T = f.center != null ? e.nodes[f.center] : void 0;
       let R;
-      _.forEach((T) => {
+      x.forEach((y) => {
         if (R) {
-          const w = R.node, b = o[w], I = this.entity.findByName(b.name), S = T.node, L = o[S], P = this.entity.findByName(L.name), U = {
+          const w = R.node, b = o[w], I = this.entity.findByName(b.name), S = y.node, B = o[S], P = this.entity.findByName(B.name), U = {
             hitRadius: R.hitRadius,
             dragForce: R.dragForce,
             gravityPower: R.gravityPower,
             stiffness: R.stiffness,
             gravityDir: R.gravityDir != null ? N(new this._pcRef.Vec3(), R.gravityDir) : void 0
-          }, A = this._importJoint(I, P, U, x);
-          y && (A.center = y), s.addJoint(A);
+          }, A = this._importJoint(I, P, U, M);
+          T && (A.center = T), s.addJoint(A);
         }
-        R = T;
+        R = y;
       });
     }), s.setInitState(), s;
   }
@@ -1272,8 +1270,8 @@ const k = class k {
       return null;
     const l = new K(), h = (a = s.colliderGroups) == null ? void 0 : a.map((p) => {
       var m;
-      const M = (m = this.entity.findByTag(`node_${p.node}`)) == null ? void 0 : m[0];
-      if (!M) {
+      const _ = (m = this.entity.findByTag(`node_${p.node}`)) == null ? void 0 : m[0];
+      if (!_) {
         console.error(
           "VRMSpringBoneLoaderPlugin Error: Did not find the node map to schemaColliderGroup"
         );
@@ -1286,13 +1284,13 @@ const k = class k {
           f.offset.y ?? 0,
           f.offset.z ? -f.offset.z : 0
           // z is opposite in VRM0.0
-        ), this._importSphereCollider(M, {
+        ), this._importSphereCollider(_, {
           offset: u,
           radius: f.radius ?? 0
         });
       }) };
     });
-    return o == null || o.forEach((p, M) => {
+    return o == null || o.forEach((p, _) => {
       const g = p.bones;
       g && g.forEach((m) => {
         var R, v;
@@ -1309,23 +1307,23 @@ const k = class k {
           p.gravityDir.y ?? 0,
           p.gravityDir.z ?? 0
         ) : u.set(0, -1, 0);
-        const _ = p.center != null ? e.nodes[p.center] : void 0, x = {
+        const x = p.center != null ? e.nodes[p.center] : void 0, M = {
           hitRadius: p.hitRadius,
           dragForce: p.dragForce,
           gravityPower: p.gravityPower,
           stiffness: p.stiffiness,
           gravityDir: u
-        }, y = (v = p.colliderGroups) == null ? void 0 : v.map((T) => {
-          const w = h == null ? void 0 : h[T];
+        }, T = (v = p.colliderGroups) == null ? void 0 : v.map((y) => {
+          const w = h == null ? void 0 : h[y];
           if (w == null)
             throw new Error(
-              `VRMSpringBoneLoaderPlugin: The spring #${M} attempted to use a colliderGroup ${T} but not found`
+              `VRMSpringBoneLoaderPlugin: The spring #${_} attempted to use a colliderGroup ${y} but not found`
             );
           return w;
         });
-        f.forEach((T) => {
-          const w = T.children[0] ?? null, b = this._importJoint(T, w, x, y);
-          _ && (b.center = _), l.addJoint(b);
+        f.forEach((y) => {
+          const w = y.children[0] ?? null, b = this._importJoint(y, w, M, T);
+          x && (b.center = x), l.addJoint(b);
         });
       });
     }), l.setInitState(), l;
@@ -1343,7 +1341,7 @@ const k = class k {
     return t.addChild(l), l;
   }
   _importJoint(t, e, i, n) {
-    return new Et(
+    return new kt(
       this._pcRef,
       t,
       e,
@@ -1352,9 +1350,9 @@ const k = class k {
     );
   }
 };
-k.EXTENSION_NAME = "VRMC_springBone";
-let j = k;
-const kt = (r) => {
+E.EXTENSION_NAME = "VRMC_springBone";
+let j = E;
+const Et = (r) => {
   class t extends r.ScriptType {
     constructor() {
       super(...arguments), this.activeSpringBone = !0, this.isWalking = !1;
@@ -1384,7 +1382,7 @@ const kt = (r) => {
   });
 }, Vt = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  importScript: kt
+  importScript: Et
 }, Symbol.toStringTag, { value: "Module" })), At = function(r, t, e, i, n, s) {
   const o = s;
   if (!o) {
@@ -1427,30 +1425,30 @@ const kt = (r) => {
     }
   }), o.assets.add(c), o.assets.load(c), c;
 };
-var B, D, rt, W, ot;
+var L, D, rt, W, ot;
 class Ct {
   constructor(t, e) {
     C(this, D);
     C(this, W);
-    C(this, B, void 0);
-    F(this, B, /* @__PURE__ */ new Map()), this.loading = !1, this._pcRef = t, this.app = e;
+    C(this, L, void 0);
+    F(this, L, /* @__PURE__ */ new Map()), this.loading = !1, this._pcRef = t, this.app = e;
   }
   async parse(t, e = "Model", i = void 0, n = {}, s = !0) {
     const o = [];
     return new Promise((l, h) => {
       const c = (d, a) => {
-        d && (this.loading = !1, h(`GLTFLoader Error: ${d}`)), E(this, B).forEach((m) => {
+        d && (this.loading = !1, h(`GLTFLoader Error: ${d}`)), k(this, L).forEach((m) => {
           const f = m(a);
           o.push(f);
         });
         const p = a.resource.data;
-        s && H(this, W, ot).call(this, p, o);
-        const M = a.resource.instantiateRenderEntity(n), g = new this._pcRef.Entity(e, this.app);
-        if (M.name !== "Room Objects" && e === "Objects") {
+        s && z(this, W, ot).call(this, p, o);
+        const _ = a.resource.instantiateRenderEntity(n), g = new this._pcRef.Entity(e, this.app);
+        if (_.name !== "Room Objects" && e === "Objects") {
           const m = new this._pcRef.Entity("Room Objects");
-          m.addChild(M), g.addChild(m);
+          m.addChild(_), g.addChild(m);
         } else
-          g.addChild(M);
+          g.addChild(_);
         o.forEach((m) => {
           m.instantiated && m.instantiated(g);
         }), this.loading = !1, l({ entity: g, asset: a });
@@ -1476,11 +1474,11 @@ class Ct {
   }
   // Register Plugin to loader
   register(t, e) {
-    E(this, B).has(t) || E(this, B).set(t, e);
+    k(this, L).has(t) || k(this, L).set(t, e);
   }
   // Deregister Plugin to loader
   deregister(t) {
-    E(this, B).has(t) && E(this, B).delete(t);
+    k(this, L).has(t) && k(this, L).delete(t);
   }
   static registerAnimation(t, e, { useResourceName: i, defaultPlayIndex: n } = {
     useResourceName: !1,
@@ -1500,14 +1498,14 @@ class Ct {
     }
   }
 }
-B = new WeakMap(), D = new WeakSet(), rt = function(t, e) {
+L = new WeakMap(), D = new WeakSet(), rt = function(t, e) {
   t.forEach((i, n) => {
     const s = e[n].extensions;
     s && (i.extensions = s);
   });
 }, W = new WeakSet(), ot = function(t, e) {
   const i = t.gltf.nodes, n = t.nodes;
-  H(this, D, rt).call(this, n, i), t.scenes.forEach((s) => {
+  z(this, D, rt).call(this, n, i), t.scenes.forEach((s) => {
     const o = /* @__PURE__ */ new Set([]);
     s.forEach((l) => {
       let h = !1, c = [];
@@ -1527,7 +1525,7 @@ B = new WeakMap(), D = new WeakSet(), rt = function(t, e) {
 };
 window.VRMLoader = {
   VrmAnimation: wt,
-  VrmExpression: Lt,
+  VrmExpression: Bt,
   VrmSpringBone: Vt,
   createFormattedVRMHumanoid: et
 };
@@ -1535,7 +1533,7 @@ window.GLTFLoader = Ct;
 export {
   Ct as GLTFLoader,
   wt as VrmAnimation,
-  Lt as VrmExpression,
+  Bt as VrmExpression,
   Vt as VrmSpringBone,
   et as createFormattedVRMHumanoid
 };

@@ -4,6 +4,17 @@ import idleAnimUrl from '/Idle_anim.glb?url';
 import runAnimUrl from '/Run_anim.glb?url';
 import mocapAnimUrl from '/mocap-animation.gltf?url';
 
+import TestAAnimUrl from '/04_Salute.glb?url';
+import TestBAnimUrl from '/23_Laying.glb?url';
+import TestCAnimUrl from '/24_Praying.glb?url';
+import TestDAnimUrl from '/07_2 Pointing.glb?url';
+
+declare global {
+  interface Window {
+    createAnim(type: 'A' | 'B' | 'C' | 'D'): void;
+  }
+}
+
 /**
  * Methods A:
  * Use import module directly, but it's better to wait for the package version.
@@ -53,9 +64,17 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 const AnimationIdle = new pc.Asset('Idle', 'animation', { url: idleAnimUrl });
 const AnimationRun = new pc.Asset('Run', 'animation', { url: runAnimUrl });
 const AnimationDance = new pc.Asset('Idle', 'container', { url: mocapAnimUrl });
+const AnimationA = new pc.Asset('ATest', 'animation', { url: TestAAnimUrl });
+const AnimationB = new pc.Asset('BTest', 'animation', { url: TestBAnimUrl });
+const AnimationC = new pc.Asset('CTest', 'animation', { url: TestCAnimUrl });
+const AnimationD = new pc.Asset('DTest', 'animation', { url: TestDAnimUrl });
 AnimationIdle.preload = true;
 AnimationRun.preload = true;
 AnimationDance.preload = true;
+AnimationA.preload = true;
+AnimationB.preload = true;
+AnimationC.preload = true;
+AnimationD.preload = true;
 
 const INPUT_SETTINGS = {
   useKeyboard: true,
@@ -88,6 +107,10 @@ const app = new pc.Application(canvas, {
 app.assets.add(AnimationIdle);
 app.assets.add(AnimationRun);
 app.assets.add(AnimationDance);
+app.assets.add(AnimationA);
+app.assets.add(AnimationB);
+app.assets.add(AnimationC);
+app.assets.add(AnimationD);
 
 app.once('start', async () => {
   // @ts-ignore
@@ -187,6 +210,54 @@ const createAvatar = () => {
               });
             }
           }
+
+          window.createAnim = (type: 'A' | 'B' | 'C' | 'D') => {
+            let animAssets = [];
+
+            switch (type) {
+              case 'A':
+                animAssets.push({
+                  stateName: 'A',
+                  asset: AnimationA,
+                });
+                break;
+              case 'B':
+                animAssets.push({
+                  stateName: 'B',
+                  asset: AnimationB,
+                });
+                break;
+              case 'C':
+                animAssets.push({
+                  stateName: 'C',
+                  asset: AnimationC,
+                });
+                break;
+              case 'D':
+                animAssets.push({
+                  stateName: 'D',
+                  asset: AnimationD,
+                });
+                break;
+            }
+
+            const resources = VRMLoader.VrmAnimation.createVRMAnimation(
+              pc,
+              animAssets,
+              convertedAsset,
+              rootEntity,
+            );
+
+            if (resources) {
+              resources.forEach((resource: any) => {
+                VRMLoader.VrmAnimation.assignAnimation(rootEntity, resource);
+              });
+            }
+
+            if (rootEntity.anim) {
+              rootEntity.anim.baseLayer.transition(type);
+            }
+          };
 
           app.root.addChild(rootEntity);
           app.on('update', (dt) => {

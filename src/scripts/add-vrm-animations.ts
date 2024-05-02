@@ -246,19 +246,13 @@ export const createVRMAnimation = (
   const isV0Used = asset.resource.data.gltf.extensions?.VRM;
   const version = isV1Used ? 'v1' : isV0Used ? 'v0' : null;
 
-  const hipBoneName = humanoidResult.getNormalizedBoneNode('hips')?.name || '';
-  const referenceEntity = entity.clone();
-  referenceEntity.setPosition(0, 0, 0);
-  const vrmHipsPosition =
-    referenceEntity.findByName(hipBoneName)?.getPosition() || new pcRef.Vec3();
+  const vrmHipsPosition = humanoidResult.rawHumanBones.hips?.node.getPosition() || new pcRef.Vec3();
 
   const vrmHipsY = vrmHipsPosition.y;
   const vrmHipsHeight = Math.abs(vrmHipsY - 0);
 
   const vrmHipsZ = vrmHipsPosition.z;
   const vrmHipsDeep = Math.abs(vrmHipsZ - 0);
-
-  referenceEntity.destroy();
 
   return loadAnimation(pcRef, animationAssets, entity, humanoidResult, {
     vrmHipsHeight,
