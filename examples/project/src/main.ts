@@ -12,6 +12,7 @@ import TestDAnimUrl from '/07_2 Pointing.glb?url';
 declare global {
   interface Window {
     createAnim(type: 'A' | 'B' | 'C' | 'D'): void;
+    avatar: pc.Entity;
   }
 }
 
@@ -210,6 +211,8 @@ const createAvatar = () => {
               });
             }
           }
+
+          window.avatar = rootEntity;
 
           window.createAnim = (type: 'A' | 'B' | 'C' | 'D') => {
             let animAssets = [];
