@@ -8,6 +8,7 @@ import TestAAnimUrl from '/04_Salute.glb?url';
 import TestBAnimUrl from '/23_Laying.glb?url';
 import TestCAnimUrl from '/24_Praying.glb?url';
 import TestDAnimUrl from '/07_2 Pointing.glb?url';
+import TestEAnimUrl from '/25_Catwalk.glb?url';
 
 declare global {
   interface Window {
@@ -69,6 +70,7 @@ const AnimationA = new pc.Asset('ATest', 'animation', { url: TestAAnimUrl });
 const AnimationB = new pc.Asset('BTest', 'animation', { url: TestBAnimUrl });
 const AnimationC = new pc.Asset('CTest', 'animation', { url: TestCAnimUrl });
 const AnimationD = new pc.Asset('DTest', 'animation', { url: TestDAnimUrl });
+const AnimationE = new pc.Asset('ETest', 'animation', { url: TestEAnimUrl });
 AnimationIdle.preload = true;
 AnimationRun.preload = true;
 AnimationDance.preload = true;
@@ -76,6 +78,7 @@ AnimationA.preload = true;
 AnimationB.preload = true;
 AnimationC.preload = true;
 AnimationD.preload = true;
+AnimationE.preload = true;
 
 const INPUT_SETTINGS = {
   useKeyboard: true,
@@ -112,6 +115,7 @@ app.assets.add(AnimationA);
 app.assets.add(AnimationB);
 app.assets.add(AnimationC);
 app.assets.add(AnimationD);
+app.assets.add(AnimationE);
 
 app.once('start', async () => {
   // @ts-ignore
@@ -139,18 +143,27 @@ const createAvatar = () => {
         ({
           entity: renderRootEntity,
           asset: convertedAsset,
+          version,
         }: {
           entity: pc.Entity;
           asset: pc.Asset;
+          version: 'v0' | 'v1' | null;
         }) => {
           const rootEntity = new pc.Entity('VRM_AVATAR_ROOT');
           rootEntity.addChild(renderRootEntity);
 
-          rootEntity.addComponent('script');
-          rootEntity.addComponent('anim', {
+          const humanoid = VRMLoader.createFormattedVRMHumanoid(pc, asset, rootEntity, {
+            autoUpdateHumanBones: version === 'v1',
+          });
+
+          const normalizedRootEntity = humanoid.normalizedHumanBonesRoot;
+          const animatedEntity = version === 'v1' ? normalizedRootEntity : rootEntity;
+
+          animatedEntity.addComponent('anim', {
             activate: true,
           });
 
+          rootEntity.addComponent('script');
           if (rootEntity.script) {
             rootEntity.script.create('vrmExpression', {
               attributes: {
@@ -175,18 +188,17 @@ const createAvatar = () => {
               },
             ];
 
-            const humanoid = VRMLoader.createFormattedVRMHumanoid(pc, asset, rootEntity);
             const loadedResources = VRMLoader.VrmAnimation.createVRMAnimation(
               pc,
               animationAssets,
               convertedAsset,
-              rootEntity,
+              animatedEntity,
               humanoid,
             );
 
             if (loadedResources) {
               loadedResources.forEach((resource: any) => {
-                VRMLoader.VrmAnimation.assignAnimation(rootEntity, resource);
+                VRMLoader.VrmAnimation.assignAnimation(animatedEntity, resource);
               });
             }
 
@@ -201,20 +213,20 @@ const createAvatar = () => {
               pc,
               mocapAnimationAssets,
               convertedAsset,
-              rootEntity,
+              animatedEntity,
               humanoid,
             );
 
             if (mocapLoadedResources) {
               mocapLoadedResources.forEach((resource: any) => {
-                VRMLoader.VrmAnimation.assignAnimation(rootEntity, resource);
+                VRMLoader.VrmAnimation.assignAnimation(animatedEntity, resource);
               });
             }
           }
 
-          window.avatar = rootEntity;
+          window.avatar = animatedEntity;
 
-          window.createAnim = (type: 'A' | 'B' | 'C' | 'D') => {
+          window.createAnim = (type: 'A' | 'B' | 'C' | 'D' | 'E') => {
             let animAssets = [];
 
             switch (type) {
@@ -242,29 +254,38 @@ const createAvatar = () => {
                   asset: AnimationD,
                 });
                 break;
+              case 'E':
+                animAssets.push({
+                  stateName: 'E',
+                  asset: AnimationE,
+                });
+                break;
             }
 
             const resources = VRMLoader.VrmAnimation.createVRMAnimation(
               pc,
               animAssets,
               convertedAsset,
-              rootEntity,
+              animatedEntity,
+              humanoid,
             );
 
             if (resources) {
               resources.forEach((resource: any) => {
-                VRMLoader.VrmAnimation.assignAnimation(rootEntity, resource);
+                VRMLoader.VrmAnimation.assignAnimation(animatedEntity, resource);
               });
             }
 
-            if (rootEntity.anim) {
-              rootEntity.anim.baseLayer.transition(type);
+            if (animatedEntity.anim) {
+              animatedEntity.anim.baseLayer.transition(type);
             }
           };
 
           app.root.addChild(rootEntity);
+
           app.on('update', (dt) => {
             timer += dt;
+            if (humanoid) humanoid.update();
             // Open when you want model move to test spring bone
             // rootEntity.setPosition(Math.sin(timer), 0, 0);
           });

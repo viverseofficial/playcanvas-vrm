@@ -9,18 +9,22 @@ export const VRMHumanBoneList: VRMHumanBoneName[] = [
   'chest',
   'upperChest',
   'neck',
+
   'head',
   'leftEye',
   'rightEye',
   'jaw',
+
   'leftUpperLeg',
   'leftLowerLeg',
   'leftFoot',
   'leftToes',
+
   'rightUpperLeg',
   'rightLowerLeg',
   'rightFoot',
   'rightToes',
+
   'leftShoulder',
   'leftUpperArm',
   'leftLowerArm',
@@ -183,6 +187,9 @@ export const VRMRigMap: { [key: string]: VRMHumanBoneName } = {
   rightLittleDistal: 'rightLittleDistal',
 };
 
+/**
+ * A map from old thumb bone names to new thumb bone names
+ */
 export const thumbBoneNameMap: { [key: string]: V1VRMSchema.HumanoidHumanBoneName | undefined } = {
   leftThumbProximal: 'leftThumbMetacarpal',
   leftThumbIntermediate: 'leftThumbProximal',

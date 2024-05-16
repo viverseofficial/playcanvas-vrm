@@ -24,63 +24,73 @@ export class GLTFLoader {
   ) {
     const plugins: any[] = [];
 
-    return new Promise<{ entity: pc.Entity; asset: pc.Asset }>((resolve, reject) => {
-      const parsedCallBack = (err: Error | null, asset: pc.Asset) => {
-        if (err) {
-          this.loading = false;
-          reject(`GLTFLoader Error: ${err}`);
-        }
-
-        // Pass parsed asset to create plugins
-        this.#pluginsCallbacks.forEach((createPlugin) => {
-          const plugin = createPlugin(asset);
-          plugins.push(plugin);
-        });
-
-        const assetData = asset.resource.data;
-
-        if (needAddTags) {
-          this.#addEssentialTags(assetData, plugins);
-        }
-
-        const renderEntity = asset.resource.instantiateRenderEntity(setting);
-        const rootEntity = new this._pcRef.Entity(name, this.app);
-
-        if (renderEntity.name !== 'Room Objects' && name === 'Objects') {
-          const rootObjectEntity = new this._pcRef.Entity('Room Objects');
-          rootObjectEntity.addChild(renderEntity);
-          rootEntity.addChild(rootObjectEntity);
-        } else {
-          rootEntity.addChild(renderEntity);
-        }
-
-        plugins.forEach((plugin) => {
-          if (plugin.instantiated) plugin.instantiated(rootEntity);
-        });
-
-        this.loading = false;
-        resolve({ entity: rootEntity, asset });
-      };
-
-      if (!source) {
-        reject('GLTFLoader Error: Please pass the asset or url to parse.');
-      }
-
-      this.loading = true;
-      if (source instanceof this._pcRef.Asset) {
-        if (source.type === 'container') {
-          if (source.loaded) {
-            parsedCallBack(null, source);
-          } else {
-            source.once('load', () => {
-              parsedCallBack(null, source);
-            });
-
-            if (!this.app.assets.get(source.id)) this.app.assets.add(source);
-            this.app.assets.load(source);
+    return new Promise<{ entity: pc.Entity; asset: pc.Asset; version: 'v0' | 'v1' | null }>(
+      (resolve, reject) => {
+        const parsedCallBack = (err: Error | null, asset: pc.Asset) => {
+          if (err) {
+            this.loading = false;
+            reject(`GLTFLoader Error: ${err}`);
           }
-        } else if (source.type === 'binary') {
-          loadGlbContainerFromAsset(
+
+          // Pass parsed asset to create plugins
+          this.#pluginsCallbacks.forEach((createPlugin) => {
+            const plugin = createPlugin(asset);
+            plugins.push(plugin);
+          });
+
+          const assetData = asset.resource.data;
+
+          if (needAddTags) {
+            this.#addEssentialTags(assetData, plugins);
+          }
+
+          const renderEntity = asset.resource.instantiateRenderEntity(setting);
+          const rootEntity = new this._pcRef.Entity(name, this.app);
+          rootEntity.addChild(renderEntity);
+          plugins.forEach((plugin) => {
+            if (plugin.instantiated) plugin.instantiated(rootEntity);
+          });
+
+          this.loading = false;
+
+          const isV1Used = asset.resource.data.gltf.extensions?.VRMC_vrm;
+          const isV0Used = asset.resource.data.gltf.extensions?.VRM;
+          const version = isV1Used ? 'v1' : isV0Used ? 'v0' : null;
+
+          resolve({ entity: rootEntity, asset, version });
+        };
+
+        if (!source) {
+          reject('GLTFLoader Error: Please pass the asset or url to parse.');
+        }
+
+        this.loading = true;
+        if (source instanceof this._pcRef.Asset) {
+          if (source.type === 'container') {
+            if (source.loaded) {
+              parsedCallBack(null, source);
+            } else {
+              source.once('load', () => {
+                parsedCallBack(null, source);
+              });
+
+              if (!this.app.assets.get(source.id)) this.app.assets.add(source);
+              this.app.assets.load(source);
+            }
+          } else if (source.type === 'binary') {
+            loadGlbContainerFromAsset(
+              this._pcRef,
+              source,
+              options,
+              name,
+              parsedCallBack.bind(this),
+              this.app,
+            );
+          } else {
+            reject('GLTFLoader Error: Please pass available asset or url to parse.');
+          }
+        } else {
+          loadGlbContainerFromUrl(
             this._pcRef,
             source,
             options,
@@ -88,20 +98,9 @@ export class GLTFLoader {
             parsedCallBack.bind(this),
             this.app,
           );
-        } else {
-          reject('GLTFLoader Error: Please pass available asset or url to parse.');
         }
-      } else {
-        loadGlbContainerFromUrl(
-          this._pcRef,
-          source,
-          options,
-          name,
-          parsedCallBack.bind(this),
-          this.app,
-        );
-      }
-    });
+      },
+    );
   }
 
   // Register Plugin to loader

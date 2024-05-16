@@ -1,6 +1,5 @@
 import * as pc from 'playcanvas';
 import { VRMRigMap } from '../extensions/vrm-map-list';
-import { createFormattedVRMHumanoid } from '../extensions/vrm-humanoid/vrm-humanoid-utils';
 import { VRMHumanoid } from '../extensions/vrm-humanoid/VRMHumanoid';
 
 interface IAnimationSetting {
@@ -151,6 +150,12 @@ const loadAnimation = (
           if (output.components === 3) {
             if (!isScaleOutput) {
               const newData = output.data.map((v, index) => {
+                let value = v;
+
+                if (version === 'v1' && index % 3 !== 1) {
+                  value *= -1;
+                }
+
                 if (hipPositionOutputIndexes[outputIndex] && index % 3 === 1) {
                   if (animationAsset.removeY) {
                     return vrmHipsHeight;
@@ -167,38 +172,19 @@ const loadAnimation = (
                   }
                 }
 
-                return v * hipsPositionScaleY;
+                return value * hipsPositionScaleY;
               });
 
               output._data = newData;
             }
-          } else if (version === 'v1') {
-            // Handle vrmc initial local rotation is not 0
-            // TODO: (yuni): Arm looks strange
-            const newData = [...output.data];
-            const mixamoRigNode = entity.findByName(entityPath);
-            const restRotationInverse = mixamoRigNode?.getRotation().invert();
-            const parentRestWorldRotation = mixamoRigNode?.parent?.getRotation();
-
-            if (restRotationInverse && parentRestWorldRotation) {
-              for (let i = 0; i < newData.length; i += 4) {
-                const flatQuaternion = newData.slice(i, i + 4);
-                const _quatA = new pcRef.Quat(flatQuaternion);
-
-                const calParentRestWorldRotation = calcQuat.copy(parentRestWorldRotation);
-                _quatA.copy(calParentRestWorldRotation.mul(_quatA));
-                _quatA.mul(restRotationInverse);
-
-                flatQuaternion[0] = _quatA.x;
-                flatQuaternion[1] = _quatA.y;
-                flatQuaternion[2] = _quatA.z;
-                flatQuaternion[3] = _quatA.w;
-
-                flatQuaternion.forEach((v, index) => {
-                  newData[index + i] = v;
-                });
+          } else if (output.components === 4) {
+            const newData = output.data.map((v, index) => {
+              if (version === 'v1' && index % 2 === 0) {
+                return -v;
+              } else {
+                return v;
               }
-            }
+            });
 
             output._data = newData;
           }
@@ -229,15 +215,7 @@ export const createVRMAnimation = (
   humanoid?: VRMHumanoid | null,
   motionHipsHeight?: number,
 ) => {
-  let humanoidResult: null | VRMHumanoid = null;
-
-  if (humanoid) {
-    humanoidResult = humanoid;
-  } else if (asset && entity) {
-    humanoidResult = createFormattedVRMHumanoid(pcRef, asset, entity);
-  }
-
-  if (!humanoidResult) {
+  if (!humanoid) {
     console.error('CreateAnimation: Please provide "humanoid" or "asset and entity".');
     return null;
   }
@@ -246,7 +224,7 @@ export const createVRMAnimation = (
   const isV0Used = asset.resource.data.gltf.extensions?.VRM;
   const version = isV1Used ? 'v1' : isV0Used ? 'v0' : null;
 
-  const vrmHipsPosition = humanoidResult.rawHumanBones.hips?.node.getPosition() || new pcRef.Vec3();
+  const vrmHipsPosition = humanoid.rawHumanBones.hips?.node.getPosition() || new pcRef.Vec3();
 
   const vrmHipsY = vrmHipsPosition.y;
   const vrmHipsHeight = Math.abs(vrmHipsY - 0);
@@ -254,7 +232,7 @@ export const createVRMAnimation = (
   const vrmHipsZ = vrmHipsPosition.z;
   const vrmHipsDeep = Math.abs(vrmHipsZ - 0);
 
-  return loadAnimation(pcRef, animationAssets, entity, humanoidResult, {
+  return loadAnimation(pcRef, animationAssets, entity, humanoid, {
     vrmHipsHeight,
     vrmHipsDeep,
     ...(motionHipsHeight && { motionHipsHeight }),

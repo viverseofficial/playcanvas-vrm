@@ -275,215 +275,6 @@ const VrmMapList = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePr
   v0ExpressionMaterialColorMap,
   v0v1PresetNameMap
 }, Symbol.toStringTag, { value: "Module" }));
-class VRMRig {
-  constructor(humanBones) {
-    this.humanBones = humanBones;
-  }
-  /**
-   * Return a bone bound to a specified {@link VRMHumanBoneName}, as a {@link VRMHumanBone}.
-   *
-   * @param name Name of the bone you want
-   */
-  getBone(name) {
-    return this.humanBones[name] ?? void 0;
-  }
-  getBoneNode(name) {
-    var _a;
-    return ((_a = this.humanBones[name]) == null ? void 0 : _a.node) ?? null;
-  }
-}
-class VRMHumanoidRig extends VRMRig {
-  static _setupTransforms(pcRef, modelRig) {
-    const rigBones = {};
-    const boneWorldPositions = {};
-    const boneWorldRotations = {};
-    const root = new pcRef.Entity();
-    root.name = "VRMHumanoidRig";
-    VRMHumanBoneList.forEach((boneName) => {
-      const boneNode = modelRig.getBoneNode(boneName);
-      if (boneNode) {
-        const boneWorldPosition = new pcRef.Vec3();
-        const boneWorldRotation = new pcRef.Quat();
-        const worldTransform = boneNode.getWorldTransform();
-        worldTransform.getTranslation(boneWorldPosition);
-        const eulers = worldTransform.getEulerAngles();
-        boneWorldRotation.setFromEulerAngles(eulers);
-        boneWorldPositions[boneName] = boneWorldPosition;
-        boneWorldRotations[boneName] = boneWorldRotation;
-        boneNode.getLocalRotation().clone();
-      }
-    });
-    VRMHumanBoneList.forEach((boneName) => {
-      var _a;
-      const boneNode = modelRig.getBoneNode(boneName);
-      const boneWorldPosition = boneWorldPositions[boneName];
-      if (boneNode && boneWorldPosition) {
-        let currentBoneName = boneName;
-        let parentWorldPosition;
-        let parentWorldRotation;
-        while (parentWorldPosition == null) {
-          currentBoneName = VRMHumanBoneParentMap[currentBoneName];
-          if (currentBoneName == null) {
-            break;
-          }
-          parentWorldPosition = boneWorldPositions[currentBoneName];
-          parentWorldRotation = boneWorldRotations[currentBoneName];
-        }
-        const rigBoneNode = new pcRef.Entity();
-        rigBoneNode.name = boneNode.name;
-        const parentRigBoneNode = currentBoneName ? (_a = rigBones[currentBoneName]) == null ? void 0 : _a.node : root;
-        (parentRigBoneNode || root).addChild(rigBoneNode);
-        rigBoneNode.setLocalPosition(boneWorldPosition);
-        if (parentWorldPosition) {
-          const localPosition = rigBoneNode.getLocalPosition().clone();
-          localPosition.sub(parentWorldPosition);
-          rigBoneNode.setLocalPosition(localPosition);
-        }
-        rigBones[boneName] = { node: rigBoneNode };
-        parentWorldRotation ?? new pcRef.Quat();
-      }
-    });
-    return {
-      rigBones,
-      root
-    };
-  }
-  constructor(pcRef, humanoid) {
-    const { rigBones, root } = VRMHumanoidRig._setupTransforms(pcRef, humanoid);
-    super(rigBones);
-    this.root = root;
-  }
-}
-class VRMHumanoid {
-  constructor(pcRef, humanBones) {
-    this._humanBones = humanBones;
-    this._rawHumanBones = new VRMRig(humanBones);
-    this._normalizedHumanBones = new VRMHumanoidRig(pcRef, this._rawHumanBones);
-  }
-  get humanBones() {
-    return this._rawHumanBones.humanBones;
-  }
-  get rawHumanBones() {
-    return this._rawHumanBones.humanBones;
-  }
-  get normalizedHumanBones() {
-    return this._normalizedHumanBones.humanBones;
-  }
-  get normalizedHumanBonesRoot() {
-    return this._normalizedHumanBones.root;
-  }
-  /**
-   * Return a raw {@link VRMHumanBone} bound to a specified {@link VRMHumanBoneName}.
-   *
-   * @param name Name of the bone you want
-   */
-  getRawBone(name) {
-    return this._rawHumanBones.getBone(name);
-  }
-  /**
-   * Return a normalized {@link VRMHumanBone} bound to a specified {@link VRMHumanBoneName}.
-   *
-   * @param name Name of the bone you want
-   */
-  getNormalizedBone(name) {
-    return this._normalizedHumanBones.getBone(name);
-  }
-  /**
-   * Return a raw bone as a `THREE.Object3D` bound to a specified {@link VRMHumanBoneName}.
-   *
-   * @param name Name of the bone you want
-   */
-  getRawBoneNode(name) {
-    return this._rawHumanBones.getBoneNode(name);
-  }
-  /**
-   * Return a normalized bone as a `THREE.Object3D` bound to a specified {@link VRMHumanBoneName}.
-   *
-   * @param name Name of the bone you want
-   */
-  getNormalizedBoneNode(name) {
-    return this._normalizedHumanBones.getBoneNode(name);
-  }
-  getBoneEntity(name) {
-    var _a;
-    return ((_a = this._humanBones[name]) == null ? void 0 : _a.entity) || null;
-  }
-}
-function createVRMHumanBones(schemaHumanoid, glbAsset, entity) {
-  const schemaHumanBones = schemaHumanoid.humanBones;
-  const existsPreviousThumbName = schemaHumanBones.findIndex((humanBone) => {
-    return humanBone.bone === "leftThumbIntermediate" || humanBone.bone === "rightThumbIntermediate";
-  });
-  const humanBones = {};
-  if (schemaHumanoid.humanBones != null) {
-    Object.entries(schemaHumanBones).map(([, schemaHumanBone]) => {
-      var _a;
-      let boneName = schemaHumanBone.bone;
-      const index = schemaHumanBone.node;
-      if (existsPreviousThumbName !== -1) {
-        const thumbBoneName = thumbBoneNameMap[boneName];
-        if (thumbBoneName != null) {
-          boneName = thumbBoneName;
-        }
-      }
-      const node = glbAsset.resource.data.nodes[index];
-      if (node == null) {
-        console.warn(
-          `A glTF node bound to the humanoid bone ${boneName} (index = ${index}) does not exist`
-        );
-        return;
-      }
-      humanBones[boneName] = {
-        node,
-        entity: ((_a = entity.findByTag(`node_${index}`)) == null ? void 0 : _a[0]) || null
-      };
-    });
-  }
-  return humanBones;
-}
-function createVRMCHumanBones(schemaHumanoid, glbAsset, entity) {
-  var _a;
-  const humanBones = {};
-  if (schemaHumanoid.humanBones) {
-    for (const property in schemaHumanoid.humanBones) {
-      let boneName = property;
-      const index = schemaHumanoid.humanBones[property].node;
-      const node = glbAsset.resource.data.nodes[index];
-      if (node == null) {
-        console.warn(
-          `A glTF node bound to the humanoid bone ${boneName} (index = ${index}) does not exist`
-        );
-        return null;
-      }
-      humanBones[boneName] = {
-        node,
-        entity: ((_a = entity.findByTag(`node_${index}`)) == null ? void 0 : _a[0]) || null
-      };
-    }
-  }
-  return humanBones;
-}
-function createFormattedVRMHumanoid(pcRef, vrmAsset, renderEntity) {
-  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
-  const VRM = (_b = (_a = vrmAsset.resource.data.gltf) == null ? void 0 : _a.extensions) == null ? void 0 : _b.VRM;
-  const VRMC_vrm = (_d = (_c = vrmAsset.resource.data.gltf) == null ? void 0 : _c.extensions) == null ? void 0 : _d.VRMC_vrm;
-  if (!VRM && !VRMC_vrm) {
-    console.warn("CreateFormattedVRMHumanoid: Please check. It is not a vrm avatar.");
-    return null;
-  }
-  let humanBones = {};
-  if (VRM) {
-    const schemaHumanoid = (_g = (_f = (_e = vrmAsset.resource.data.gltf) == null ? void 0 : _e.extensions) == null ? void 0 : _f.VRM) == null ? void 0 : _g.humanoid;
-    humanBones = createVRMHumanBones(schemaHumanoid, vrmAsset, renderEntity);
-  } else if (VRMC_vrm) {
-    const schemaHumanoid = (_j = (_i = (_h = vrmAsset.resource.data.gltf) == null ? void 0 : _h.extensions) == null ? void 0 : _i.VRMC_vrm) == null ? void 0 : _j.humanoid;
-    const VRMCHumanBones = createVRMCHumanBones(schemaHumanoid, vrmAsset, renderEntity);
-    if (VRMCHumanBones)
-      humanBones = VRMCHumanBones;
-  }
-  const humanoid = new VRMHumanoid(pcRef, humanBones);
-  return humanoid;
-}
 const createAnimTrack = (pcRef, animTrack) => {
   const inputs = animTrack.inputs.map((input) => new pcRef.AnimData(input.components, input.data));
   const outputs = animTrack.outputs.map(
@@ -510,7 +301,7 @@ const loadAnimation = (pcRef, animationAssets, entity, humanoid, {
 }) => {
   const hipPositionOutputIndexes = {};
   const scaleOutputIndexes = {};
-  const calcQuat = new pcRef.Quat();
+  new pcRef.Quat();
   return animationAssets.map((animationAsset) => {
     var _a;
     const resource = animationAsset.asset.type === "container" ? (_a = animationAsset.asset.resource.animations[0]) == null ? void 0 : _a.resource : animationAsset.asset.resource;
@@ -561,18 +352,20 @@ const loadAnimation = (pcRef, animationAssets, entity, humanoid, {
         }
       });
       animTrack.outputs.forEach((output, outputIndex) => {
-        var _a2;
         const isScaleOutput = scaleOutputIndexes[outputIndex];
         const outputCurve = animTrack.curves.find((curve) => curve.output === outputIndex);
-        let entityPath = "";
         if (outputCurve) {
           const path = outputCurve.paths[0];
           const entityPaths = path.entityPath;
-          entityPath = entityPaths[entityPaths.length - 1];
+          entityPaths[entityPaths.length - 1];
         }
         if (output.components === 3) {
           if (!isScaleOutput) {
             const newData = output.data.map((v, index) => {
+              let value = v;
+              if (version === "v1" && index % 3 !== 1) {
+                value *= -1;
+              }
               if (hipPositionOutputIndexes[outputIndex] && index % 3 === 1) {
                 if (animationAsset.removeY) {
                   return vrmHipsHeight;
@@ -586,31 +379,18 @@ const loadAnimation = (pcRef, animationAssets, entity, humanoid, {
                   return vrmHipsDeep;
                 }
               }
-              return v * hipsPositionScaleY;
+              return value * hipsPositionScaleY;
             });
             output._data = newData;
           }
-        } else if (version === "v1") {
-          const newData = [...output.data];
-          const mixamoRigNode = entity.findByName(entityPath);
-          const restRotationInverse = mixamoRigNode == null ? void 0 : mixamoRigNode.getRotation().invert();
-          const parentRestWorldRotation = (_a2 = mixamoRigNode == null ? void 0 : mixamoRigNode.parent) == null ? void 0 : _a2.getRotation();
-          if (restRotationInverse && parentRestWorldRotation) {
-            for (let i = 0; i < newData.length; i += 4) {
-              const flatQuaternion = newData.slice(i, i + 4);
-              const _quatA = new pcRef.Quat(flatQuaternion);
-              const calParentRestWorldRotation = calcQuat.copy(parentRestWorldRotation);
-              _quatA.copy(calParentRestWorldRotation.mul(_quatA));
-              _quatA.mul(restRotationInverse);
-              flatQuaternion[0] = _quatA.x;
-              flatQuaternion[1] = _quatA.y;
-              flatQuaternion[2] = _quatA.z;
-              flatQuaternion[3] = _quatA.w;
-              flatQuaternion.forEach((v, index) => {
-                newData[index + i] = v;
-              });
+        } else if (output.components === 4) {
+          const newData = output.data.map((v, index) => {
+            if (version === "v1" && index % 2 === 0) {
+              return -v;
+            } else {
+              return v;
             }
-          }
+          });
           output._data = newData;
         }
       });
@@ -631,25 +411,19 @@ const loadAnimation = (pcRef, animationAssets, entity, humanoid, {
 };
 const createVRMAnimation = (pcRef, animationAssets, asset, entity, humanoid, motionHipsHeight) => {
   var _a, _b, _c;
-  let humanoidResult = null;
-  if (humanoid) {
-    humanoidResult = humanoid;
-  } else if (asset && entity) {
-    humanoidResult = createFormattedVRMHumanoid(pcRef, asset, entity);
-  }
-  if (!humanoidResult) {
+  if (!humanoid) {
     console.error('CreateAnimation: Please provide "humanoid" or "asset and entity".');
     return null;
   }
   const isV1Used = (_a = asset.resource.data.gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
   const isV0Used = (_b = asset.resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
   const version = isV1Used ? "v1" : isV0Used ? "v0" : null;
-  const vrmHipsPosition = ((_c = humanoidResult.rawHumanBones.hips) == null ? void 0 : _c.node.getPosition()) || new pcRef.Vec3();
+  const vrmHipsPosition = ((_c = humanoid.rawHumanBones.hips) == null ? void 0 : _c.node.getPosition()) || new pcRef.Vec3();
   const vrmHipsY = vrmHipsPosition.y;
   const vrmHipsHeight = Math.abs(vrmHipsY - 0);
   const vrmHipsZ = vrmHipsPosition.z;
   const vrmHipsDeep = Math.abs(vrmHipsZ - 0);
-  return loadAnimation(pcRef, animationAssets, entity, humanoidResult, {
+  return loadAnimation(pcRef, animationAssets, entity, humanoid, {
     vrmHipsHeight,
     vrmHipsDeep,
     ...motionHipsHeight && { motionHipsHeight },
@@ -2061,6 +1835,277 @@ const VrmSpringBone = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defin
   __proto__: null,
   importScript
 }, Symbol.toStringTag, { value: "Module" }));
+class VRMRig {
+  constructor(humanBones) {
+    this.humanBones = humanBones;
+  }
+  /**
+   * Return a bone bound to a specified {@link VRMHumanBoneName}, as a {@link VRMHumanBone}.
+   *
+   * @param name Name of the bone you want
+   */
+  getBone(name) {
+    return this.humanBones[name] ?? void 0;
+  }
+  getBoneNode(name) {
+    var _a;
+    return ((_a = this.humanBones[name]) == null ? void 0 : _a.node) ?? null;
+  }
+}
+class VRMHumanoidRig extends VRMRig {
+  static _setupTransforms(pcRef, modelRig) {
+    const root = new pcRef.Entity();
+    root.name = "VRMHumanoidRig";
+    const boneWorldPositions = {};
+    const boneRotations = {};
+    const parentWorldRotations = {};
+    VRMHumanBoneList.forEach((boneName) => {
+      const boneNode = modelRig.getBoneNode(boneName);
+      if (boneNode) {
+        boneWorldPositions[boneName] = boneNode.getPosition().clone();
+        boneNode.getRotation().clone();
+        boneRotations[boneName] = boneNode.getLocalRotation().clone();
+        const parentWorldRotation = new pcRef.Quat();
+        if (boneNode.parent) {
+          parentWorldRotation.copy(boneNode.parent.getRotation());
+        }
+        parentWorldRotations[boneName] = parentWorldRotation;
+      }
+    });
+    const rigBones = {};
+    VRMHumanBoneList.forEach((boneName) => {
+      var _a;
+      const boneNode = modelRig.getBoneNode(boneName);
+      if (boneNode) {
+        const boneWorldPosition = boneWorldPositions[boneName];
+        let currentBoneName = boneName;
+        let parentBoneWorldPosition;
+        while (parentBoneWorldPosition == null) {
+          currentBoneName = VRMHumanBoneParentMap[currentBoneName];
+          if (currentBoneName == null) {
+            break;
+          }
+          parentBoneWorldPosition = boneWorldPositions[currentBoneName];
+        }
+        const rigBoneNode = new pcRef.Entity();
+        rigBoneNode.name = boneNode.name;
+        const parentRigBoneNode = currentBoneName ? (_a = rigBones[currentBoneName]) == null ? void 0 : _a.node : root;
+        parentRigBoneNode.addChild(rigBoneNode);
+        const localPosition = new pcRef.Vec3().copy(boneWorldPosition);
+        if (parentBoneWorldPosition) {
+          localPosition.sub(parentBoneWorldPosition);
+        }
+        rigBoneNode.setLocalPosition(localPosition);
+        rigBones[boneName] = { node: rigBoneNode };
+      }
+    });
+    return {
+      rigBones,
+      root,
+      parentWorldRotations,
+      boneRotations
+    };
+  }
+  constructor(pcRef, humanoid) {
+    const { rigBones, root, parentWorldRotations, boneRotations } = VRMHumanoidRig._setupTransforms(
+      pcRef,
+      humanoid
+    );
+    super(rigBones);
+    this.pcRef = pcRef;
+    this.original = humanoid;
+    this.root = root;
+    this._parentWorldRotations = parentWorldRotations;
+    this._boneRotations = boneRotations;
+    this._quatA = new pcRef.Quat();
+    this._quatB = new pcRef.Quat();
+    this._vec3A = new pcRef.Vec3();
+    this._mat4A = new pcRef.Mat4();
+    const app = pcRef.Application.getApplication();
+    if (app)
+      app.root.addChild(root);
+  }
+  applyMatrix4(position, m) {
+    const x = position.x, y = position.y, z = position.z;
+    const e = m.data;
+    const w = 1 / (e[3] * x + e[7] * y + e[11] * z + e[15]);
+    position.x = (e[0] * x + e[4] * y + e[8] * z + e[12]) * w;
+    position.y = (e[1] * x + e[5] * y + e[9] * z + e[13]) * w;
+    position.z = (e[2] * x + e[6] * y + e[10] * z + e[14]) * w;
+    return position;
+  }
+  update() {
+    VRMHumanBoneList.forEach((boneName) => {
+      var _a;
+      const boneNode = (_a = this.original.humanBones[boneName]) == null ? void 0 : _a.entity;
+      const rigBoneNode = this.getBoneNode(boneName);
+      if (boneNode != null && rigBoneNode) {
+        const parentWorldRotation = this._parentWorldRotations[boneName];
+        const invParentWorldRotation = this._quatB.copy(parentWorldRotation).invert();
+        const boneRotation = this._boneRotations[boneName];
+        this._quatA.copy(rigBoneNode.getLocalRotation());
+        this._quatA.mul(parentWorldRotation);
+        this._quatA.copy(invParentWorldRotation.mul(this._quatA));
+        this._quatA.mul(boneRotation);
+        boneNode.setLocalRotation(this._quatA);
+        if (boneName === "hips") {
+          const boneWorldPosition = this._vec3A.copy(rigBoneNode.getPosition());
+          const parentWorldMatrix = this._mat4A.copy(boneNode.parent.getWorldTransform());
+          const localPosition = this.applyMatrix4(boneWorldPosition, parentWorldMatrix.invert());
+          boneNode.setLocalPosition(localPosition);
+        }
+      }
+    });
+  }
+}
+class VRMHumanoid {
+  constructor(pcRef, humanBones, options) {
+    this.autoUpdateHumanBones = (options == null ? void 0 : options.autoUpdateHumanBones) ?? true;
+    this._rawHumanBones = new VRMRig(humanBones);
+    this._normalizedHumanBones = new VRMHumanoidRig(pcRef, this._rawHumanBones);
+  }
+  get humanBones() {
+    return this._rawHumanBones.humanBones;
+  }
+  get rawHumanBones() {
+    return this._rawHumanBones.humanBones;
+  }
+  get normalizedHumanBones() {
+    return this._normalizedHumanBones.humanBones;
+  }
+  get normalizedHumanBonesRoot() {
+    return this._normalizedHumanBones.root;
+  }
+  /**
+   * Return a raw {@link VRMHumanBone} bound to a specified {@link VRMHumanBoneName}.
+   *
+   * @param name Name of the bone you want
+   */
+  getRawBone(name) {
+    return this._rawHumanBones.getBone(name);
+  }
+  /**
+   * Return a normalized {@link VRMHumanBone} bound to a specified {@link VRMHumanBoneName}.
+   *
+   * @param name Name of the bone you want
+   */
+  getNormalizedBone(name) {
+    return this._normalizedHumanBones.getBone(name);
+  }
+  /**
+   * Return a raw bone as a `THREE.Object3D` bound to a specified {@link VRMHumanBoneName}.
+   *
+   * @param name Name of the bone you want
+   */
+  getRawBoneNode(name) {
+    return this._rawHumanBones.getBoneNode(name);
+  }
+  /**
+   * Return a normalized bone as a `THREE.Object3D` bound to a specified {@link VRMHumanBoneName}.
+   *
+   * @param name Name of the bone you want
+   */
+  getNormalizedBoneNode(name) {
+    return this._normalizedHumanBones.getBoneNode(name);
+  }
+  getBoneEntity(name) {
+    var _a;
+    return ((_a = this._rawHumanBones.humanBones[name]) == null ? void 0 : _a.entity) || null;
+  }
+  /**
+   * Update the humanoid component.
+   *
+   * If {@link autoUpdateHumanBones} is `true`, it transfers the pose of normalized human bones to raw human bones.
+   */
+  update() {
+    if (this.autoUpdateHumanBones) {
+      this._normalizedHumanBones.update();
+    }
+  }
+}
+function createVRMHumanBones(schemaHumanoid, glbAsset, entity) {
+  const schemaHumanBones = schemaHumanoid.humanBones;
+  const humanBones = {};
+  if (schemaHumanoid.humanBones != null) {
+    Object.entries(schemaHumanBones).map(([, schemaHumanBone]) => {
+      var _a;
+      let boneName = schemaHumanBone.bone;
+      const index = schemaHumanBone.node;
+      if (boneName == null || index == null) {
+        return;
+      }
+      const node = glbAsset.resource.data.nodes[index];
+      if (node == null) {
+        console.warn(
+          `A glTF node bound to the humanoid bone ${boneName} (index = ${index}) does not exist`
+        );
+        return;
+      }
+      humanBones[boneName] = {
+        node,
+        entity: ((_a = entity.findByTag(`node_${index}`)) == null ? void 0 : _a[0]) || null
+      };
+    });
+  }
+  return humanBones;
+}
+function createVRMCHumanBones(schemaHumanoid, glbAsset, entity) {
+  var _a;
+  const humanBones = {};
+  const existsPreviousThumbName = schemaHumanoid.humanBones.leftThumbIntermediate != null || schemaHumanoid.humanBones.rightThumbIntermediate != null;
+  if (schemaHumanoid.humanBones) {
+    for (const property in schemaHumanoid.humanBones) {
+      let boneName = property;
+      const index = schemaHumanoid.humanBones[property].node;
+      const node = glbAsset.resource.data.nodes[index];
+      if (existsPreviousThumbName) {
+        const thumbBoneName = thumbBoneNameMap[boneName];
+        if (thumbBoneName != null) {
+          boneName = thumbBoneName;
+        }
+      }
+      if (node == null) {
+        console.warn(
+          `A glTF node bound to the humanoid bone ${boneName} (index = ${index}) does not exist`
+        );
+        return null;
+      }
+      humanBones[boneName] = {
+        node,
+        entity: ((_a = entity.findByTag(`node_${index}`)) == null ? void 0 : _a[0]) || null
+      };
+    }
+  }
+  return humanBones;
+}
+function createFormattedVRMHumanoid(pcRef, vrmAsset, renderEntity, options) {
+  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
+  const VRM = (_b = (_a = vrmAsset.resource.data.gltf) == null ? void 0 : _a.extensions) == null ? void 0 : _b.VRM;
+  const VRMC_vrm = (_d = (_c = vrmAsset.resource.data.gltf) == null ? void 0 : _c.extensions) == null ? void 0 : _d.VRMC_vrm;
+  if (!VRM && !VRMC_vrm) {
+    console.warn("CreateFormattedVRMHumanoid: Please check. It is not a vrm avatar.");
+    return null;
+  }
+  let humanBones = null;
+  if (VRM) {
+    const schemaHumanoid = (_g = (_f = (_e = vrmAsset.resource.data.gltf) == null ? void 0 : _e.extensions) == null ? void 0 : _f.VRM) == null ? void 0 : _g.humanoid;
+    humanBones = createVRMHumanBones(schemaHumanoid, vrmAsset, renderEntity);
+  } else if (VRMC_vrm) {
+    const specVersion = VRMC_vrm.specVersion;
+    if (!POSSIBLE_SPEC_VERSIONS.has(specVersion)) {
+      console.warn(`Unknown VRMC_vrm specVersion "${specVersion}"`);
+      return null;
+    }
+    const schemaHumanoid = (_j = (_i = (_h = vrmAsset.resource.data.gltf) == null ? void 0 : _h.extensions) == null ? void 0 : _i.VRMC_vrm) == null ? void 0 : _j.humanoid;
+    humanBones = createVRMCHumanBones(schemaHumanoid, vrmAsset, renderEntity);
+  }
+  if (humanBones) {
+    const autoUpdateHumanBones = !!(options == null ? void 0 : options.autoUpdateHumanBones);
+    const humanoid = new VRMHumanoid(pcRef, humanBones, { autoUpdateHumanBones });
+    return humanoid;
+  }
+  return null;
+}
 const loadGlbContainerFromAsset = function(pcRef, glbBinAsset, options, assetName, callback, assignApp) {
   const app = assignApp;
   if (!app) {
@@ -2130,54 +2175,65 @@ class GLTFLoader {
   }
   async parse(source, name = "Model", options = void 0, setting = {}, needAddTags = true) {
     const plugins = [];
-    return new Promise((resolve, reject) => {
-      const parsedCallBack = (err, asset) => {
-        if (err) {
-          this.loading = false;
-          reject(`GLTFLoader Error: ${err}`);
-        }
-        __privateGet(this, _pluginsCallbacks).forEach((createPlugin) => {
-          const plugin = createPlugin(asset);
-          plugins.push(plugin);
-        });
-        const assetData = asset.resource.data;
-        if (needAddTags) {
-          __privateMethod(this, _addEssentialTags, addEssentialTags_fn).call(this, assetData, plugins);
-        }
-        const renderEntity = asset.resource.instantiateRenderEntity(setting);
-        const rootEntity = new this._pcRef.Entity(name, this.app);
-        if (renderEntity.name !== "Room Objects" && name === "Objects") {
-          const rootObjectEntity = new this._pcRef.Entity("Room Objects");
-          rootObjectEntity.addChild(renderEntity);
-          rootEntity.addChild(rootObjectEntity);
-        } else {
-          rootEntity.addChild(renderEntity);
-        }
-        plugins.forEach((plugin) => {
-          if (plugin.instantiated)
-            plugin.instantiated(rootEntity);
-        });
-        this.loading = false;
-        resolve({ entity: rootEntity, asset });
-      };
-      if (!source) {
-        reject("GLTFLoader Error: Please pass the asset or url to parse.");
-      }
-      this.loading = true;
-      if (source instanceof this._pcRef.Asset) {
-        if (source.type === "container") {
-          if (source.loaded) {
-            parsedCallBack(null, source);
-          } else {
-            source.once("load", () => {
-              parsedCallBack(null, source);
-            });
-            if (!this.app.assets.get(source.id))
-              this.app.assets.add(source);
-            this.app.assets.load(source);
+    return new Promise(
+      (resolve, reject) => {
+        const parsedCallBack = (err, asset) => {
+          var _a, _b;
+          if (err) {
+            this.loading = false;
+            reject(`GLTFLoader Error: ${err}`);
           }
-        } else if (source.type === "binary") {
-          loadGlbContainerFromAsset(
+          __privateGet(this, _pluginsCallbacks).forEach((createPlugin) => {
+            const plugin = createPlugin(asset);
+            plugins.push(plugin);
+          });
+          const assetData = asset.resource.data;
+          if (needAddTags) {
+            __privateMethod(this, _addEssentialTags, addEssentialTags_fn).call(this, assetData, plugins);
+          }
+          const renderEntity = asset.resource.instantiateRenderEntity(setting);
+          const rootEntity = new this._pcRef.Entity(name, this.app);
+          rootEntity.addChild(renderEntity);
+          plugins.forEach((plugin) => {
+            if (plugin.instantiated)
+              plugin.instantiated(rootEntity);
+          });
+          this.loading = false;
+          const isV1Used = (_a = asset.resource.data.gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
+          const isV0Used = (_b = asset.resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
+          const version = isV1Used ? "v1" : isV0Used ? "v0" : null;
+          resolve({ entity: rootEntity, asset, version });
+        };
+        if (!source) {
+          reject("GLTFLoader Error: Please pass the asset or url to parse.");
+        }
+        this.loading = true;
+        if (source instanceof this._pcRef.Asset) {
+          if (source.type === "container") {
+            if (source.loaded) {
+              parsedCallBack(null, source);
+            } else {
+              source.once("load", () => {
+                parsedCallBack(null, source);
+              });
+              if (!this.app.assets.get(source.id))
+                this.app.assets.add(source);
+              this.app.assets.load(source);
+            }
+          } else if (source.type === "binary") {
+            loadGlbContainerFromAsset(
+              this._pcRef,
+              source,
+              options,
+              name,
+              parsedCallBack.bind(this),
+              this.app
+            );
+          } else {
+            reject("GLTFLoader Error: Please pass available asset or url to parse.");
+          }
+        } else {
+          loadGlbContainerFromUrl(
             this._pcRef,
             source,
             options,
@@ -2185,20 +2241,9 @@ class GLTFLoader {
             parsedCallBack.bind(this),
             this.app
           );
-        } else {
-          reject("GLTFLoader Error: Please pass available asset or url to parse.");
         }
-      } else {
-        loadGlbContainerFromUrl(
-          this._pcRef,
-          source,
-          options,
-          name,
-          parsedCallBack.bind(this),
-          this.app
-        );
       }
-    });
+    );
   }
   // Register Plugin to loader
   register(name, callback) {

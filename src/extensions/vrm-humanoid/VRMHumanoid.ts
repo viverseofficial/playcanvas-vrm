@@ -4,12 +4,16 @@ import { VRMRig } from './VRMRig';
 import { VRMHumanBones, VRMHumanBoneName } from './vrm-humanoid';
 
 export class VRMHumanoid {
-  private _humanBones: Partial<VRMHumanBones>;
+  public autoUpdateHumanBones: boolean;
   private _rawHumanBones: VRMRig;
   private _normalizedHumanBones: VRMHumanoidRig;
 
-  constructor(pcRef: typeof pc, humanBones: Partial<VRMHumanBones>) {
-    this._humanBones = humanBones;
+  constructor(
+    pcRef: typeof pc,
+    humanBones: Partial<VRMHumanBones>,
+    options?: { autoUpdateHumanBones?: boolean },
+  ) {
+    this.autoUpdateHumanBones = options?.autoUpdateHumanBones ?? true;
     this._rawHumanBones = new VRMRig(humanBones);
     this._normalizedHumanBones = new VRMHumanoidRig(pcRef, this._rawHumanBones);
   }
@@ -67,6 +71,17 @@ export class VRMHumanoid {
   }
 
   getBoneEntity(name: VRMHumanBoneName) {
-    return this._humanBones[name]?.entity || null;
+    return this._rawHumanBones.humanBones[name]?.entity || null;
+  }
+
+  /**
+   * Update the humanoid component.
+   *
+   * If {@link autoUpdateHumanBones} is `true`, it transfers the pose of normalized human bones to raw human bones.
+   */
+  public update(): void {
+    if (this.autoUpdateHumanBones) {
+      this._normalizedHumanBones.update();
+    }
   }
 }
