@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
-import avatarUrl from '/blue.vrm?url';
-import idleAnimUrl from '/Idle_anim.glb?url';
+import avatarUrl from '/rara.vrm?url';
+import idleAnimUrl from '/Test_+Z_axes+z.glb?url';
 import runAnimUrl from '/Run_anim.glb?url';
 import mocapAnimUrl from '/mocap-animation.gltf?url';
 
@@ -149,6 +149,7 @@ const createAvatar = () => {
           asset: pc.Asset;
           version: 'v0' | 'v1' | null;
         }) => {
+          console.log('YYY version?', version);
           const rootEntity = new pc.Entity('VRM_AVATAR_ROOT');
           rootEntity.addChild(renderRootEntity);
 
@@ -192,7 +193,6 @@ const createAvatar = () => {
               pc,
               animationAssets,
               convertedAsset,
-              animatedEntity,
               humanoid,
             );
 
@@ -213,7 +213,6 @@ const createAvatar = () => {
               pc,
               mocapAnimationAssets,
               convertedAsset,
-              animatedEntity,
               humanoid,
             );
 
@@ -266,7 +265,6 @@ const createAvatar = () => {
               pc,
               animAssets,
               convertedAsset,
-              animatedEntity,
               humanoid,
             );
 
@@ -345,6 +343,15 @@ const plane = new pc.Entity('Plane');
 app.root.addChild(plane);
 plane.addComponent('render', {
   type: 'plane',
+});
+
+// Front ball at +Z
+const ball = new pc.Entity('Ball');
+ball.setLocalScale(0.1, 0.1, 0.1);
+ball.setPosition(0, 0, 1);
+app.root.addChild(ball);
+ball.addComponent('render', {
+  type: 'sphere',
 });
 
 app.start();

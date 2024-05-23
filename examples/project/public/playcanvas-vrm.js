@@ -1,31 +1,18 @@
 /**
  * name: playcanvas-vrm
- * version: v1.0.3
+ * version: v1.1.0
  */
-var __accessCheck = (obj, member, msg) => {
-  if (!member.has(obj))
-    throw TypeError("Cannot " + msg);
+var N = (r, t, e) => {
+  if (!t.has(r))
+    throw TypeError("Cannot " + e);
 };
-var __privateGet = (obj, member, getter) => {
-  __accessCheck(obj, member, "read from private field");
-  return getter ? getter.call(obj) : member.get(obj);
-};
-var __privateAdd = (obj, member, value) => {
-  if (member.has(obj))
+var P = (r, t, e) => (N(r, t, "read from private field"), e ? e.call(r) : t.get(r)), I = (r, t, e) => {
+  if (t.has(r))
     throw TypeError("Cannot add the same private member more than once");
-  member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
-};
-var __privateSet = (obj, member, value, setter) => {
-  __accessCheck(obj, member, "write to private field");
-  setter ? setter.call(obj, value) : member.set(obj, value);
-  return value;
-};
-var __privateMethod = (obj, member, method) => {
-  __accessCheck(obj, member, "access private method");
-  return method;
-};
-var _pluginsCallbacks, _setExtensionsToNodes, setExtensionsToNodes_fn, _addEssentialTags, addEssentialTags_fn;
-const VRMHumanBoneList = [
+  t instanceof WeakSet ? t.add(r) : t.set(r, e);
+}, O = (r, t, e, i) => (N(r, t, "write to private field"), i ? i.call(r, e) : t.set(r, e), e);
+var D = (r, t, e) => (N(r, t, "access private method"), e);
+const E = [
   "hips",
   "spine",
   "chest",
@@ -81,8 +68,7 @@ const VRMHumanBoneList = [
   "rightLittleProximal",
   "rightLittleIntermediate",
   "rightLittleDistal"
-];
-const VRMHumanBoneParentMap = {
+], Y = {
   hips: null,
   spine: "hips",
   chest: "spine",
@@ -138,8 +124,7 @@ const VRMHumanBoneParentMap = {
   rightLittleProximal: "rightHand",
   rightLittleIntermediate: "rightLittleProximal",
   rightLittleDistal: "rightLittleIntermediate"
-};
-const VRMRigMap = {
+}, A = {
   hips: "hips",
   spine: "spine",
   chest: "chest",
@@ -192,14 +177,12 @@ const VRMRigMap = {
   rightLittleProximal: "rightLittleProximal",
   rightLittleIntermediate: "rightLittleIntermediate",
   rightLittleDistal: "rightLittleDistal"
-};
-const thumbBoneNameMap = {
+}, q = {
   leftThumbProximal: "leftThumbMetacarpal",
   leftThumbIntermediate: "leftThumbProximal",
   rightThumbProximal: "rightThumbMetacarpal",
   rightThumbIntermediate: "rightThumbProximal"
-};
-const v0v1PresetNameMap = {
+}, Z = {
   a: "aa",
   e: "ee",
   i: "ih",
@@ -217,8 +200,7 @@ const v0v1PresetNameMap = {
   blink_l: "blinkLeft",
   blink_r: "blinkRight",
   neutral: "neutral"
-};
-const VRMExpressionPresetName = {
+}, K = {
   Aa: "aa",
   Ih: "ih",
   Ou: "ou",
@@ -237,16 +219,13 @@ const VRMExpressionPresetName = {
   BlinkLeft: "blinkLeft",
   BlinkRight: "blinkRight",
   Neutral: "neutral"
-};
-const POSSIBLE_SPEC_VERSIONS = /* @__PURE__ */ new Set(["1.0", "1.0-beta"]);
-const v0ExpressionMaterialColorMap = {
+}, U = /* @__PURE__ */ new Set(["1.0", "1.0-beta"]), dt = {
   _Color: "color",
   _EmissionColor: "emissionColor",
   _ShadeColor: "shadeColor",
   _RimColor: "rimColor",
   _OutlineColor: "outlineColor"
-};
-const expressionMateriaPropertyNameMapMap = {
+}, pt = {
   isMeshStandardMaterial: {
     color: "color",
     emissionColor: "emissive"
@@ -262,278 +241,171 @@ const expressionMateriaPropertyNameMapMap = {
     rimColor: "parametricRimColorFactor",
     shadeColor: "shadeColorFactor"
   }
-};
-const VrmMapList = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, ut = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  POSSIBLE_SPEC_VERSIONS,
-  VRMExpressionPresetName,
-  VRMHumanBoneList,
-  VRMHumanBoneParentMap,
-  VRMRigMap,
-  expressionMateriaPropertyNameMapMap,
-  thumbBoneNameMap,
-  v0ExpressionMaterialColorMap,
-  v0v1PresetNameMap
-}, Symbol.toStringTag, { value: "Module" }));
-const createAnimTrack = (pcRef, animTrack) => {
-  const inputs = animTrack.inputs.map((input) => new pcRef.AnimData(input.components, input.data));
-  const outputs = animTrack.outputs.map(
-    (output) => new pcRef.AnimData(output.components, output.data)
-  );
-  const curves = animTrack.curves.map((curve) => {
-    const curvePaths = curve.paths.map((path) => {
-      const morphCurvePath = path;
+  POSSIBLE_SPEC_VERSIONS: U,
+  VRMExpressionPresetName: K,
+  VRMHumanBoneList: E,
+  VRMHumanBoneParentMap: Y,
+  VRMRigMap: A,
+  expressionMateriaPropertyNameMapMap: pt,
+  thumbBoneNameMap: q,
+  v0ExpressionMaterialColorMap: dt,
+  v0v1PresetNameMap: Z
+}, Symbol.toStringTag, { value: "Module" })), gt = (r, t) => {
+  const e = t.inputs.map((s) => new r.AnimData(s.components, s.data)), i = t.outputs.map(
+    (s) => new r.AnimData(s.components, s.data)
+  ), n = t.curves.map((s) => {
+    const o = s.paths.map((l) => {
+      const h = l;
       return {
-        component: morphCurvePath.component,
-        entityPath: [...morphCurvePath.entityPath],
-        propertyPath: [...morphCurvePath.propertyPath]
+        component: h.component,
+        entityPath: [...h.entityPath],
+        propertyPath: [...h.propertyPath]
       };
     });
-    return new pcRef.AnimCurve(curvePaths, curve.input, curve.output, curve.interpolation);
+    return new r.AnimCurve(o, s.input, s.output, s.interpolation);
   });
-  return new pcRef.AnimTrack(animTrack.name, animTrack.duration, inputs, outputs, curves);
-};
-const loadAnimation = (pcRef, animationAssets, entity, humanoid, {
-  vrmHipsHeight,
-  vrmHipsDeep,
-  motionHipsHeight,
-  version = "v0"
+  return new r.AnimTrack(t.name, t.duration, e, i, n);
+}, mt = (r, t, e, {
+  vrmHipsHeight: i,
+  vrmHipsDeep: n,
+  motionHipsHeight: s,
+  version: o = "v0"
 }) => {
-  const hipPositionOutputIndexes = {};
-  const scaleOutputIndexes = {};
-  new pcRef.Quat();
-  return animationAssets.map((animationAsset) => {
-    var _a;
-    const resource = animationAsset.asset.type === "container" ? (_a = animationAsset.asset.resource.animations[0]) == null ? void 0 : _a.resource : animationAsset.asset.resource;
-    if (resource) {
-      const animTrack = createAnimTrack(pcRef, resource);
-      let nodeMotionHipsHeight = 0;
-      if (animationAsset.asset.type === "container") {
-        const motionHipsNode = animationAsset.asset.resource.data.nodes.find(
-          (node) => node.name === VRMRigMap.hips
+  const l = {}, h = {};
+  return t.map((a) => {
+    var p;
+    const c = a.asset.type === "container" ? (p = a.asset.resource.animations[0]) == null ? void 0 : p.resource : a.asset.resource;
+    if (c) {
+      const d = gt(r, c);
+      let f = 0;
+      if (a.asset.type === "container") {
+        const u = a.asset.resource.data.nodes.find(
+          (g) => g.name === A.hips
         );
-        if (motionHipsNode) {
-          nodeMotionHipsHeight = motionHipsNode.getPosition().y;
-        }
+        u && (f = u.getPosition().y);
       }
-      motionHipsHeight = motionHipsHeight || nodeMotionHipsHeight || 0.855;
-      const hipsPositionScaleY = vrmHipsHeight / motionHipsHeight;
-      animTrack.curves.forEach((curve) => {
-        curve.paths.forEach((graph) => {
-          const morphCurvePath = graph;
-          const isPosition = morphCurvePath.propertyPath.find((path) => path === "localPosition");
-          const isHipsTarget = morphCurvePath.entityPath[morphCurvePath.entityPath.length - 1] === VRMRigMap["hips"];
-          if (isPosition && isHipsTarget && !hipPositionOutputIndexes[curve.output]) {
-            hipPositionOutputIndexes[curve.output] = true;
-          }
+      s = s || f || 0.855;
+      const _ = i / s;
+      return d.curves.forEach((u) => {
+        u.paths.forEach((g) => {
+          const x = g, M = x.propertyPath.find((w) => w === "localPosition"), m = x.entityPath[x.entityPath.length - 1] === A.hips;
+          M && m && !l[u.output] && (l[u.output] = !0);
         });
-      });
-      animTrack.curves.forEach((curve) => {
-        let isLocalScale = false;
-        curve.paths.forEach((graph) => {
-          const morphCurvePath = graph;
-          const arrangedEntityPath = morphCurvePath.entityPath.map((path) => {
-            var _a2;
-            const originalRigName = path;
-            const vrmBoneName = VRMRigMap[originalRigName];
-            const vrmNodeName = (_a2 = humanoid.getNormalizedBoneNode(vrmBoneName)) == null ? void 0 : _a2.name;
-            if (!vrmBoneName || !vrmNodeName) {
-              return path;
-            }
-            return vrmNodeName;
+      }), d.curves.forEach((u) => {
+        let g = !1;
+        u.paths.forEach((x) => {
+          const M = x, m = M.entityPath.map((w) => {
+            var v;
+            const B = A[w], T = (v = e.getNormalizedBoneNode(B)) == null ? void 0 : v.name;
+            return !B || !T ? w : T;
           });
-          morphCurvePath.entityPath = arrangedEntityPath;
-          if (morphCurvePath.propertyPath.find((path) => path === "localScale")) {
-            isLocalScale = true;
-          }
-        });
-        if (isLocalScale && !scaleOutputIndexes[curve.output]) {
-          scaleOutputIndexes[curve.output] = true;
-        }
-      });
-      animTrack.outputs.forEach((output, outputIndex) => {
-        const isScaleOutput = scaleOutputIndexes[outputIndex];
-        const outputCurve = animTrack.curves.find((curve) => curve.output === outputIndex);
-        if (outputCurve) {
-          const path = outputCurve.paths[0];
-          const entityPaths = path.entityPath;
-          entityPaths[entityPaths.length - 1];
-        }
-        if (output.components === 3) {
-          if (!isScaleOutput) {
-            const newData = output.data.map((v, index) => {
-              let value = v;
-              if (version === "v1" && index % 3 !== 1) {
-                value *= -1;
-              }
-              if (hipPositionOutputIndexes[outputIndex] && index % 3 === 1) {
-                if (animationAsset.removeY) {
-                  return vrmHipsHeight;
-                }
-                if (animationAsset.removeUpperY && v * hipsPositionScaleY > vrmHipsHeight) {
-                  return vrmHipsHeight;
-                }
-              }
-              if (hipPositionOutputIndexes[outputIndex] && index % 3 === 2) {
-                if (animationAsset.removeZ) {
-                  return vrmHipsDeep;
-                }
-              }
-              return value * hipsPositionScaleY;
+          M.entityPath = m, M.propertyPath.find((w) => w === "localScale") && (g = !0);
+        }), g && !h[u.output] && (h[u.output] = !0);
+      }), d.outputs.forEach((u, g) => {
+        const x = h[g];
+        if (u.components === 3) {
+          if (!x) {
+            const M = u.data.map((m, w) => {
+              let y = m;
+              return o === "v0" && w % 3 !== 1 && (y *= -1), l[g] && w % 3 === 1 && (a.removeY || a.removeUpperY && m * _ > i) ? i : l[g] && w % 3 === 2 && a.removeZ ? n : y * _;
             });
-            output._data = newData;
+            u._data = M;
           }
-        } else if (output.components === 4) {
-          const newData = output.data.map((v, index) => {
-            if (version === "v1" && index % 2 === 0) {
-              return -v;
-            } else {
-              return v;
-            }
-          });
-          output._data = newData;
+        } else if (u.components === 4) {
+          const M = u.data.map((m, w) => o === "v0" && w % 2 === 0 ? -m : m);
+          u._data = M;
         }
-      });
-      return {
-        name: animationAsset.stateName,
-        resource: animTrack,
-        ...animationAsset.setting && {
-          setting: animationAsset.setting
+      }), {
+        name: a.stateName,
+        resource: d,
+        ...a.setting && {
+          setting: a.setting
         }
       };
-    } else {
-      console.error(
-        `AddVrmAnimation: loadAnimation can't find available resource from ${animationAsset.stateName} asset.`
-      );
-      return null;
-    }
-  }).filter((animationAsset) => animationAsset);
-};
-const createVRMAnimation = (pcRef, animationAssets, asset, entity, humanoid, motionHipsHeight) => {
-  var _a, _b, _c;
-  if (!humanoid) {
-    console.error('CreateAnimation: Please provide "humanoid" or "asset and entity".');
-    return null;
-  }
-  const isV1Used = (_a = asset.resource.data.gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
-  const isV0Used = (_b = asset.resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
-  const version = isV1Used ? "v1" : isV0Used ? "v0" : null;
-  const vrmHipsPosition = ((_c = humanoid.rawHumanBones.hips) == null ? void 0 : _c.node.getPosition()) || new pcRef.Vec3();
-  const vrmHipsY = vrmHipsPosition.y;
-  const vrmHipsHeight = Math.abs(vrmHipsY - 0);
-  const vrmHipsZ = vrmHipsPosition.z;
-  const vrmHipsDeep = Math.abs(vrmHipsZ - 0);
-  return loadAnimation(pcRef, animationAssets, entity, humanoid, {
-    vrmHipsHeight,
-    vrmHipsDeep,
-    ...motionHipsHeight && { motionHipsHeight },
-    ...version && { version }
+    } else
+      return console.error(
+        `AddVrmAnimation: loadAnimation can't find available resource from ${a.stateName} asset.`
+      ), null;
+  }).filter((a) => a);
+}, ft = (r, t, e, i, n) => {
+  var f, _, u;
+  if (!i)
+    return console.error('CreateAnimation: Please provide "humanoid" or "asset and entity".'), null;
+  const s = (f = e.resource.data.gltf.extensions) == null ? void 0 : f.VRMC_vrm, o = (_ = e.resource.data.gltf.extensions) == null ? void 0 : _.VRM, l = s ? "v1" : o ? "v0" : null, h = ((u = i.rawHumanBones.hips) == null ? void 0 : u.node.getPosition()) || new r.Vec3(), a = h.y, c = Math.abs(a - 0), p = h.z, d = Math.abs(p - 0);
+  return mt(r, t, i, {
+    vrmHipsHeight: c,
+    vrmHipsDeep: d,
+    ...n && { motionHipsHeight: n },
+    ...l && { version: l }
   });
-};
-const assignAnimation = (entity, {
-  name,
-  resource,
-  setting
+}, _t = (r, {
+  name: t,
+  resource: e,
+  setting: i
 }) => {
-  if (entity.anim) {
-    entity.anim.assignAnimation(
-      name,
-      resource,
-      setting && setting.layerName !== void 0 ? setting.layerName : void 0,
-      setting && setting.speed !== void 0 ? setting.speed : 1,
-      setting && setting.loop !== void 0 ? setting.loop : true
-    );
-  } else {
-    console.error("assignAnimation: Please set the anim component on the entity.");
-  }
-};
-const VrmAnimation = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  r.anim ? r.anim.assignAnimation(
+    t,
+    e,
+    i && i.layerName !== void 0 ? i.layerName : void 0,
+    i && i.speed !== void 0 ? i.speed : 1,
+    i && i.loop !== void 0 ? i.loop : !0
+  ) : console.error("assignAnimation: Please set the anim component on the entity.");
+}, xt = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  assignAnimation,
-  createVRMAnimation
+  assignAnimation: _t,
+  createVRMAnimation: ft
 }, Symbol.toStringTag, { value: "Module" }));
-class Timer {
-  constructor(name) {
-    this.name = name;
-    this._timers = {};
-    this._nextFreeId = 0;
-    this.timer = {};
-    this.handle = null;
-    this.isPausing = true;
+class F {
+  constructor(t) {
+    this.name = t, this._timers = {}, this._nextFreeId = 0, this.timer = {}, this.handle = null, this.isPausing = !0;
   }
-  add(durationSecs, callback, scope) {
-    if (durationSecs > 0) {
-      this.isPausing = false;
-      const handle = { id: this._nextFreeId };
+  add(t, e, i) {
+    if (t > 0) {
+      this.isPausing = !1;
+      const n = { id: this._nextFreeId };
       this._timers[this._nextFreeId] = {
-        secsLeft: durationSecs,
-        callback,
-        scope
-      };
-      this._nextFreeId += 1;
-      this.handle = handle;
-    } else {
+        secsLeft: t,
+        callback: e,
+        scope: i
+      }, this._nextFreeId += 1, this.handle = n;
+    } else
       this.handle = null;
-    }
   }
   pause() {
-    if (this.handle) {
-      this.isPausing = true;
-      if (this.handle.id) {
-        delete this._timers[this.handle.id];
-      }
-    }
+    this.handle && (this.isPausing = !0, this.handle.id && delete this._timers[this.handle.id]);
   }
-  update(dt) {
-    for (let property in this._timers) {
-      const targetTimer = this._timers[property];
-      if (targetTimer.secsLeft !== void 0) {
-        targetTimer.secsLeft -= dt;
-        if (targetTimer.secsLeft <= 0) {
-          delete this._timers[property];
-          if (targetTimer.callback)
-            targetTimer.callback.call(targetTimer.scope);
-        }
-      }
+  update(t) {
+    for (let e in this._timers) {
+      const i = this._timers[e];
+      i.secsLeft !== void 0 && (i.secsLeft -= t, i.secsLeft <= 0 && (delete this._timers[e], i.callback && i.callback.call(i.scope)));
     }
   }
 }
-function saturate(value) {
-  return Math.max(Math.min(value, 1), 0);
+function tt(r) {
+  return Math.max(Math.min(r, 1), 0);
 }
-function getRandomInt(min, max) {
-  min = Math.ceil(min);
-  max = Math.floor(max);
-  return Math.floor(Math.random() * (max - min) + min);
+function Mt(r, t) {
+  return r = Math.ceil(r), t = Math.floor(t), Math.floor(Math.random() * (t - r) + r);
 }
-function getRandom(min, max) {
-  return Math.random() * (max - min) + min;
+function L(r, t) {
+  return Math.random() * (t - r) + r;
 }
-function fromArray(vec3, array, offset = 0) {
-  vec3.x = array[offset];
-  vec3.y = array[offset + 1];
-  vec3.z = array[offset + 2];
-  return vec3;
+function k(r, t, e = 0) {
+  return r.x = t[e], r.y = t[e + 1], r.z = t[e + 2], r;
 }
-function localToWorld(vector, matrixWorld) {
-  return vector.copy(matrixWorld.transformPoint(vector));
+function $(r, t) {
+  return r.copy(t.transformPoint(r));
 }
-class Matrix4InverseCache {
-  constructor(pcRef, matrix) {
-    this._pcRef = pcRef;
-    this.matrix = matrix;
-    this._inverseCache = new this._pcRef.Mat4();
-    this._shouldUpdateInverse = true;
-    const handler = {
+class wt {
+  constructor(t, e) {
+    this._pcRef = t, this.matrix = e, this._inverseCache = new this._pcRef.Mat4(), this._shouldUpdateInverse = !0;
+    const i = {
       // @ts-ignore
-      set: (obj, prop, newVal) => {
-        this._shouldUpdateInverse = true;
-        obj[prop] = newVal;
-        return true;
-      }
+      set: (n, s, o) => (this._shouldUpdateInverse = !0, n[s] = o, !0)
     };
-    this._originalElements = matrix.data;
-    this.matrix.set(new Proxy(Array.from(matrix.data), handler));
+    this._originalElements = e.data, this.matrix.set(new Proxy(Array.from(e.data), i));
   }
   /**
    * Inverse of given matrix.
@@ -541,622 +413,390 @@ class Matrix4InverseCache {
    * Make sure copying this before mutate this.
    */
   get inverse() {
-    if (this._shouldUpdateInverse) {
-      this._inverseCache.copy(this.matrix);
-      mat4InvertCompat(this._pcRef, this._inverseCache);
-      this._shouldUpdateInverse = false;
-    }
-    return this._inverseCache;
+    return this._shouldUpdateInverse && (this._inverseCache.copy(this.matrix), et(this._pcRef, this._inverseCache), this._shouldUpdateInverse = !1), this._inverseCache;
   }
   revert() {
     this.matrix.set(Array.from(this._originalElements));
   }
 }
-function mat4InvertCompat(pcRef, target) {
-  const _matA = new pcRef.Mat4();
-  if (target.invert) {
-    target.invert();
-  } else {
-    target.getInverse(_matA.copy(target));
-  }
-  return target;
+function et(r, t) {
+  const e = new r.Mat4();
+  return t.invert ? t.invert() : t.getInverse(e.copy(t)), t;
 }
-function setFromUnitVectors(quat, vFrom, vTo) {
-  let r = vFrom.dot(vTo) + 1;
-  if (r < Number.EPSILON) {
-    r = 0;
-    if (Math.abs(vFrom.x) > Math.abs(vFrom.z)) {
-      quat.x = -vFrom.y;
-      quat.y = vFrom.x;
-      quat.z = 0;
-      quat.w = r;
-    } else {
-      quat.x = 0;
-      quat.y = -vFrom.z;
-      quat.z = vFrom.y;
-      quat.w = r;
-    }
-  } else {
-    quat.x = vFrom.y * vTo.z - vFrom.z * vTo.y;
-    quat.y = vFrom.z * vTo.x - vFrom.x * vTo.z;
-    quat.z = vFrom.x * vTo.y - vFrom.y * vTo.x;
-    quat.w = r;
-  }
-  return quat.normalize();
+function yt(r, t, e) {
+  let i = t.dot(e) + 1;
+  return i < Number.EPSILON ? (i = 0, Math.abs(t.x) > Math.abs(t.z) ? (r.x = -t.y, r.y = t.x, r.z = 0, r.w = i) : (r.x = 0, r.y = -t.z, r.z = t.y, r.w = i)) : (r.x = t.y * e.z - t.z * e.y, r.y = t.z * e.x - t.x * e.z, r.z = t.x * e.y - t.y * e.x, r.w = i), r.normalize();
 }
-class VRMExpressionManager {
+class j {
   constructor() {
-    this.managerName = "expression";
-    this.blinkExpressionNames = ["blink", "blinkLeft", "blinkRight"];
-    this.lookAtExpressionNames = ["lookLeft", "lookRight", "lookUp", "lookDown"];
-    this.mouthExpressionNames = ["aa", "ee", "ih", "oh", "ou"];
-    this.emotionExpressionNames = ["neutral", "happy", "angry", "sad", "relaxed", "surprised"];
-    this._expressions = [];
-    this._expressionMap = {};
-    this.talkExpressions = [];
-    this.previousTalkName = "";
-    this.isBackToBlink = false;
+    this.managerName = "expression", this.blinkExpressionNames = ["blink", "blinkLeft", "blinkRight"], this.lookAtExpressionNames = ["lookLeft", "lookRight", "lookUp", "lookDown"], this.mouthExpressionNames = ["aa", "ee", "ih", "oh", "ou"], this.emotionExpressionNames = ["neutral", "happy", "angry", "sad", "relaxed", "surprised"], this._expressions = [], this._expressionMap = {}, this.talkExpressions = [], this.previousTalkName = "", this.isBackToBlink = !1;
   }
-  registerExpression(expression) {
-    this._expressions.push(expression);
-    this._expressionMap[expression.expressionName] = expression;
+  registerExpression(t) {
+    this._expressions.push(t), this._expressionMap[t.expressionName] = t;
   }
-  getExpression(name) {
-    return this._expressionMap[name] ?? null;
+  getExpression(t) {
+    return this._expressionMap[t] ?? null;
   }
   getTalkingExpression() {
-    const aExpression = this.getExpression("aa");
-    const eExpression = this.getExpression("ee");
-    const iExpression = this.getExpression("ih");
-    const oExpression = this.getExpression("oh");
-    const uExpression = this.getExpression("ou");
-    return [aExpression, eExpression, iExpression, oExpression, uExpression].filter(
-      (expression) => expression
+    const t = this.getExpression("aa"), e = this.getExpression("ee"), i = this.getExpression("ih"), n = this.getExpression("oh"), s = this.getExpression("ou");
+    return [t, e, i, n, s].filter(
+      (o) => o
     );
   }
-  setValue(name, weight) {
-    const expression = this.getExpression(name);
-    if (expression) {
-      expression.weight = saturate(weight);
-    }
+  setValue(t, e) {
+    const i = this.getExpression(t);
+    i && (i.weight = tt(e));
   }
   // Specific expression animations
-  startBlink(blinkInterval, config) {
-    const blinkConfig = config || {
-      times: [0, blinkInterval - 0.2, blinkInterval - 0.1, blinkInterval],
+  startBlink(t, e) {
+    const i = e || {
+      times: [0, t - 0.2, t - 0.1, t],
       values: [0, 0, 1, 0]
-    };
-    const expression = this.getExpression("blink");
-    if (!expression)
-      return;
-    expression.animatedMorph = blinkConfig;
-    expression.isPausing = false;
-    this.clearAllAppliedWeight(true);
+    }, n = this.getExpression("blink");
+    n && (n.animatedMorph = i, n.isPausing = !1, this.clearAllAppliedWeight(!0));
   }
   stopBlink() {
-    const expression = this.getExpression("blink");
-    if (!expression)
-      return;
-    expression.stop();
+    const t = this.getExpression("blink");
+    t && t.stop();
   }
-  startEmotion(name, config) {
-    const emotionConfig = config || {
+  startEmotion(t, e) {
+    const i = e || {
       times: [0, 1, 2.5, 3],
       values: [0, 1, 1, 0]
-    };
-    const expression = this.getExpression(name);
-    if (!expression)
-      return;
-    expression.animatedMorph = emotionConfig;
-    expression.isPausing = false;
-    this.clearAllAppliedWeight(true);
+    }, n = this.getExpression(t);
+    n && (n.animatedMorph = i, n.isPausing = !1, this.clearAllAppliedWeight(!0));
   }
   getNextTalking() {
     if (this.talkExpressions.length === 0)
       return null;
-    const expressionIndex = getRandomInt(0, this.talkExpressions.length - 1);
-    if (this.talkExpressions[expressionIndex].name === this.previousTalkName && this.talkExpressions.length > 1) {
-      return this.getNextTalking();
-    }
-    this.previousTalkName = this.talkExpressions[expressionIndex].expressionName;
-    return this.talkExpressions[expressionIndex];
+    const t = Mt(0, this.talkExpressions.length - 1);
+    return this.talkExpressions[t].name === this.previousTalkName && this.talkExpressions.length > 1 ? this.getNextTalking() : (this.previousTalkName = this.talkExpressions[t].expressionName, this.talkExpressions[t]);
   }
-  startTalking(times, values) {
-    if (this.talkExpressions.length === 0) {
-      this.talkExpressions = this.getTalkingExpression();
-    }
-    const talkExpression = this.getNextTalking();
-    if (!talkExpression)
-      return;
-    talkExpression.animatedMorph = {
-      times,
-      values
-    };
+  startTalking(t, e) {
+    this.talkExpressions.length === 0 && (this.talkExpressions = this.getTalkingExpression());
+    const i = this.getNextTalking();
+    i && (i.animatedMorph = {
+      times: t,
+      values: e
+    });
   }
   stopTalking() {
-    this.talkExpressions.forEach((expression) => {
-      if (expression)
-        expression.stop();
+    this.talkExpressions.forEach((t) => {
+      t && t.stop();
     });
   }
-  updateBlendShape(dt) {
-    this._expressions.forEach((expression) => {
-      expression.updateBlendShape(dt);
+  updateBlendShape(t) {
+    this._expressions.forEach((e) => {
+      e.updateBlendShape(t);
     });
   }
-  clearAllAppliedWeight(isAllToZero) {
-    this._expressions.forEach((expression) => {
-      expression.clearAppliedWeight(isAllToZero);
+  clearAllAppliedWeight(t) {
+    this._expressions.forEach((e) => {
+      e.clearAppliedWeight(t);
     });
   }
-  update(dt) {
-    this.updateBlendShape(dt);
-    const weightMultipliers = this._calculateWeightMultipliers();
-    this.clearAllAppliedWeight();
-    this.isBackToBlink = true;
-    this._expressions.forEach((expression) => {
-      let multiplier = 1;
-      const name = expression.expressionName;
-      if (this.blinkExpressionNames.indexOf(name) !== -1) {
-        multiplier *= weightMultipliers.blink;
-      }
-      if (this.lookAtExpressionNames.indexOf(name) !== -1) {
-        multiplier *= weightMultipliers.lookAt;
-      }
-      if (this.mouthExpressionNames.indexOf(name) !== -1) {
-        multiplier *= weightMultipliers.mouth;
-      }
-      expression.applyWeight({ multiplier });
-      if (expression.weight !== 0) {
-        this.isBackToBlink = false;
-      }
+  update(t) {
+    this.updateBlendShape(t);
+    const e = this._calculateWeightMultipliers();
+    this.clearAllAppliedWeight(), this.isBackToBlink = !0, this._expressions.forEach((i) => {
+      let n = 1;
+      const s = i.expressionName;
+      this.blinkExpressionNames.indexOf(s) !== -1 && (n *= e.blink), this.lookAtExpressionNames.indexOf(s) !== -1 && (n *= e.lookAt), this.mouthExpressionNames.indexOf(s) !== -1 && (n *= e.mouth), i.applyWeight({ multiplier: n }), i.weight !== 0 && (this.isBackToBlink = !1);
     });
   }
   /**
    * Calculate sum of override amounts to see how much we should multiply weights of certain expressions.
    */
   _calculateWeightMultipliers() {
-    let blink = 1;
-    let lookAt = 1;
-    let mouth = 1;
-    this._expressions.forEach((expression) => {
-      blink -= expression.overrideBlinkAmount;
-      lookAt -= expression.overrideLookAtAmount;
-      mouth -= expression.overrideMouthAmount;
-    });
-    blink = Math.max(0, blink);
-    lookAt = Math.max(0, lookAt);
-    mouth = Math.max(0, mouth);
-    return { blink, lookAt, mouth };
+    let t = 1, e = 1, i = 1;
+    return this._expressions.forEach((n) => {
+      t -= n.overrideBlinkAmount, e -= n.overrideLookAtAmount, i -= n.overrideMouthAmount;
+    }), t = Math.max(0, t), e = Math.max(0, e), i = Math.max(0, i), { blink: t, lookAt: e, mouth: i };
   }
 }
-class VRMExpression {
-  constructor(expressionName) {
-    this._binds = [];
-    this.overrideLookAt = "none";
-    this.overrideMouth = "none";
-    this.name = `VRMExpression_${expressionName}`;
-    this.expressionName = expressionName;
-    this.type = "VRMExpression";
-    this.isBinary = false;
-    this.weight = 0;
-    this._animatedMorph = null;
-    this.time = 0;
-    this.currentValue = 0;
-    this.currentTimeIndex = null;
-    this.isPausing = false;
-    this._binds = [];
-    this.overrideBlink = "none";
-    this.overrideLookAt = "none";
-    this.overrideMouth = "none";
+class J {
+  constructor(t) {
+    this._binds = [], this.overrideLookAt = "none", this.overrideMouth = "none", this.name = `VRMExpression_${t}`, this.expressionName = t, this.type = "VRMExpression", this.isBinary = !1, this.weight = 0, this._animatedMorph = null, this.time = 0, this.currentValue = 0, this.currentTimeIndex = null, this.isPausing = !1, this._binds = [], this.overrideBlink = "none", this.overrideLookAt = "none", this.overrideMouth = "none";
   }
   get animatedMorph() {
     return this._animatedMorph;
   }
-  set animatedMorph(input) {
-    this.resetAnimatedMorph();
-    this._animatedMorph = input;
+  set animatedMorph(t) {
+    this.resetAnimatedMorph(), this._animatedMorph = t;
   }
-  addBind(bind) {
-    this._binds.push(bind);
+  addBind(t) {
+    this._binds.push(t);
   }
-  applyWeight({ multiplier }) {
-    let actualWeight = this.isBinary ? this.weight <= 0.5 ? 0 : 1 : this.weight;
-    actualWeight *= multiplier ?? 1;
-    this._binds.forEach((bind) => bind.applyWeight(actualWeight));
+  applyWeight({ multiplier: t }) {
+    let e = this.isBinary ? this.weight <= 0.5 ? 0 : 1 : this.weight;
+    e *= t ?? 1, this._binds.forEach((i) => i.applyWeight(e));
   }
   /**
    * Clear previously assigned blend shapes.
    */
-  clearAppliedWeight(isAllToZero) {
-    if (isAllToZero)
-      this.weight = 0;
-    this._binds.forEach((bind) => bind.clearAppliedWeight());
+  clearAppliedWeight(t) {
+    t && (this.weight = 0), this._binds.forEach((e) => e.clearAppliedWeight());
   }
   /**
    * A value represents how much it should override blink expressions.
    * `0.0` == no override at all, `1.0` == completely block the expressions.
    */
   get overrideBlinkAmount() {
-    if (this.overrideBlink === "block") {
-      return 0 < this.weight ? 1 : 0;
-    } else if (this.overrideBlink === "blend") {
-      return this.weight;
-    } else {
-      return 0;
-    }
+    return this.overrideBlink === "block" ? 0 < this.weight ? 1 : 0 : this.overrideBlink === "blend" ? this.weight : 0;
   }
   /**
    * A value represents how much it should override lookAt expressions.
    * `0.0` == no override at all, `1.0` == completely block the expressions.
    */
   get overrideLookAtAmount() {
-    if (this.overrideLookAt === "block") {
-      return 0 < this.weight ? 1 : 0;
-    } else if (this.overrideLookAt === "blend") {
-      return this.weight;
-    } else {
-      return 0;
-    }
+    return this.overrideLookAt === "block" ? 0 < this.weight ? 1 : 0 : this.overrideLookAt === "blend" ? this.weight : 0;
   }
   /**
    * A value represents how much it should override mouth expressions.
    * `0.0` == no override at all, `1.0` == completely block the expressions.
    */
   get overrideMouthAmount() {
-    if (this.overrideMouth === "block") {
-      return 0 < this.weight ? 1 : 0;
-    } else if (this.overrideMouth === "blend") {
-      return this.weight;
-    } else {
-      return 0;
-    }
+    return this.overrideMouth === "block" ? 0 < this.weight ? 1 : 0 : this.overrideMouth === "blend" ? this.weight : 0;
   }
-  setValue(weight) {
-    this.currentValue = weight;
-    this.weight = saturate(weight);
+  setValue(t) {
+    this.currentValue = t, this.weight = tt(t);
   }
   resetAnimatedMorph() {
-    this.time = 0;
-    this._animatedMorph = null;
-    this.currentTimeIndex = null;
+    this.time = 0, this._animatedMorph = null, this.currentTimeIndex = null;
   }
   stop() {
     this.resetAnimatedMorph();
   }
   pause() {
-    this.isPausing = true;
+    this.isPausing = !0;
   }
   play() {
-    this.isPausing = false;
+    this.isPausing = !1;
   }
-  updateBlendShape(dt) {
+  updateBlendShape(t) {
     if (!this._animatedMorph || this.isPausing)
       return;
-    const { times, values } = this._animatedMorph;
+    const { times: e, values: i } = this._animatedMorph;
     if (this.time === 0 && this.currentTimeIndex === null) {
-      const initialValue = values[0];
-      this.setValue(initialValue);
+      const s = i[0];
+      this.setValue(s);
     }
-    if (this.time >= times[times.length - 1]) {
+    if (this.time >= e[e.length - 1]) {
       this.resetAnimatedMorph();
-      const lastValue = values[values.length - 1];
-      this.setValue(lastValue);
+      const s = i[i.length - 1];
+      this.setValue(s);
       return;
     }
-    this.time += dt;
-    const timeIndex = this.time < times[1] ? 0 : times.findIndex(
-      (_, index) => times[index - 1] < this.time && times[index + 1] > this.time
+    this.time += t;
+    const n = this.time < e[1] ? 0 : e.findIndex(
+      (s, o) => e[o - 1] < this.time && e[o + 1] > this.time
     );
-    if (timeIndex !== -1) {
-      if (this.currentTimeIndex !== timeIndex) {
-        this.currentValue = values[timeIndex];
-      }
-      this.currentTimeIndex = timeIndex;
-      const targetValue = values[this.currentTimeIndex + 1];
-      const duration = times[this.currentTimeIndex] - times[this.currentTimeIndex + 1];
-      const valueRange = values[this.currentTimeIndex] - values[this.currentTimeIndex + 1];
-      const eachSecondValue = valueRange / duration;
-      const newValue = this.currentValue + eachSecondValue * dt;
-      if (eachSecondValue > 0 && newValue >= targetValue || eachSecondValue < 0 && targetValue >= newValue) {
-        this.setValue(targetValue);
-      } else {
-        this.setValue(newValue);
-      }
+    if (n !== -1) {
+      this.currentTimeIndex !== n && (this.currentValue = i[n]), this.currentTimeIndex = n;
+      const s = i[this.currentTimeIndex + 1], o = e[this.currentTimeIndex] - e[this.currentTimeIndex + 1], h = (i[this.currentTimeIndex] - i[this.currentTimeIndex + 1]) / o, a = this.currentValue + h * t;
+      h > 0 && a >= s || h < 0 && s >= a ? this.setValue(s) : this.setValue(a);
     }
   }
 }
-class VRMExpressionMorphTargetBind {
+class G {
   constructor({
-    primitives,
-    targetIndex,
-    weight
+    primitives: t,
+    targetIndex: e,
+    weight: i
   }) {
-    this.primitives = primitives;
-    this.targetIndex = targetIndex;
-    this.weight = weight;
+    this.primitives = t, this.targetIndex = e, this.weight = i;
   }
-  applyWeight(weight) {
-    this.primitives.forEach((mesh) => {
-      var _a;
-      if (((_a = mesh.morphInstance) == null ? void 0 : _a.morph.targets[this.targetIndex]) != null) {
-        let currentWeight = mesh.morphInstance.getWeight(this.targetIndex);
-        mesh.morphInstance.setWeight(this.targetIndex, currentWeight += this.weight * weight);
+  applyWeight(t) {
+    this.primitives.forEach((e) => {
+      var i;
+      if (((i = e.morphInstance) == null ? void 0 : i.morph.targets[this.targetIndex]) != null) {
+        let n = e.morphInstance.getWeight(this.targetIndex);
+        e.morphInstance.setWeight(this.targetIndex, n += this.weight * t);
       }
     });
   }
   clearAppliedWeight() {
-    this.primitives.forEach((mesh) => {
-      var _a;
-      if (((_a = mesh.morphInstance) == null ? void 0 : _a.morph.targets[this.targetIndex]) != null) {
-        mesh.morphInstance.setWeight(this.targetIndex, 0);
-      }
+    this.primitives.forEach((t) => {
+      var e;
+      ((e = t.morphInstance) == null ? void 0 : e.morph.targets[this.targetIndex]) != null && t.morphInstance.setWeight(this.targetIndex, 0);
     });
   }
 }
-class VRMExpressionLoaderPlugin {
-  constructor(asset, meshInstances) {
-    this.asset = asset;
-    this.meshInstances = meshInstances;
+class Tt {
+  constructor(t, e) {
+    this.asset = t, this.meshInstances = e;
   }
   import() {
-    const gltf = this.asset.resource.data.gltf;
-    const v1Result = this._v1Import(gltf);
-    if (v1Result) {
-      return v1Result;
-    }
-    const v0Result = this._v0Import(gltf);
-    if (v0Result) {
-      return v0Result;
-    }
-    return null;
+    const t = this.asset.resource.data.gltf, e = this._v1Import(t);
+    if (e)
+      return e;
+    const i = this._v0Import(t);
+    return i || null;
   }
-  _v1Import(gltf) {
-    var _a;
-    const isVRMUsed = (gltf == null ? void 0 : gltf.extensionsUsed.indexOf("VRMC_vrm")) !== -1;
-    if (!isVRMUsed) {
+  _v1Import(t) {
+    var h;
+    if (!((t == null ? void 0 : t.extensionsUsed.indexOf("VRMC_vrm")) !== -1))
       return null;
-    }
-    const extension = (_a = gltf == null ? void 0 : gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
-    if (!extension) {
+    const i = (h = t == null ? void 0 : t.extensions) == null ? void 0 : h.VRMC_vrm;
+    if (!i)
       return null;
-    }
-    const schemaExpressions = extension.expressions;
-    if (!schemaExpressions) {
+    const n = i.expressions;
+    if (!n)
       return null;
-    }
-    const presetNameSet = new Set(Object.values(VRMExpressionPresetName));
-    const nameSchemaExpressionMap = /* @__PURE__ */ new Map();
-    if (schemaExpressions.preset != null) {
-      Object.entries(schemaExpressions.preset).forEach(([name, schemaExpression]) => {
-        if (schemaExpression == null) {
-          return;
-        }
-        if (!presetNameSet.has(name)) {
+    const s = new Set(Object.values(K)), o = /* @__PURE__ */ new Map();
+    n.preset != null && Object.entries(n.preset).forEach(([a, c]) => {
+      if (c != null) {
+        if (!s.has(a)) {
           console.warn(
-            `VRMExpressionLoaderPlugin: Unknown preset name "${name}" detected. Ignoring the expression`
+            `VRMExpressionLoaderPlugin: Unknown preset name "${a}" detected. Ignoring the expression`
           );
           return;
         }
-        nameSchemaExpressionMap.set(name, schemaExpression);
-      });
-    }
-    if (schemaExpressions.custom != null) {
-      Object.entries(schemaExpressions.custom).forEach(([name, schemaExpression]) => {
-        if (presetNameSet.has(name)) {
-          console.warn(
-            `VRMExpressionLoaderPlugin: Custom expression cannot have preset name "${name}". Ignoring the expression`
-          );
-          return;
-        }
-        nameSchemaExpressionMap.set(name, schemaExpression);
-      });
-    }
-    const manager = new VRMExpressionManager();
-    Array.from(nameSchemaExpressionMap.entries()).map(([name, schemaExpression]) => {
-      const expression = new VRMExpression(name);
-      expression.isBinary = schemaExpression.isBinary ?? false;
-      expression.overrideBlink = schemaExpression.overrideBlink ?? "none";
-      expression.overrideLookAt = schemaExpression.overrideLookAt ?? "none";
-      expression.overrideMouth = schemaExpression.overrideMouth ?? "none";
-      if (schemaExpression.morphTargetBinds) {
-        schemaExpression.morphTargetBinds.forEach((bind) => {
-          if (bind.node === void 0 || bind.index === void 0) {
-            return;
-          }
-          const primitives = this.meshInstances.filter((meshInstance) => {
-            return meshInstance.node.tags.has(`node_${bind.node}`);
-          });
-          const morphTargetIndex = bind.index;
-          expression.addBind(
-            new VRMExpressionMorphTargetBind({
-              primitives,
-              targetIndex: morphTargetIndex,
-              weight: bind.weight ?? 1
-            })
-          );
-        });
+        o.set(a, c);
       }
-      manager.registerExpression(expression);
+    }), n.custom != null && Object.entries(n.custom).forEach(([a, c]) => {
+      if (s.has(a)) {
+        console.warn(
+          `VRMExpressionLoaderPlugin: Custom expression cannot have preset name "${a}". Ignoring the expression`
+        );
+        return;
+      }
+      o.set(a, c);
     });
-    return manager;
+    const l = new j();
+    return Array.from(o.entries()).map(([a, c]) => {
+      const p = new J(a);
+      p.isBinary = c.isBinary ?? !1, p.overrideBlink = c.overrideBlink ?? "none", p.overrideLookAt = c.overrideLookAt ?? "none", p.overrideMouth = c.overrideMouth ?? "none", c.morphTargetBinds && c.morphTargetBinds.forEach((d) => {
+        if (d.node === void 0 || d.index === void 0)
+          return;
+        const f = this.meshInstances.filter((u) => u.node.tags.has(`node_${d.node}`)), _ = d.index;
+        p.addBind(
+          new G({
+            primitives: f,
+            targetIndex: _,
+            weight: d.weight ?? 1
+          })
+        );
+      }), l.registerExpression(p);
+    }), l;
   }
-  _v0Import(gltf) {
-    var _a, _b;
-    const isVRMUsed = ((_a = gltf.extensionsUsed) == null ? void 0 : _a.indexOf("VRM")) !== -1;
-    if (!isVRMUsed) {
+  _v0Import(t) {
+    var h, a;
+    if (!(((h = t.extensionsUsed) == null ? void 0 : h.indexOf("VRM")) !== -1))
       return null;
-    }
-    const vrmExt = (_b = gltf.extensions) == null ? void 0 : _b.VRM;
-    if (!vrmExt) {
+    const i = (a = t.extensions) == null ? void 0 : a.VRM;
+    if (!i)
       return null;
-    }
-    const schemaBlendShape = vrmExt.blendShapeMaster;
-    if (!schemaBlendShape) {
+    const n = i.blendShapeMaster;
+    if (!n)
       return null;
-    }
-    const manager = new VRMExpressionManager();
-    const schemaBlendShapeGroups = schemaBlendShape.blendShapeGroups;
-    if (!schemaBlendShapeGroups) {
-      return manager;
-    }
-    const blendShapeNameSet = /* @__PURE__ */ new Set();
-    schemaBlendShapeGroups.map((schemaGroup) => {
-      const v0PresetName = schemaGroup.presetName;
-      const v1PresetName = v0PresetName != null && v0v1PresetNameMap[v0PresetName] || null;
-      const name = v1PresetName ?? schemaGroup.name;
-      if (name == null) {
+    const s = new j(), o = n.blendShapeGroups;
+    if (!o)
+      return s;
+    const l = /* @__PURE__ */ new Set();
+    return o.map((c) => {
+      const p = c.presetName, f = (p != null && Z[p] || null) ?? c.name;
+      if (f == null) {
         console.warn(
           "VRMExpressionLoaderPlugin: One of custom expressions has no name. Ignoring the expression"
         );
         return;
       }
-      if (blendShapeNameSet.has(name)) {
+      if (l.has(f)) {
         console.warn(
-          `VRMExpressionLoaderPlugin: An expression preset ${v0PresetName} has duplicated entries. Ignoring the expression`
+          `VRMExpressionLoaderPlugin: An expression preset ${p} has duplicated entries. Ignoring the expression`
         );
         return;
       }
-      blendShapeNameSet.add(name);
-      const expression = new VRMExpression(name);
-      expression.isBinary = schemaGroup.isBinary ?? false;
-      if (schemaGroup.binds) {
-        schemaGroup.binds.forEach((bind) => {
-          if (bind.mesh === void 0 || bind.index === void 0) {
-            return;
-          }
-          const nodesUsingMesh = [];
-          gltf.nodes.forEach((node, index) => {
-            if (node.mesh === bind.mesh) {
-              nodesUsingMesh.push({ gltfNode: node, index });
-            }
-          });
-          const morphTargetIndex = bind.index;
-          nodesUsingMesh.map((node) => {
-            const primitives = this.meshInstances.filter((meshInstance) => {
-              return meshInstance.node.tags.has(`node_${node.index}`);
-            });
-            expression.addBind(
-              new VRMExpressionMorphTargetBind({
-                primitives,
-                targetIndex: morphTargetIndex,
-                weight: 0.01 * (bind.weight ?? 100)
-                // narrowing the range from [ 0.0 - 100.0 ] to [ 0.0 - 1.0 ]
-              })
-            );
-          });
+      l.add(f);
+      const _ = new J(f);
+      _.isBinary = c.isBinary ?? !1, c.binds && (c.binds.forEach((u) => {
+        if (u.mesh === void 0 || u.index === void 0)
+          return;
+        const g = [];
+        t.nodes.forEach((M, m) => {
+          M.mesh === u.mesh && g.push({ gltfNode: M, index: m });
         });
-        manager.registerExpression(expression);
-      }
-    });
-    return manager;
+        const x = u.index;
+        g.map((M) => {
+          const m = this.meshInstances.filter((w) => w.node.tags.has(`node_${M.index}`));
+          _.addBind(
+            new G({
+              primitives: m,
+              targetIndex: x,
+              weight: 0.01 * (u.weight ?? 100)
+              // narrowing the range from [ 0.0 - 100.0 ] to [ 0.0 - 1.0 ]
+            })
+          );
+        });
+      }), s.registerExpression(_));
+    }), s;
   }
 }
-const collectMeshInstances = (entity) => {
-  const meshInstances = [];
-  if (entity) {
-    const components = entity.findComponents("render");
-    for (let i = 0; i < components.length; i++) {
-      const render = components[i];
-      if (render.meshInstances) {
-        for (let m = 0; m < render.meshInstances.length; m++) {
-          const meshInstance = render.meshInstances[m];
-          meshInstances.push(meshInstance);
+const vt = (r) => {
+  const t = [];
+  if (r) {
+    const e = r.findComponents("render");
+    for (let i = 0; i < e.length; i++) {
+      const n = e[i];
+      if (n.meshInstances)
+        for (let s = 0; s < n.meshInstances.length; s++) {
+          const o = n.meshInstances[s];
+          t.push(o);
         }
-      }
     }
   }
-  return meshInstances;
+  return t;
 };
-function traverseAncestorsFromRoot(object, callback) {
-  const ancestors = [];
-  let head = object;
-  while (head !== null) {
-    ancestors.unshift(head);
-    head = head.parent;
-  }
-  ancestors.forEach((ancestor) => {
-    callback(ancestor);
+function Rt(r, t) {
+  const e = [];
+  let i = r;
+  for (; i !== null; )
+    e.unshift(i), i = i.parent;
+  e.forEach((n) => {
+    t(n);
   });
 }
-const importScript$1 = (pcRef) => {
-  class VrmExpression2 extends pcRef.ScriptType {
+const Bt = (r) => {
+  class t extends r.ScriptType {
     constructor() {
-      super(...arguments);
-      this.previousTalkName = "";
+      super(...arguments), this.previousTalkName = "";
     }
     initialize() {
-      const meshInstances = collectMeshInstances(this.entity);
-      const loaderPlugin = new VRMExpressionLoaderPlugin(this.asset, meshInstances);
-      this.expressionManager = loaderPlugin.import();
-      this.blinkTimer = new Timer("blink");
-      this.talkTimer = new Timer("talk");
-      this.startBlink();
-      this.entity.on("vrm-expression:start-emotion", this.startEmotion, this);
-      this.entity.on("audio:is-talking-change", this.onIsTalkingChange, this);
-      this.on("destroy", () => {
-        this.entity.off("vrm-expression:start-emotion", this.startEmotion, this);
-        this.entity.off("audio:is-talking-change", this.onIsTalkingChange, this);
+      const i = vt(this.entity), n = new Tt(this.asset, i);
+      this.expressionManager = n.import(), this.blinkTimer = new F("blink"), this.talkTimer = new F("talk"), this.startBlink(), this.entity.on("vrm-expression:start-emotion", this.startEmotion, this), this.entity.on("audio:is-talking-change", this.onIsTalkingChange, this), this.on("destroy", () => {
+        this.entity.off("vrm-expression:start-emotion", this.startEmotion, this), this.entity.off("audio:is-talking-change", this.onIsTalkingChange, this);
       });
     }
     // Specific Expression Animation
-    startBlink(config) {
-      const randomValue = getRandom(1, 5);
-      if (this.expressionManager) {
-        this.expressionManager.startBlink(1, config);
-        this.blinkTimer.add(randomValue, this.startBlink, this);
-      }
+    startBlink(i) {
+      const n = L(1, 5);
+      this.expressionManager && (this.expressionManager.startBlink(1, i), this.blinkTimer.add(n, this.startBlink, this));
     }
-    stopBlink(restartSeconds) {
+    stopBlink(i) {
+      this.expressionManager && (this.stopExpressionLoop("blink"), this.expressionManager.stopBlink(), i && this.blinkTimer.add(i, this.startBlink, this));
+    }
+    startEmotion(i, n) {
       if (!this.expressionManager)
         return;
-      this.stopExpressionLoop("blink");
-      this.expressionManager.stopBlink();
-      if (restartSeconds) {
-        this.blinkTimer.add(restartSeconds, this.startBlink, this);
-      }
+      this.expressionManager.startEmotion(i, n);
+      const s = n ? n.times[n.times.length - 1] : 3;
+      this.stopBlink(s);
     }
-    startEmotion(name, config) {
+    startTalking(i = 0.25) {
       if (!this.expressionManager)
         return;
-      this.expressionManager.startEmotion(name, config);
-      const time = config ? config.times[config.times.length - 1] : 3;
-      this.stopBlink(time);
+      const n = Math.random() * 0.5, s = Math.random() * 0.5 + 0.5, o = L(0.5, 1), l = L(0.4, 0.6) * o, h = L(0.4, 0.6) * o, a = [0, n, 0.5, s, 1].filter((d) => d * i), c = [0, l, o, h, 0], p = L(0.5, 1);
+      this.expressionManager.startTalking(a, c), this.talkTimer.add(p, this.startTalking, this);
     }
-    startTalking(speed = 0.25) {
-      if (!this.expressionManager)
-        return;
-      const time1 = Math.random() * 0.5;
-      const time2 = Math.random() * 0.5 + 0.5;
-      const valueMiddle = getRandom(0.5, 1);
-      const value1 = getRandom(0.4, 0.6) * valueMiddle;
-      const value2 = getRandom(0.4, 0.6) * valueMiddle;
-      const times = [0, time1, 0.5, time2, 1].filter((time) => time * speed);
-      const values = [0, value1, valueMiddle, value2, 0];
-      const timerRandomValue = getRandom(0.5, 1);
-      this.expressionManager.startTalking(times, values);
-      this.talkTimer.add(timerRandomValue, this.startTalking, this);
+    stopTalking(i) {
+      this.stopExpressionLoop("talk"), i && this.talkTimer.add(i, this.startTalking, this);
     }
-    stopTalking(restartSeconds) {
-      this.stopExpressionLoop("talk");
-      if (restartSeconds) {
-        this.talkTimer.add(restartSeconds, this.startTalking, this);
-      }
+    onIsTalkingChange(i) {
+      i && (this.talkTimer.isPausing && this.talkTimer.handle || !this.talkTimer.handle) ? this.startTalking() : this.stopTalking();
     }
-    onIsTalkingChange(state) {
-      if (state && (this.talkTimer.isPausing && this.talkTimer.handle || !this.talkTimer.handle)) {
-        this.startTalking();
-      } else {
-        this.stopTalking();
-      }
-    }
-    stopExpressionLoop(timerName) {
-      if (timerName === "blink") {
-        this.blinkTimer.pause();
-      }
-      if (timerName === "talk") {
-        this.talkTimer.pause();
-      }
+    stopExpressionLoop(i) {
+      i === "blink" && this.blinkTimer.pause(), i === "talk" && this.talkTimer.pause();
     }
     pauseAllExpression() {
       this.app.timeScale = 0;
@@ -1164,805 +804,527 @@ const importScript$1 = (pcRef) => {
     restartAllExpression() {
       this.app.timeScale = 1;
     }
-    update(dt) {
-      if (!this.expressionManager)
-        return;
-      this.expressionManager.update(dt);
-      this.blinkTimer.update(dt);
-      this.talkTimer.update(dt);
+    update(i) {
+      this.expressionManager && (this.expressionManager.update(i), this.blinkTimer.update(i), this.talkTimer.update(i));
     }
   }
-  pcRef.registerScript(VrmExpression2, "vrmExpression");
-  VrmExpression2.attributes.add("asset", {
+  r.registerScript(t, "vrmExpression"), t.attributes.add("asset", {
     type: "asset",
     description: "Set the container asset loaded from vrm avatar."
   });
-};
-const VrmExpression = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, Pt = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  importScript: importScript$1
+  importScript: Bt
 }, Symbol.toStringTag, { value: "Module" }));
-class VRMSpringBoneManager {
+class Q {
   constructor() {
-    this._joints = /* @__PURE__ */ new Set();
-    this._objectSpringBonesMap = /* @__PURE__ */ new Map();
-    this.managerName = "springBone";
-    this._joints = /* @__PURE__ */ new Set();
-    this._objectSpringBonesMap = /* @__PURE__ */ new Map();
-    this.direction = 1;
-    this.strength = 0.1;
-    this.limitHeight = 0.2;
-    this.limitLow = 0;
+    this._joints = /* @__PURE__ */ new Set(), this._objectSpringBonesMap = /* @__PURE__ */ new Map(), this.managerName = "springBone", this._joints = /* @__PURE__ */ new Set(), this._objectSpringBonesMap = /* @__PURE__ */ new Map(), this.direction = 1, this.strength = 0.1, this.limitHeight = 0.2, this.limitLow = 0;
   }
   get joints() {
     return this._joints;
   }
-  addJoint(joint) {
-    this._joints.add(joint);
-    let objectSet = this._objectSpringBonesMap.get(joint.bone);
-    if (objectSet == null) {
-      objectSet = /* @__PURE__ */ new Set();
-      this._objectSpringBonesMap.set(joint.bone, objectSet);
-    }
-    objectSet.add(joint);
+  addJoint(t) {
+    this._joints.add(t);
+    let e = this._objectSpringBonesMap.get(t.bone);
+    e == null && (e = /* @__PURE__ */ new Set(), this._objectSpringBonesMap.set(t.bone, e)), e.add(t);
   }
   setInitState() {
-    const springBonesTried = /* @__PURE__ */ new Set();
-    const springBonesDone = /* @__PURE__ */ new Set();
-    const objectUpdated = /* @__PURE__ */ new Set();
-    for (const springBone of this._joints) {
+    const t = /* @__PURE__ */ new Set(), e = /* @__PURE__ */ new Set(), i = /* @__PURE__ */ new Set();
+    for (const n of this._joints)
       this._processSpringBone(
-        springBone,
-        springBonesTried,
-        springBonesDone,
-        objectUpdated,
-        (springBone2) => springBone2.setInitState()
+        n,
+        t,
+        e,
+        i,
+        (s) => s.setInitState()
       );
-    }
   }
   reset() {
-    const springBonesTried = /* @__PURE__ */ new Set();
-    const springBonesDone = /* @__PURE__ */ new Set();
-    const objectUpdated = /* @__PURE__ */ new Set();
-    for (const springBone of this._joints) {
+    const t = /* @__PURE__ */ new Set(), e = /* @__PURE__ */ new Set(), i = /* @__PURE__ */ new Set();
+    for (const n of this._joints)
       this._processSpringBone(
-        springBone,
-        springBonesTried,
-        springBonesDone,
-        objectUpdated,
-        (springBone2) => springBone2.reset()
+        n,
+        t,
+        e,
+        i,
+        (s) => s.reset()
       );
-    }
   }
-  update(dt, isWalking) {
-    const springBonesTried = /* @__PURE__ */ new Set();
-    const springBonesDone = /* @__PURE__ */ new Set();
-    const objectUpdated = /* @__PURE__ */ new Set();
-    if (isWalking) {
-      if (this.strength >= this.limitHeight) {
-        this.direction = -0.2;
-        this.limitHeight = Math.random() * (0.2 - this.limitLow) + this.limitLow;
-      } else if (this.strength <= this.limitLow) {
-        this.direction = 0.2;
-        this.limitLow = Math.random() * 0.2;
-      }
-      this.strength += this.direction * dt;
-    } else {
-      if (this.strength <= 0.5) {
-        this.strength += 0.1 * dt;
-      }
-    }
-    for (const springBone of this._joints) {
+  update(t, e) {
+    const i = /* @__PURE__ */ new Set(), n = /* @__PURE__ */ new Set(), s = /* @__PURE__ */ new Set();
+    e ? (this.strength >= this.limitHeight ? (this.direction = -0.2, this.limitHeight = Math.random() * (0.2 - this.limitLow) + this.limitLow) : this.strength <= this.limitLow && (this.direction = 0.2, this.limitLow = Math.random() * 0.2), this.strength += this.direction * t) : this.strength <= 0.5 && (this.strength += 0.1 * t);
+    for (const o of this._joints)
       this._processSpringBone(
-        springBone,
-        springBonesTried,
-        springBonesDone,
-        objectUpdated,
-        (springBone2) => {
-          springBone2.update(dt, this.strength);
+        o,
+        i,
+        n,
+        s,
+        (l) => {
+          l.update(t, this.strength);
         }
       );
-    }
   }
-  _processSpringBone(springBone, springBonesTried, springBonesDone, objectUpdated, callback) {
-    if (springBonesDone.has(springBone)) {
+  _processSpringBone(t, e, i, n, s) {
+    if (i.has(t))
       return;
-    }
-    if (springBonesTried.has(springBone)) {
+    if (e.has(t))
       throw new Error(
         "VRMSpringBoneManager: Circular dependency detected while updating springbones"
       );
-    }
-    springBonesTried.add(springBone);
-    const depObjects = this._getDependencies(springBone);
-    for (const depObject of depObjects) {
-      traverseAncestorsFromRoot(depObject, (depObjectAncestor) => {
-        const objectSet = this._objectSpringBonesMap.get(depObjectAncestor);
-        if (objectSet) {
-          for (const depSpringBone of objectSet) {
+    e.add(t);
+    const o = this._getDependencies(t);
+    for (const l of o)
+      Rt(l, (h) => {
+        const a = this._objectSpringBonesMap.get(h);
+        if (a)
+          for (const c of a)
             this._processSpringBone(
-              depSpringBone,
-              springBonesTried,
-              springBonesDone,
-              objectUpdated,
-              callback
+              c,
+              e,
+              i,
+              n,
+              s
             );
-          }
-        } else if (!objectUpdated.has(depObjectAncestor)) {
-          objectUpdated.add(depObjectAncestor);
-        }
+        else
+          n.has(h) || n.add(h);
       });
-    }
-    callback(springBone);
-    objectUpdated.add(springBone.bone);
-    springBonesDone.add(springBone);
+    s(t), n.add(t.bone), i.add(t);
   }
   // Return a set of objects that are dependant of given spring bone.
-  _getDependencies(springBone) {
-    var _a;
-    const set = /* @__PURE__ */ new Set();
-    const parent = springBone.bone.parent;
-    if (parent) {
-      set.add(parent);
-    }
-    (_a = springBone.colliderGroups) == null ? void 0 : _a.forEach((colliderGroup) => {
-      colliderGroup.colliders.forEach((collider) => {
-        set.add(collider);
+  _getDependencies(t) {
+    var n;
+    const e = /* @__PURE__ */ new Set(), i = t.bone.parent;
+    return i && e.add(i), (n = t.colliderGroups) == null || n.forEach((s) => {
+      s.colliders.forEach((o) => {
+        e.add(o);
       });
-    });
-    return set;
+    }), e;
   }
 }
-class VRMSpringBoneColliderShapeSphere {
-  constructor(pcRef, params) {
-    this.offset = (params == null ? void 0 : params.offset) ?? new pcRef.Vec3();
-    this.radius = (params == null ? void 0 : params.radius) ?? 0;
+class bt {
+  constructor(t, e) {
+    this.offset = (e == null ? void 0 : e.offset) ?? new t.Vec3(), this.radius = (e == null ? void 0 : e.radius) ?? 0;
   }
   get type() {
     return "sphere";
   }
-  calculateCollision(colliderMatrix, objectPosition, objectRadius, target) {
-    target.copy(this.offset).copy(colliderMatrix.transformPoint(target));
-    target.mulScalar(-1).add(objectPosition);
-    const radius = objectRadius + this.radius;
-    const distance = target.length() - radius;
-    target.normalize();
-    return distance;
+  calculateCollision(t, e, i, n) {
+    n.copy(this.offset).copy(t.transformPoint(n)), n.mulScalar(-1).add(e);
+    const s = i + this.radius, o = n.length() - s;
+    return n.normalize(), o;
   }
 }
-const createVRMSpringBoneCollider = (pcRef) => {
-  return class VRMSpringBoneCollider extends pcRef.Entity {
-    constructor(shape) {
-      super();
-      this.shape = shape;
-    }
-  };
+const X = (r) => class extends r.Entity {
+  constructor(e) {
+    super(), this.shape = e;
+  }
 };
-class VRMSpringBoneColliderShapeCapsule {
-  constructor(pcRef, params) {
-    this.offset = (params == null ? void 0 : params.offset) ?? new pcRef.Vec3();
-    this.tail = (params == null ? void 0 : params.tail) ?? new pcRef.Vec3();
-    this.radius = (params == null ? void 0 : params.radius) ?? 0;
-    this._v3A = new pcRef.Vec3();
-    this._v3B = new pcRef.Vec3();
+class Lt {
+  constructor(t, e) {
+    this.offset = (e == null ? void 0 : e.offset) ?? new t.Vec3(), this.tail = (e == null ? void 0 : e.tail) ?? new t.Vec3(), this.radius = (e == null ? void 0 : e.radius) ?? 0, this._v3A = new t.Vec3(), this._v3B = new t.Vec3();
   }
   get type() {
     return "capsule";
   }
-  calculateCollision(colliderMatrix, objectPosition, objectRadius, target) {
-    this._v3A.copy(this.offset).copy(colliderMatrix.transformPoint(this._v3A));
-    this._v3B.copy(this.tail).copy(colliderMatrix.transformPoint(this._v3B));
-    this._v3B.sub(this._v3A);
-    const lengthSqCapsule = this._v3B.lengthSq();
-    target.copy(objectPosition).sub(this._v3A);
-    const dot = this._v3B.dot(target);
-    if (dot <= 0)
-      ;
-    else if (lengthSqCapsule <= dot) {
-      target.sub(this._v3B);
-    } else {
-      this._v3B.mulScalar(dot / lengthSqCapsule);
-      target.sub(this._v3B);
-    }
-    const radius = objectRadius + this.radius;
-    const distance = target.length() - radius;
-    target.normalize();
-    return distance;
+  calculateCollision(t, e, i, n) {
+    this._v3A.copy(this.offset).copy(t.transformPoint(this._v3A)), this._v3B.copy(this.tail).copy(t.transformPoint(this._v3B)), this._v3B.sub(this._v3A);
+    const s = this._v3B.lengthSq();
+    n.copy(e).sub(this._v3A);
+    const o = this._v3B.dot(n);
+    o <= 0 || (s <= o ? n.sub(this._v3B) : (this._v3B.mulScalar(o / s), n.sub(this._v3B)));
+    const l = i + this.radius, h = n.length() - l;
+    return n.normalize(), h;
   }
 }
-class VRMSpringBoneJoint {
-  constructor(pcRef, bone, child, settings = {}, colliderGroups = []) {
-    var _a;
-    this._center = null;
-    this._worldSpaceBoneLength = 0;
-    this._pcRef = pcRef;
-    this._v3A = new this._pcRef.Vec3();
-    this._v3B = new this._pcRef.Vec3();
-    this._nextTail = new this._pcRef.Vec3();
-    this._quatA = new this._pcRef.Quat();
-    this._matA = new this._pcRef.Mat4();
-    this._matB = new this._pcRef.Mat4();
-    this._identityMat4 = new this._pcRef.Mat4();
-    this._worldSpacePosition = new this._pcRef.Vec3();
-    this._centerSpacePosition = new this._pcRef.Vec3();
-    this._matrixWorldToCenterTranslation = new this._pcRef.Vec3();
-    this._worldSpaceBoneLength = 0;
-    this.bone = bone;
-    this.child = child;
-    this.settings = {
-      hitRadius: settings.hitRadius ?? 0,
-      stiffness: settings.stiffness ?? 1,
-      gravityPower: settings.gravityPower ?? 0,
-      gravityDir: ((_a = settings.gravityDir) == null ? void 0 : _a.clone()) ?? new this._pcRef.Vec3(0, -1, 0),
-      dragForce: settings.dragForce ?? 0.4
-    };
-    this.colliderGroups = colliderGroups;
-    this._initialLocalMatrix = new this._pcRef.Mat4();
-    this._initialLocalRotation = new this._pcRef.Quat();
-    this._initialLocalChildPosition = new this._pcRef.Vec3();
-    this._currentTail = new this._pcRef.Vec3();
-    this._prevTail = new this._pcRef.Vec3();
-    this._boneAxis = new this._pcRef.Vec3();
-    this._center = null;
+class St {
+  constructor(t, e, i, n = {}, s = []) {
+    var o;
+    this._center = null, this._worldSpaceBoneLength = 0, this._pcRef = t, this._v3A = new this._pcRef.Vec3(), this._v3B = new this._pcRef.Vec3(), this._nextTail = new this._pcRef.Vec3(), this._quatA = new this._pcRef.Quat(), this._matA = new this._pcRef.Mat4(), this._matB = new this._pcRef.Mat4(), this._identityMat4 = new this._pcRef.Mat4(), this._worldSpacePosition = new this._pcRef.Vec3(), this._centerSpacePosition = new this._pcRef.Vec3(), this._matrixWorldToCenterTranslation = new this._pcRef.Vec3(), this._worldSpaceBoneLength = 0, this.bone = e, this.child = i, this.settings = {
+      hitRadius: n.hitRadius ?? 0,
+      stiffness: n.stiffness ?? 1,
+      gravityPower: n.gravityPower ?? 0,
+      gravityDir: ((o = n.gravityDir) == null ? void 0 : o.clone()) ?? new this._pcRef.Vec3(0, -1, 0),
+      dragForce: n.dragForce ?? 0.4
+    }, this.colliderGroups = s, this._initialLocalMatrix = new this._pcRef.Mat4(), this._initialLocalRotation = new this._pcRef.Quat(), this._initialLocalChildPosition = new this._pcRef.Vec3(), this._currentTail = new this._pcRef.Vec3(), this._prevTail = new this._pcRef.Vec3(), this._boneAxis = new this._pcRef.Vec3(), this._center = null;
   }
   get center() {
     return this._center;
   }
-  set center(center) {
-    var _a;
-    if ((_a = this._center) == null ? void 0 : _a.userData.inverseCacheProxy) {
-      this._center.userData.inverseCacheProxy.revert();
-      delete this._center.userData.inverseCacheProxy;
-    }
-    this._center = center;
-    if (this._center) {
-      if (!this._center.userData) {
-        this._center.userData = {};
-      }
-      if (!this._center.userData.inverseCacheProxy) {
-        this._center.userData.inverseCacheProxy = new Matrix4InverseCache(
-          this._pcRef,
-          this._center.getWorldTransform()
-        );
-      }
-    }
+  set center(t) {
+    var e;
+    (e = this._center) != null && e.userData.inverseCacheProxy && (this._center.userData.inverseCacheProxy.revert(), delete this._center.userData.inverseCacheProxy), this._center = t, this._center && (this._center.userData || (this._center.userData = {}), this._center.userData.inverseCacheProxy || (this._center.userData.inverseCacheProxy = new wt(
+      this._pcRef,
+      this._center.getWorldTransform()
+    )));
   }
   get _parentMatrixWorld() {
     return this.bone.parent ? this.bone.parent.getWorldTransform() : this._identityMat4;
   }
   setInitState() {
-    this._initialLocalMatrix.copy(this.bone.getLocalTransform());
-    this._initialLocalRotation.copy(this.bone.getLocalRotation());
-    if (this.child) {
-      this._initialLocalChildPosition.copy(this.child.getLocalPosition());
-    } else {
-      this._initialLocalChildPosition.copy(this.bone.getLocalPosition()).normalize().mulScalar(0.07);
-    }
-    const worldTransform = this.bone.getWorldTransform();
-    localToWorld(this._currentTail.copy(this._initialLocalChildPosition), worldTransform);
-    this._prevTail.copy(this._currentTail);
-    this._boneAxis.copy(this._initialLocalChildPosition).normalize();
-    const matrixWorldTranslated = this.bone.getWorldTransform().transformPoint(new this._pcRef.Vec3());
-    this._worldSpaceBoneLength = this._v3A.copy(this._initialLocalChildPosition).copy(this.bone.getWorldTransform().transformPoint(this._v3A)).sub(matrixWorldTranslated).length();
+    this._initialLocalMatrix.copy(this.bone.getLocalTransform()), this._initialLocalRotation.copy(this.bone.getLocalRotation()), this.child ? this._initialLocalChildPosition.copy(this.child.getLocalPosition()) : this._initialLocalChildPosition.copy(this.bone.getLocalPosition()).normalize().mulScalar(0.07);
+    const t = this.bone.getWorldTransform();
+    $(this._currentTail.copy(this._initialLocalChildPosition), t), this._prevTail.copy(this._currentTail), this._boneAxis.copy(this._initialLocalChildPosition).normalize();
+    const e = this.bone.getWorldTransform().transformPoint(new this._pcRef.Vec3());
+    this._worldSpaceBoneLength = this._v3A.copy(this._initialLocalChildPosition).copy(this.bone.getWorldTransform().transformPoint(this._v3A)).sub(e).length();
   }
   reset() {
     this.bone.setLocalRotation(this._initialLocalRotation);
-    const transform = new this._pcRef.Mat4();
-    transform.mul2(this._parentMatrixWorld, this.bone.getLocalTransform());
-    const position = transform.transformPoint(new this._pcRef.Vec3());
-    this.bone.setPosition(position.x, position.y, position.z);
-    const matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
-    const worldTransform = this.bone.getWorldTransform();
-    localToWorld(this._currentTail.copy(this._initialLocalChildPosition), worldTransform);
-    this._currentTail.copy(matrixWorldToCenter.transformPoint(this._currentTail));
-    this._prevTail.copy(this._currentTail);
+    const t = new this._pcRef.Mat4();
+    t.mul2(this._parentMatrixWorld, this.bone.getLocalTransform());
+    const e = t.transformPoint(new this._pcRef.Vec3());
+    this.bone.setPosition(e.x, e.y, e.z);
+    const i = this._getMatrixWorldToCenter(this._matA), n = this.bone.getWorldTransform();
+    $(this._currentTail.copy(this._initialLocalChildPosition), n), this._currentTail.copy(i.transformPoint(this._currentTail)), this._prevTail.copy(this._currentTail);
   }
-  update(dt, strength) {
-    if (dt <= 0)
+  update(t, e) {
+    if (t <= 0)
       return;
     this._worldSpacePosition.copy(
       this.bone.getWorldTransform().getTranslation(new this._pcRef.Vec3())
     );
-    let matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
-    this._matrixWorldToCenterTranslation.set(0, 0, 0);
-    matrixWorldToCenter.getTranslation(this._matrixWorldToCenterTranslation);
-    this._centerSpacePosition.copy(this._worldSpacePosition).add(this._matrixWorldToCenterTranslation);
-    const quatWorldToCenter = this._quatA.setFromMat4(matrixWorldToCenter);
-    const centerSpaceParentMatrix = this._matB.copy(matrixWorldToCenter).mul(this._parentMatrixWorld);
-    const centerSpaceBoneAxis = this._v3B.copy(this._boneAxis).copy(this._initialLocalMatrix.transformPoint(this._v3B)).copy(centerSpaceParentMatrix.transformPoint(this._v3B)).sub(this._centerSpacePosition).normalize();
-    const centerSpaceGravity = this._v3A.copy(this.settings.gravityDir).copy(quatWorldToCenter.transformVector(this._v3A)).normalize();
-    const matrixCenterToWorld = this._getMatrixCenterToWorld(this._matA);
+    let i = this._getMatrixWorldToCenter(this._matA);
+    this._matrixWorldToCenterTranslation.set(0, 0, 0), i.getTranslation(this._matrixWorldToCenterTranslation), this._centerSpacePosition.copy(this._worldSpacePosition).add(this._matrixWorldToCenterTranslation);
+    const n = this._quatA.setFromMat4(i), s = this._matB.copy(i).mul(this._parentMatrixWorld), o = this._v3B.copy(this._boneAxis).copy(this._initialLocalMatrix.transformPoint(this._v3B)).copy(s.transformPoint(this._v3B)).sub(this._centerSpacePosition).normalize(), l = this._v3A.copy(this.settings.gravityDir).copy(n.transformVector(this._v3A)).normalize(), h = this._getMatrixCenterToWorld(this._matA);
     this._nextTail.copy(this._currentTail).add(
       this._v3A.copy(this._currentTail).sub(this._prevTail).mulScalar(1 - this.settings.dragForce)
-    ).add(this._v3A.copy(centerSpaceBoneAxis).mulScalar(this.settings.stiffness * dt)).add(this._v3A.copy(centerSpaceGravity).mulScalar(this.settings.gravityPower * dt)).copy(matrixCenterToWorld.transformPoint(this._nextTail));
-    this._nextTail.sub(this._worldSpacePosition).normalize().mulScalar(this._worldSpaceBoneLength).add(this._worldSpacePosition);
-    const compareTransform = this._v3A.copy(this._nextTail).sub(this._currentTail).mulScalar(0.2);
-    this._nextTail.sub(this._v3A.set(0, compareTransform.y, 0));
-    this._collision(this._nextTail);
-    matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
-    this._prevTail.copy(this._currentTail);
-    this._currentTail.copy(
-      this._v3A.copy(this._nextTail).copy(matrixWorldToCenter.transformPoint(this._v3A))
+    ).add(this._v3A.copy(o).mulScalar(this.settings.stiffness * t)).add(this._v3A.copy(l).mulScalar(this.settings.gravityPower * t)).copy(h.transformPoint(this._nextTail)), this._nextTail.sub(this._worldSpacePosition).normalize().mulScalar(this._worldSpaceBoneLength).add(this._worldSpacePosition);
+    const a = this._v3A.copy(this._nextTail).sub(this._currentTail).mulScalar(0.2);
+    this._nextTail.sub(this._v3A.set(0, a.y, 0)), this._collision(this._nextTail), i = this._getMatrixWorldToCenter(this._matA), this._prevTail.copy(this._currentTail), this._currentTail.copy(
+      this._v3A.copy(this._nextTail).copy(i.transformPoint(this._v3A))
     );
-    const worldSpaceInitialMatrixInv = mat4InvertCompat(
+    const c = et(
       this._pcRef,
       this._matA.copy(this._parentMatrixWorld).mul(this._initialLocalMatrix)
-    );
-    const applyRotation = setFromUnitVectors(
+    ), p = yt(
       this._quatA,
       this._boneAxis,
-      this._v3A.copy(this._nextTail).copy(worldSpaceInitialMatrixInv.transformPoint(this._v3A)).normalize()
-    );
-    const angles = applyRotation.getEulerAngles();
-    applyRotation.setFromEulerAngles(angles.x * strength, angles.y * strength, angles.z * strength);
-    const rotation = this._initialLocalRotation.clone().mul(applyRotation);
-    this.bone.setLocalRotation(rotation);
+      this._v3A.copy(this._nextTail).copy(c.transformPoint(this._v3A)).normalize()
+    ), d = p.getEulerAngles();
+    p.setFromEulerAngles(d.x * e, d.y * e, d.z * e);
+    const f = this._initialLocalRotation.clone().mul(p);
+    this.bone.setLocalRotation(f);
   }
-  _getMatrixCenterToWorld(target) {
+  _getMatrixCenterToWorld(t) {
     if (this._center) {
-      const worldTransform = this._center.getWorldTransform();
-      target.copy(worldTransform);
-    } else {
-      target.setIdentity();
-    }
-    return target;
+      const e = this._center.getWorldTransform();
+      t.copy(e);
+    } else
+      t.setIdentity();
+    return t;
   }
   // Create a matrix that converts world space into center space.
-  _getMatrixWorldToCenter(target) {
-    if (this._center) {
-      target.copy(this._center.userData.inverseCacheProxy.inverse);
-    } else {
-      target.setIdentity();
-    }
-    return target;
+  _getMatrixWorldToCenter(t) {
+    return this._center ? t.copy(this._center.userData.inverseCacheProxy.inverse) : t.setIdentity(), t;
   }
-  _collision(tail) {
-    var _a;
-    (_a = this.colliderGroups) == null ? void 0 : _a.forEach((colliderGroup) => {
-      colliderGroup.colliders.forEach((collider) => {
-        const dist = collider.shape.calculateCollision(
-          collider.getWorldTransform(),
-          tail,
+  _collision(t) {
+    var e;
+    (e = this.colliderGroups) == null || e.forEach((i) => {
+      i.colliders.forEach((n) => {
+        const s = n.shape.calculateCollision(
+          n.getWorldTransform(),
+          t,
           this.settings.hitRadius,
           this._v3A
         );
-        if (dist < 0) {
-          tail.add(this._v3A.mulScalar(-dist));
-          tail.sub(this._worldSpacePosition).normalize().mulScalar(this._worldSpaceBoneLength).add(this._worldSpacePosition);
-        }
+        s < 0 && (t.add(this._v3A.mulScalar(-s)), t.sub(this._worldSpacePosition).normalize().mulScalar(this._worldSpaceBoneLength).add(this._worldSpacePosition));
       });
     });
   }
 }
-const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
-  constructor(pcRef, asset, entity) {
-    this.asset = asset;
-    this.entity = entity;
-    this._pcRef = pcRef;
+const b = class b {
+  constructor(t, e, i) {
+    this.asset = e, this.entity = i, this._pcRef = t;
   }
   import() {
-    const gltf = this.asset.resource.data.gltf;
-    const data = this.asset.resource.data;
-    const v1Result = this._v1Import(gltf, data);
-    if (v1Result) {
-      return v1Result;
-    }
-    const v0Result = this._v0Import(gltf, data);
-    if (v0Result) {
-      return v0Result;
-    }
-    return null;
+    const t = this.asset.resource.data.gltf, e = this.asset.resource.data, i = this._v1Import(t, e);
+    if (i)
+      return i;
+    const n = this._v0Import(t, e);
+    return n || null;
   }
-  _v1Import(gltf, resourceData) {
-    var _a, _b;
-    const isSpringBoneUsed = ((_a = gltf.extensionsUsed) == null ? void 0 : _a.indexOf(_VRMSpringBoneLoaderPlugin.EXTENSION_NAME)) !== -1;
-    if (!isSpringBoneUsed) {
+  _v1Import(t, e) {
+    var _, u;
+    if (!(((_ = t.extensionsUsed) == null ? void 0 : _.indexOf(b.EXTENSION_NAME)) !== -1) || !((t == null ? void 0 : t.extensionsUsed.indexOf("VRMC_vrm")) !== -1))
       return null;
-    }
-    const isVRMUsed = (gltf == null ? void 0 : gltf.extensionsUsed.indexOf("VRMC_vrm")) !== -1;
-    if (!isVRMUsed) {
+    const s = new Q(), o = t == null ? void 0 : t.nodes, l = (u = t.extensions) == null ? void 0 : u[b.EXTENSION_NAME];
+    if (!l)
       return null;
-    }
-    const manager = new VRMSpringBoneManager();
-    const gltfNodes = gltf == null ? void 0 : gltf.nodes;
-    const extension = (_b = gltf.extensions) == null ? void 0 : _b[_VRMSpringBoneLoaderPlugin.EXTENSION_NAME];
-    if (!extension) {
-      return null;
-    }
-    const specVersion = extension.specVersion;
-    if (!POSSIBLE_SPEC_VERSIONS.has(specVersion)) {
-      console.warn(
-        `VRMSpringBoneLoaderPlugin: Unknown ${_VRMSpringBoneLoaderPlugin.EXTENSION_NAME} specVersion "${specVersion}"`
-      );
-      return null;
-    }
-    const extensionColliders = extension.colliders;
-    const colliders = extensionColliders == null ? void 0 : extensionColliders.map((schemaCollider, iCollider) => {
-      var _a2;
-      const node = (_a2 = this.entity.findByTag(`node_${schemaCollider.node}`)) == null ? void 0 : _a2[0];
-      const schemaShape = schemaCollider.shape;
-      if (!node) {
+    const h = l.specVersion;
+    if (!U.has(h))
+      return console.warn(
+        `VRMSpringBoneLoaderPlugin: Unknown ${b.EXTENSION_NAME} specVersion "${h}"`
+      ), null;
+    const a = l.colliders, c = a == null ? void 0 : a.map((g, x) => {
+      var w;
+      const M = (w = this.entity.findByTag(`node_${g.node}`)) == null ? void 0 : w[0], m = g.shape;
+      if (!M) {
         console.error(
           "VRMSpringBoneLoaderPlugin Error: Did not find the node map to schemaColliderGroup"
         );
         return;
       }
-      if (schemaShape) {
-        if (schemaShape.sphere) {
-          return this._importSphereCollider(node, {
-            offset: fromArray(new this._pcRef.Vec3(), schemaShape.sphere.offset ?? [0, 0, 0]),
-            radius: schemaShape.sphere.radius ?? 0
+      if (m) {
+        if (m.sphere)
+          return this._importSphereCollider(M, {
+            offset: k(new this._pcRef.Vec3(), m.sphere.offset ?? [0, 0, 0]),
+            radius: m.sphere.radius ?? 0
           });
-        } else if (schemaShape.capsule) {
-          return this._importCapsuleCollider(node, {
-            offset: fromArray(
+        if (m.capsule)
+          return this._importCapsuleCollider(M, {
+            offset: k(
               new this._pcRef.Vec3(),
-              schemaShape.capsule.offset ?? [0, 0, 0]
+              m.capsule.offset ?? [0, 0, 0]
             ),
-            radius: schemaShape.capsule.radius ?? 0,
-            tail: fromArray(new this._pcRef.Vec3(), schemaShape.capsule.tail ?? [0, 0, 0])
+            radius: m.capsule.radius ?? 0,
+            tail: k(new this._pcRef.Vec3(), m.capsule.tail ?? [0, 0, 0])
           });
-        }
       }
-      throw new Error(`VRMSpringBoneLoaderPlugin: The collider #${iCollider} has no valid shape`);
-    });
-    const extensionColliderGroups = extension.colliderGroups;
-    const colliderGroups = extensionColliderGroups == null ? void 0 : extensionColliderGroups.map((schemaColliderGroup, iColliderGroup) => {
-      const cols = (schemaColliderGroup.colliders ?? []).map((iCollider) => {
-        const col = colliders == null ? void 0 : colliders[iCollider];
-        if (col == null) {
+      throw new Error(`VRMSpringBoneLoaderPlugin: The collider #${x} has no valid shape`);
+    }), p = l.colliderGroups, d = p == null ? void 0 : p.map((g, x) => ({
+      colliders: (g.colliders ?? []).map((m) => {
+        const w = c == null ? void 0 : c[m];
+        if (w == null)
           throw new Error(
-            `VRMSpringBoneLoaderPlugin: The colliderGroup #${iColliderGroup} attempted to use a collider #${iCollider} but not found`
+            `VRMSpringBoneLoaderPlugin: The colliderGroup #${x} attempted to use a collider #${m} but not found`
           );
-        }
-        return col;
-      });
-      return {
-        colliders: cols,
-        name: schemaColliderGroup.name
-      };
-    });
-    const extensionSprings = extension.springs;
-    extensionSprings.forEach((schemaSpring, iSpring) => {
-      var _a2;
-      const schemaJoints = schemaSpring.joints;
-      const colliderGroupsForSpring = (_a2 = schemaSpring.colliderGroups) == null ? void 0 : _a2.map((iColliderGroup) => {
-        const group = colliderGroups == null ? void 0 : colliderGroups[iColliderGroup];
-        if (group == null) {
+        return w;
+      }),
+      name: g.name
+    }));
+    return l.springs.forEach((g, x) => {
+      var B;
+      const M = g.joints, m = (B = g.colliderGroups) == null ? void 0 : B.map((T) => {
+        const v = d == null ? void 0 : d[T];
+        if (v == null)
           throw new Error(
-            `VRMSpringBoneLoaderPlugin: The spring #${iSpring} attempted to use a colliderGroup ${iColliderGroup} but not found`
+            `VRMSpringBoneLoaderPlugin: The spring #${x} attempted to use a colliderGroup ${T} but not found`
           );
+        return v;
+      }), w = g.center != null ? e.nodes[g.center] : void 0;
+      let y;
+      M.forEach((T) => {
+        if (y) {
+          const v = y.node, S = o[v], rt = this.entity.findByName(S.name), at = T.node, lt = o[at], ht = this.entity.findByName(lt.name), ct = {
+            hitRadius: y.hitRadius,
+            dragForce: y.dragForce,
+            gravityPower: y.gravityPower,
+            stiffness: y.stiffness,
+            gravityDir: y.gravityDir != null ? k(new this._pcRef.Vec3(), y.gravityDir) : void 0
+          }, z = this._importJoint(rt, ht, ct, m);
+          w && (z.center = w), s.addJoint(z);
         }
-        return group;
+        y = T;
       });
-      const center = schemaSpring.center != null ? resourceData.nodes[schemaSpring.center] : void 0;
-      let prevSchemaJoint;
-      schemaJoints.forEach((schemaJoint) => {
-        if (prevSchemaJoint) {
-          const nodeIndex = prevSchemaJoint.node;
-          const rootNode = gltfNodes[nodeIndex];
-          const node = this.entity.findByName(rootNode.name);
-          const childIndex = schemaJoint.node;
-          const rootChild = gltfNodes[childIndex];
-          const child = this.entity.findByName(rootChild.name);
-          const setting = {
-            hitRadius: prevSchemaJoint.hitRadius,
-            dragForce: prevSchemaJoint.dragForce,
-            gravityPower: prevSchemaJoint.gravityPower,
-            stiffness: prevSchemaJoint.stiffness,
-            gravityDir: prevSchemaJoint.gravityDir != null ? fromArray(new this._pcRef.Vec3(), prevSchemaJoint.gravityDir) : void 0
-          };
-          const joint = this._importJoint(node, child, setting, colliderGroupsForSpring);
-          if (center) {
-            joint.center = center;
-          }
-          manager.addJoint(joint);
-        }
-        prevSchemaJoint = schemaJoint;
-      });
-    });
-    manager.setInitState();
-    return manager;
+    }), s.setInitState(), s;
   }
-  _v0Import(gltf, resourceData) {
-    var _a, _b, _c;
-    const extension = (_a = gltf.extensions) == null ? void 0 : _a.VRM;
-    const isVRMUsed = ((_b = gltf.extensionsUsed) == null ? void 0 : _b.indexOf("VRM")) !== -1;
-    if (!isVRMUsed) {
+  _v0Import(t, e) {
+    var a, c, p;
+    const i = (a = t.extensions) == null ? void 0 : a.VRM;
+    if (!(((c = t.extensionsUsed) == null ? void 0 : c.indexOf("VRM")) !== -1))
       return null;
-    }
-    const schemaSecondaryAnimation = extension == null ? void 0 : extension.secondaryAnimation;
-    if (!schemaSecondaryAnimation) {
+    const s = i == null ? void 0 : i.secondaryAnimation;
+    if (!s)
       return null;
-    }
-    const schemaBoneGroups = schemaSecondaryAnimation == null ? void 0 : schemaSecondaryAnimation.boneGroups;
-    if (!schemaBoneGroups) {
+    const o = s == null ? void 0 : s.boneGroups;
+    if (!o)
       return null;
-    }
-    const manager = new VRMSpringBoneManager();
-    const colliderGroups = (_c = schemaSecondaryAnimation.colliderGroups) == null ? void 0 : _c.map((schemaColliderGroup) => {
-      var _a2;
-      const node = (_a2 = this.entity.findByTag(`node_${schemaColliderGroup.node}`)) == null ? void 0 : _a2[0];
-      if (!node) {
+    const l = new Q(), h = (p = s.colliderGroups) == null ? void 0 : p.map((d) => {
+      var u;
+      const f = (u = this.entity.findByTag(`node_${d.node}`)) == null ? void 0 : u[0];
+      if (!f) {
         console.error(
           "VRMSpringBoneLoaderPlugin Error: Did not find the node map to schemaColliderGroup"
         );
         return;
       }
-      const colliders = (schemaColliderGroup.colliders ?? []).map((schemaCollider) => {
-        const offset = new this._pcRef.Vec3(0, 0, 0);
-        if (schemaCollider.offset) {
-          offset.set(
-            schemaCollider.offset.x ?? 0,
-            schemaCollider.offset.y ?? 0,
-            schemaCollider.offset.z ? -schemaCollider.offset.z : 0
-            // z is opposite in VRM0.0
-          );
-        }
-        return this._importSphereCollider(node, {
-          offset,
-          radius: schemaCollider.radius ?? 0
+      return { colliders: (d.colliders ?? []).map((g) => {
+        const x = new this._pcRef.Vec3(0, 0, 0);
+        return g.offset && x.set(
+          g.offset.x ?? 0,
+          g.offset.y ?? 0,
+          g.offset.z ? -g.offset.z : 0
+          // z is opposite in VRM0.0
+        ), this._importSphereCollider(f, {
+          offset: x,
+          radius: g.radius ?? 0
         });
-      });
-      return { colliders };
+      }) };
     });
-    schemaBoneGroups == null ? void 0 : schemaBoneGroups.forEach((schemaBoneGroup, iBoneGroup) => {
-      const rootIndices = schemaBoneGroup.bones;
-      if (!rootIndices) {
-        return;
-      }
-      rootIndices.forEach((rootIndex) => {
-        var _a2, _b2;
-        const root = (_a2 = this.entity.findByTag(`node_${rootIndex}`)) == null ? void 0 : _a2[0];
-        if (!root) {
+    return o == null || o.forEach((d, f) => {
+      const _ = d.bones;
+      _ && _.forEach((u) => {
+        var y, B;
+        const g = (y = this.entity.findByTag(`node_${u}`)) == null ? void 0 : y[0];
+        if (!g) {
           console.error(
             "VRMSpringBoneLoaderPlugin Error: Did not find the node map to schemaColliderGroup"
           );
           return;
         }
-        const gravityDir = new this._pcRef.Vec3();
-        if (schemaBoneGroup.gravityDir) {
-          gravityDir.set(
-            schemaBoneGroup.gravityDir.x ?? 0,
-            schemaBoneGroup.gravityDir.y ?? 0,
-            schemaBoneGroup.gravityDir.z ?? 0
-          );
-        } else {
-          gravityDir.set(0, -1, 0);
-        }
-        const center = schemaBoneGroup.center != null ? resourceData.nodes[schemaBoneGroup.center] : void 0;
-        const setting = {
-          hitRadius: schemaBoneGroup.hitRadius,
-          dragForce: schemaBoneGroup.dragForce,
-          gravityPower: schemaBoneGroup.gravityPower,
-          stiffness: schemaBoneGroup.stiffiness,
-          gravityDir
-        };
-        const colliderGroupsForSpring = (_b2 = schemaBoneGroup.colliderGroups) == null ? void 0 : _b2.map((iColliderGroup) => {
-          const group = colliderGroups == null ? void 0 : colliderGroups[iColliderGroup];
-          if (group == null) {
+        const x = new this._pcRef.Vec3();
+        d.gravityDir ? x.set(
+          d.gravityDir.x ?? 0,
+          d.gravityDir.y ?? 0,
+          d.gravityDir.z ?? 0
+        ) : x.set(0, -1, 0);
+        const M = d.center != null ? e.nodes[d.center] : void 0, m = {
+          hitRadius: d.hitRadius,
+          dragForce: d.dragForce,
+          gravityPower: d.gravityPower,
+          stiffness: d.stiffiness,
+          gravityDir: x
+        }, w = (B = d.colliderGroups) == null ? void 0 : B.map((T) => {
+          const v = h == null ? void 0 : h[T];
+          if (v == null)
             throw new Error(
-              `VRMSpringBoneLoaderPlugin: The spring #${iBoneGroup} attempted to use a colliderGroup ${iColliderGroup} but not found`
+              `VRMSpringBoneLoaderPlugin: The spring #${f} attempted to use a colliderGroup ${T} but not found`
             );
-          }
-          return group;
+          return v;
         });
-        root.forEach((node) => {
-          const child = node.children[0] ?? null;
-          const joint = this._importJoint(node, child, setting, colliderGroupsForSpring);
-          if (center) {
-            joint.center = center;
-          }
-          manager.addJoint(joint);
+        g.forEach((T) => {
+          const v = T.children[0] ?? null, S = this._importJoint(T, v, m, w);
+          M && (S.center = M), l.addJoint(S);
         });
       });
-    });
-    manager.setInitState();
-    return manager;
+    }), l.setInitState(), l;
   }
-  _importSphereCollider(destination, { offset, radius }) {
-    const shape = new VRMSpringBoneColliderShapeSphere(this._pcRef, { offset, radius });
-    const VRMSpringBoneCollider = createVRMSpringBoneCollider(this._pcRef);
-    const collider = new VRMSpringBoneCollider(shape);
-    destination.addChild(collider);
-    return collider;
+  _importSphereCollider(t, { offset: e, radius: i }) {
+    const n = new bt(this._pcRef, { offset: e, radius: i }), s = X(this._pcRef), o = new s(n);
+    return t.addChild(o), o;
   }
-  _importCapsuleCollider(destination, { offset, radius, tail }) {
-    const shape = new VRMSpringBoneColliderShapeCapsule(this._pcRef, {
-      offset,
-      radius,
-      tail
-    });
-    const VRMSpringBoneCollider = createVRMSpringBoneCollider(this._pcRef);
-    const collider = new VRMSpringBoneCollider(shape);
-    destination.addChild(collider);
-    return collider;
+  _importCapsuleCollider(t, { offset: e, radius: i, tail: n }) {
+    const s = new Lt(this._pcRef, {
+      offset: e,
+      radius: i,
+      tail: n
+    }), o = X(this._pcRef), l = new o(s);
+    return t.addChild(l), l;
   }
-  _importJoint(node, child, setting, colliderGroupsForSpring) {
-    const springBone = new VRMSpringBoneJoint(
+  _importJoint(t, e, i, n) {
+    return new St(
       this._pcRef,
-      node,
-      child,
-      setting,
-      colliderGroupsForSpring
+      t,
+      e,
+      i,
+      n
     );
-    return springBone;
   }
 };
-_VRMSpringBoneLoaderPlugin.EXTENSION_NAME = "VRMC_springBone";
-let VRMSpringBoneLoaderPlugin = _VRMSpringBoneLoaderPlugin;
-const importScript = (pcRef) => {
-  class VrmSpringBone2 extends pcRef.ScriptType {
+b.EXTENSION_NAME = "VRMC_springBone";
+let W = b;
+const It = (r) => {
+  class t extends r.ScriptType {
     constructor() {
-      super(...arguments);
-      this.activeSpringBone = true;
-      this.isWalking = false;
+      super(...arguments), this.activeSpringBone = !0, this.isWalking = !1;
     }
     initialize() {
-      const springBoneLoader = new VRMSpringBoneLoaderPlugin(pcRef, this.asset, this.entity);
-      this.springBoneManager = springBoneLoader.import();
-      this.isWalking = false;
-      this.entity.on("toggle-spring-bone", this.toggleSpringBone, this);
-      this.entity.on("toggle-is-walking", this.toggleIsWalking, this);
-      this.on("destroy", () => {
-        this.entity.off("toggle-spring-bone", this.toggleSpringBone, this);
-        this.entity.on("toggle-is-walking", this.toggleIsWalking, this);
+      const i = new W(r, this.asset, this.entity);
+      this.springBoneManager = i.import(), this.isWalking = !1, this.entity.on("toggle-spring-bone", this.toggleSpringBone, this), this.entity.on("toggle-is-walking", this.toggleIsWalking, this), this.on("destroy", () => {
+        this.entity.off("toggle-spring-bone", this.toggleSpringBone, this), this.entity.on("toggle-is-walking", this.toggleIsWalking, this);
       });
     }
-    toggleSpringBone(isActive) {
-      this.activeSpringBone = isActive;
+    toggleSpringBone(i) {
+      this.activeSpringBone = i;
     }
-    toggleIsWalking(isWalking) {
-      this.isWalking = isWalking;
+    toggleIsWalking(i) {
+      this.isWalking = i;
     }
-    update(dt) {
-      if (!this.springBoneManager || !this.activeSpringBone)
-        return;
-      this.springBoneManager.update(dt, this.isWalking);
+    update(i) {
+      !this.springBoneManager || !this.activeSpringBone || this.springBoneManager.update(i, this.isWalking);
     }
   }
-  pcRef.registerScript(VrmSpringBone2, "vrmSpringBone");
-  VrmSpringBone2.attributes.add("activeSpringBone", {
+  r.registerScript(t, "vrmSpringBone"), t.attributes.add("activeSpringBone", {
     type: "boolean",
-    default: true
-  });
-  VrmSpringBone2.attributes.add("asset", {
+    default: !0
+  }), t.attributes.add("asset", {
     type: "asset",
     description: "Set the container asset loaded from vrm avatar."
   });
-};
-const VrmSpringBone = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, kt = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  importScript
+  importScript: It
 }, Symbol.toStringTag, { value: "Module" }));
-class VRMRig {
-  constructor(humanBones) {
-    this.humanBones = humanBones;
+class it {
+  constructor(t) {
+    this.humanBones = t;
   }
   /**
    * Return a bone bound to a specified {@link VRMHumanBoneName}, as a {@link VRMHumanBone}.
    *
    * @param name Name of the bone you want
    */
-  getBone(name) {
-    return this.humanBones[name] ?? void 0;
+  getBone(t) {
+    return this.humanBones[t] ?? void 0;
   }
-  getBoneNode(name) {
-    var _a;
-    return ((_a = this.humanBones[name]) == null ? void 0 : _a.node) ?? null;
+  getBoneNode(t) {
+    var e;
+    return ((e = this.humanBones[t]) == null ? void 0 : e.node) ?? null;
   }
 }
-class VRMHumanoidRig extends VRMRig {
-  static _setupTransforms(pcRef, modelRig) {
-    const root = new pcRef.Entity();
-    root.name = "VRMHumanoidRig";
-    const boneWorldPositions = {};
-    const boneRotations = {};
-    const parentWorldRotations = {};
-    VRMHumanBoneList.forEach((boneName) => {
-      const boneNode = modelRig.getBoneNode(boneName);
-      if (boneNode) {
-        boneWorldPositions[boneName] = boneNode.getPosition().clone();
-        boneNode.getRotation().clone();
-        boneRotations[boneName] = boneNode.getLocalRotation().clone();
-        const parentWorldRotation = new pcRef.Quat();
-        if (boneNode.parent) {
-          parentWorldRotation.copy(boneNode.parent.getRotation());
-        }
-        parentWorldRotations[boneName] = parentWorldRotation;
+class H extends it {
+  static _setupTransforms(t, e) {
+    const i = new t.Entity();
+    i.name = "VRMHumanoidRig";
+    const n = {}, s = {}, o = {};
+    E.forEach((h) => {
+      const a = e.getBoneNode(h);
+      if (a) {
+        n[h] = a.getPosition().clone(), a.getRotation().clone(), s[h] = a.getLocalRotation().clone();
+        const c = new t.Quat();
+        a.parent && c.copy(a.parent.getRotation()), o[h] = c;
       }
     });
-    const rigBones = {};
-    VRMHumanBoneList.forEach((boneName) => {
-      var _a;
-      const boneNode = modelRig.getBoneNode(boneName);
-      if (boneNode) {
-        const boneWorldPosition = boneWorldPositions[boneName];
-        let currentBoneName = boneName;
-        let parentBoneWorldPosition;
-        while (parentBoneWorldPosition == null) {
-          currentBoneName = VRMHumanBoneParentMap[currentBoneName];
-          if (currentBoneName == null) {
-            break;
-          }
-          parentBoneWorldPosition = boneWorldPositions[currentBoneName];
-        }
-        const rigBoneNode = new pcRef.Entity();
-        rigBoneNode.name = boneNode.name;
-        const parentRigBoneNode = currentBoneName ? (_a = rigBones[currentBoneName]) == null ? void 0 : _a.node : root;
-        parentRigBoneNode.addChild(rigBoneNode);
-        const localPosition = new pcRef.Vec3().copy(boneWorldPosition);
-        if (parentBoneWorldPosition) {
-          localPosition.sub(parentBoneWorldPosition);
-        }
-        rigBoneNode.setLocalPosition(localPosition);
-        rigBones[boneName] = { node: rigBoneNode };
+    const l = {};
+    return E.forEach((h) => {
+      var c;
+      const a = e.getBoneNode(h);
+      if (a) {
+        const p = n[h];
+        let d = h, f;
+        for (; f == null && (d = Y[d], d != null); )
+          f = n[d];
+        const _ = new t.Entity();
+        _.name = a.name, (d ? (c = l[d]) == null ? void 0 : c.node : i).addChild(_);
+        const g = new t.Vec3().copy(p);
+        f && g.sub(f), _.setLocalPosition(g), l[h] = { node: _ };
       }
-    });
-    return {
-      rigBones,
-      root,
-      parentWorldRotations,
-      boneRotations
+    }), {
+      rigBones: l,
+      root: i,
+      parentWorldRotations: o,
+      boneRotations: s
     };
   }
-  constructor(pcRef, humanoid) {
-    const { rigBones, root, parentWorldRotations, boneRotations } = VRMHumanoidRig._setupTransforms(
-      pcRef,
-      humanoid
+  constructor(t, e) {
+    const { rigBones: i, root: n, parentWorldRotations: s, boneRotations: o } = H._setupTransforms(
+      t,
+      e
     );
-    super(rigBones);
-    this.pcRef = pcRef;
-    this.original = humanoid;
-    this.root = root;
-    this._parentWorldRotations = parentWorldRotations;
-    this._boneRotations = boneRotations;
-    this._quatA = new pcRef.Quat();
-    this._quatB = new pcRef.Quat();
-    this._vec3A = new pcRef.Vec3();
-    this._mat4A = new pcRef.Mat4();
-    const app = pcRef.Application.getApplication();
-    if (app)
-      app.root.addChild(root);
+    super(i), this.pcRef = t, this.original = e, this.root = n, this._parentWorldRotations = s, this._boneRotations = o, this._quatA = new t.Quat(), this._quatB = new t.Quat(), this._vec3A = new t.Vec3(), this._mat4A = new t.Mat4();
+    const l = t.Application.getApplication();
+    l && l.root.addChild(n);
   }
-  applyMatrix4(position, m) {
-    const x = position.x, y = position.y, z = position.z;
-    const e = m.data;
-    const w = 1 / (e[3] * x + e[7] * y + e[11] * z + e[15]);
-    position.x = (e[0] * x + e[4] * y + e[8] * z + e[12]) * w;
-    position.y = (e[1] * x + e[5] * y + e[9] * z + e[13]) * w;
-    position.z = (e[2] * x + e[6] * y + e[10] * z + e[14]) * w;
-    return position;
+  applyMatrix4(t, e) {
+    const i = t.x, n = t.y, s = t.z, o = e.data, l = 1 / (o[3] * i + o[7] * n + o[11] * s + o[15]);
+    return t.x = (o[0] * i + o[4] * n + o[8] * s + o[12]) * l, t.y = (o[1] * i + o[5] * n + o[9] * s + o[13]) * l, t.z = (o[2] * i + o[6] * n + o[10] * s + o[14]) * l, t;
   }
   update() {
-    VRMHumanBoneList.forEach((boneName) => {
-      var _a;
-      const boneNode = (_a = this.original.humanBones[boneName]) == null ? void 0 : _a.entity;
-      const rigBoneNode = this.getBoneNode(boneName);
-      if (boneNode != null && rigBoneNode) {
-        const parentWorldRotation = this._parentWorldRotations[boneName];
-        const invParentWorldRotation = this._quatB.copy(parentWorldRotation).invert();
-        const boneRotation = this._boneRotations[boneName];
-        this._quatA.copy(rigBoneNode.getLocalRotation());
-        this._quatA.mul(parentWorldRotation);
-        this._quatA.copy(invParentWorldRotation.mul(this._quatA));
-        this._quatA.mul(boneRotation);
-        boneNode.setLocalRotation(this._quatA);
-        if (boneName === "hips") {
-          const boneWorldPosition = this._vec3A.copy(rigBoneNode.getPosition());
-          const parentWorldMatrix = this._mat4A.copy(boneNode.parent.getWorldTransform());
-          const localPosition = this.applyMatrix4(boneWorldPosition, parentWorldMatrix.invert());
-          boneNode.setLocalPosition(localPosition);
+    E.forEach((t) => {
+      var n;
+      const e = (n = this.original.humanBones[t]) == null ? void 0 : n.entity, i = this.getBoneNode(t);
+      if (e != null && i) {
+        const s = this._parentWorldRotations[t], o = this._quatB.copy(s).invert(), l = this._boneRotations[t];
+        if (this._quatA.copy(i.getLocalRotation()), this._quatA.mul(s), this._quatA.copy(o.mul(this._quatA)), this._quatA.mul(l), e.setLocalRotation(this._quatA), t === "hips") {
+          const h = this._vec3A.copy(i.getPosition()), a = this._mat4A.copy(e.parent.getWorldTransform()), c = this.applyMatrix4(h, a.invert());
+          e.setLocalPosition(c);
         }
       }
     });
   }
 }
-class VRMHumanoid {
-  constructor(pcRef, humanBones, options) {
-    this.autoUpdateHumanBones = (options == null ? void 0 : options.autoUpdateHumanBones) ?? true;
-    this._rawHumanBones = new VRMRig(humanBones);
-    this._normalizedHumanBones = new VRMHumanoidRig(pcRef, this._rawHumanBones);
+class Et {
+  constructor(t, e, i) {
+    this.autoUpdateHumanBones = (i == null ? void 0 : i.autoUpdateHumanBones) ?? !0, this._rawHumanBones = new it(e), this._normalizedHumanBones = new H(t, this._rawHumanBones);
   }
   get humanBones() {
     return this._rawHumanBones.humanBones;
@@ -1981,36 +1343,36 @@ class VRMHumanoid {
    *
    * @param name Name of the bone you want
    */
-  getRawBone(name) {
-    return this._rawHumanBones.getBone(name);
+  getRawBone(t) {
+    return this._rawHumanBones.getBone(t);
   }
   /**
    * Return a normalized {@link VRMHumanBone} bound to a specified {@link VRMHumanBoneName}.
    *
    * @param name Name of the bone you want
    */
-  getNormalizedBone(name) {
-    return this._normalizedHumanBones.getBone(name);
+  getNormalizedBone(t) {
+    return this._normalizedHumanBones.getBone(t);
   }
   /**
    * Return a raw bone as a `THREE.Object3D` bound to a specified {@link VRMHumanBoneName}.
    *
    * @param name Name of the bone you want
    */
-  getRawBoneNode(name) {
-    return this._rawHumanBones.getBoneNode(name);
+  getRawBoneNode(t) {
+    return this._rawHumanBones.getBoneNode(t);
   }
   /**
    * Return a normalized bone as a `THREE.Object3D` bound to a specified {@link VRMHumanBoneName}.
    *
    * @param name Name of the bone you want
    */
-  getNormalizedBoneNode(name) {
-    return this._normalizedHumanBones.getBoneNode(name);
+  getNormalizedBoneNode(t) {
+    return this._normalizedHumanBones.getBoneNode(t);
   }
-  getBoneEntity(name) {
-    var _a;
-    return ((_a = this._rawHumanBones.humanBones[name]) == null ? void 0 : _a.entity) || null;
+  getBoneEntity(t) {
+    var e;
+    return ((e = this._rawHumanBones.humanBones[t]) == null ? void 0 : e.entity) || null;
   }
   /**
    * Update the humanoid component.
@@ -2018,325 +1380,227 @@ class VRMHumanoid {
    * If {@link autoUpdateHumanBones} is `true`, it transfers the pose of normalized human bones to raw human bones.
    */
   update() {
-    if (this.autoUpdateHumanBones) {
-      this._normalizedHumanBones.update();
+    this.autoUpdateHumanBones && this._normalizedHumanBones.update();
+  }
+}
+function At(r, t, e) {
+  const i = r.humanBones, n = {};
+  return r.humanBones != null && Object.entries(i).map(([, s]) => {
+    var a;
+    let o = s.bone;
+    const l = s.node;
+    if (o == null || l == null)
+      return;
+    const h = t.resource.data.nodes[l];
+    if (h == null) {
+      console.warn(
+        `A glTF node bound to the humanoid bone ${o} (index = ${l}) does not exist`
+      );
+      return;
     }
-  }
+    n[o] = {
+      node: h,
+      entity: ((a = e.findByTag(`node_${l}`)) == null ? void 0 : a[0]) || null
+    };
+  }), n;
 }
-function createVRMHumanBones(schemaHumanoid, glbAsset, entity) {
-  const schemaHumanBones = schemaHumanoid.humanBones;
-  const humanBones = {};
-  if (schemaHumanoid.humanBones != null) {
-    Object.entries(schemaHumanBones).map(([, schemaHumanBone]) => {
-      var _a;
-      let boneName = schemaHumanBone.bone;
-      const index = schemaHumanBone.node;
-      if (boneName == null || index == null) {
-        return;
+function Vt(r, t, e) {
+  var s;
+  const i = {}, n = r.humanBones.leftThumbIntermediate != null || r.humanBones.rightThumbIntermediate != null;
+  if (r.humanBones)
+    for (const o in r.humanBones) {
+      let l = o;
+      const h = r.humanBones[o].node, a = t.resource.data.nodes[h];
+      if (n) {
+        const c = q[l];
+        c != null && (l = c);
       }
-      const node = glbAsset.resource.data.nodes[index];
-      if (node == null) {
-        console.warn(
-          `A glTF node bound to the humanoid bone ${boneName} (index = ${index}) does not exist`
-        );
-        return;
-      }
-      humanBones[boneName] = {
-        node,
-        entity: ((_a = entity.findByTag(`node_${index}`)) == null ? void 0 : _a[0]) || null
-      };
-    });
-  }
-  return humanBones;
-}
-function createVRMCHumanBones(schemaHumanoid, glbAsset, entity) {
-  var _a;
-  const humanBones = {};
-  const existsPreviousThumbName = schemaHumanoid.humanBones.leftThumbIntermediate != null || schemaHumanoid.humanBones.rightThumbIntermediate != null;
-  if (schemaHumanoid.humanBones) {
-    for (const property in schemaHumanoid.humanBones) {
-      let boneName = property;
-      const index = schemaHumanoid.humanBones[property].node;
-      const node = glbAsset.resource.data.nodes[index];
-      if (existsPreviousThumbName) {
-        const thumbBoneName = thumbBoneNameMap[boneName];
-        if (thumbBoneName != null) {
-          boneName = thumbBoneName;
-        }
-      }
-      if (node == null) {
-        console.warn(
-          `A glTF node bound to the humanoid bone ${boneName} (index = ${index}) does not exist`
-        );
-        return null;
-      }
-      humanBones[boneName] = {
-        node,
-        entity: ((_a = entity.findByTag(`node_${index}`)) == null ? void 0 : _a[0]) || null
+      if (a == null)
+        return console.warn(
+          `A glTF node bound to the humanoid bone ${l} (index = ${h}) does not exist`
+        ), null;
+      i[l] = {
+        node: a,
+        entity: ((s = e.findByTag(`node_${h}`)) == null ? void 0 : s[0]) || null
       };
     }
-  }
-  return humanBones;
+  return i;
 }
-function createFormattedVRMHumanoid(pcRef, vrmAsset, renderEntity, options) {
-  var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
-  const VRM = (_b = (_a = vrmAsset.resource.data.gltf) == null ? void 0 : _a.extensions) == null ? void 0 : _b.VRM;
-  const VRMC_vrm = (_d = (_c = vrmAsset.resource.data.gltf) == null ? void 0 : _c.extensions) == null ? void 0 : _d.VRMC_vrm;
-  if (!VRM && !VRMC_vrm) {
-    console.warn("CreateFormattedVRMHumanoid: Please check. It is not a vrm avatar.");
-    return null;
+function Ct(r, t, e, i) {
+  var l, h, a, c, p, d, f, _, u, g;
+  const n = (h = (l = t.resource.data.gltf) == null ? void 0 : l.extensions) == null ? void 0 : h.VRM, s = (c = (a = t.resource.data.gltf) == null ? void 0 : a.extensions) == null ? void 0 : c.VRMC_vrm;
+  if (!n && !s)
+    return console.warn("CreateFormattedVRMHumanoid: Please check. It is not a vrm avatar."), null;
+  let o = null;
+  if (n) {
+    const x = (f = (d = (p = t.resource.data.gltf) == null ? void 0 : p.extensions) == null ? void 0 : d.VRM) == null ? void 0 : f.humanoid;
+    o = At(x, t, e);
+  } else if (s) {
+    const x = s.specVersion;
+    if (!U.has(x))
+      return console.warn(`Unknown VRMC_vrm specVersion "${x}"`), null;
+    const M = (g = (u = (_ = t.resource.data.gltf) == null ? void 0 : _.extensions) == null ? void 0 : u.VRMC_vrm) == null ? void 0 : g.humanoid;
+    o = Vt(M, t, e);
   }
-  let humanBones = null;
-  if (VRM) {
-    const schemaHumanoid = (_g = (_f = (_e = vrmAsset.resource.data.gltf) == null ? void 0 : _e.extensions) == null ? void 0 : _f.VRM) == null ? void 0 : _g.humanoid;
-    humanBones = createVRMHumanBones(schemaHumanoid, vrmAsset, renderEntity);
-  } else if (VRMC_vrm) {
-    const specVersion = VRMC_vrm.specVersion;
-    if (!POSSIBLE_SPEC_VERSIONS.has(specVersion)) {
-      console.warn(`Unknown VRMC_vrm specVersion "${specVersion}"`);
-      return null;
-    }
-    const schemaHumanoid = (_j = (_i = (_h = vrmAsset.resource.data.gltf) == null ? void 0 : _h.extensions) == null ? void 0 : _i.VRMC_vrm) == null ? void 0 : _j.humanoid;
-    humanBones = createVRMCHumanBones(schemaHumanoid, vrmAsset, renderEntity);
-  }
-  if (humanBones) {
-    const autoUpdateHumanBones = !!(options == null ? void 0 : options.autoUpdateHumanBones);
-    const humanoid = new VRMHumanoid(pcRef, humanBones, { autoUpdateHumanBones });
-    return humanoid;
+  if (o) {
+    const x = !!(i != null && i.autoUpdateHumanBones);
+    return new Et(r, o, { autoUpdateHumanBones: x });
   }
   return null;
 }
-const loadGlbContainerFromAsset = function(pcRef, glbBinAsset, options, assetName, callback, assignApp) {
-  const app = assignApp;
-  if (!app) {
+const Nt = function(r, t, e, i, n, s) {
+  const o = s;
+  if (!o) {
     console.error("loadGlbContainerFromAsset: Can not find app.");
     return;
   }
-  const onAssetReady = function(asset) {
-    const blob = new Blob([asset.resource]);
-    const data = URL.createObjectURL(blob);
-    return loadGlbContainerFromUrl(
-      pcRef,
-      data,
-      options,
-      assetName,
-      function(error, asset2) {
-        callback(error, asset2);
-        URL.revokeObjectURL(data);
+  const l = function(h) {
+    const a = new Blob([h.resource]), c = URL.createObjectURL(a);
+    return nt(
+      r,
+      c,
+      e,
+      i,
+      function(p, d) {
+        n(p, d), URL.revokeObjectURL(c);
       },
-      app
+      o
     );
   };
-  if (!glbBinAsset.loaded) {
-    glbBinAsset.ready(onAssetReady);
-    app.assets.load(glbBinAsset);
-  } else {
-    onAssetReady(glbBinAsset);
-  }
-};
-const loadGlbContainerFromUrl = function(pcRef, url, options, assetName, callback, assignApp) {
-  const app = assignApp;
-  if (!app) {
+  t.loaded ? l(t) : (t.ready(l), o.assets.load(t));
+}, nt = function(r, t, e, i, n, s) {
+  const o = s;
+  if (!o) {
     console.error("loadGlbContainerFromAsset: Can not find app.");
     return;
   }
-  const filename = assetName;
-  const file = {
-    url,
-    filename
-  };
-  const asset = new pcRef.Asset(filename, "container", file, void 0, options);
-  asset.once("load", function(containerAsset) {
-    if (callback) {
-      const animations = containerAsset.resource.animations;
-      if (animations.length == 1) {
-        animations[0].name = assetName;
-      } else if (animations.length > 1) {
-        for (let i = 0; i < animations.length; ++i) {
-          animations[i].name = assetName + " " + i.toString();
-        }
-      }
-      callback(null, containerAsset);
+  const l = i, h = {
+    url: t,
+    filename: l
+  }, a = new r.Asset(l, "container", h, void 0, e);
+  return a.once("load", function(c) {
+    if (n) {
+      const p = c.resource.animations;
+      if (p.length == 1)
+        p[0].name = i;
+      else if (p.length > 1)
+        for (let d = 0; d < p.length; ++d)
+          p[d].name = i + " " + d.toString();
+      n(null, c);
     }
-  });
-  app.assets.add(asset);
-  app.assets.load(asset);
-  return asset;
+  }), o.assets.add(a), o.assets.load(a), a;
 };
-class GLTFLoader {
-  constructor(pcRef, app) {
-    __privateAdd(this, _setExtensionsToNodes);
-    __privateAdd(this, _addEssentialTags);
-    __privateAdd(this, _pluginsCallbacks, void 0);
-    __privateSet(this, _pluginsCallbacks, /* @__PURE__ */ new Map());
-    this.loading = false;
-    this._pcRef = pcRef;
-    this.app = app;
+var R, V, st, C, ot;
+class Dt {
+  constructor(t, e) {
+    I(this, V);
+    I(this, C);
+    I(this, R, void 0);
+    O(this, R, /* @__PURE__ */ new Map()), this.loading = !1, this._pcRef = t, this.app = e;
   }
-  async parse(source, name = "Model", options = void 0, setting = {}, needAddTags = true) {
-    const plugins = [];
+  async parse(t, e = "Model", i = void 0, n = {}, s = !0) {
+    const o = [];
     return new Promise(
-      (resolve, reject) => {
-        const parsedCallBack = (err, asset) => {
-          var _a, _b;
-          if (err) {
-            this.loading = false;
-            reject(`GLTFLoader Error: ${err}`);
-          }
-          __privateGet(this, _pluginsCallbacks).forEach((createPlugin) => {
-            const plugin = createPlugin(asset);
-            plugins.push(plugin);
+      (l, h) => {
+        const a = (c, p) => {
+          var M, m;
+          c && (this.loading = !1, h(`GLTFLoader Error: ${c}`)), P(this, R).forEach((w) => {
+            const y = w(p);
+            o.push(y);
           });
-          const assetData = asset.resource.data;
-          if (needAddTags) {
-            __privateMethod(this, _addEssentialTags, addEssentialTags_fn).call(this, assetData, plugins);
-          }
-          const renderEntity = asset.resource.instantiateRenderEntity(setting);
-          const rootEntity = new this._pcRef.Entity(name, this.app);
-          rootEntity.addChild(renderEntity);
-          plugins.forEach((plugin) => {
-            if (plugin.instantiated)
-              plugin.instantiated(rootEntity);
-          });
-          this.loading = false;
-          const isV1Used = (_a = asset.resource.data.gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
-          const isV0Used = (_b = asset.resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
-          const version = isV1Used ? "v1" : isV0Used ? "v0" : null;
-          resolve({ entity: rootEntity, asset, version });
+          const d = p.resource.data;
+          s && D(this, C, ot).call(this, d, o);
+          const f = p.resource.instantiateRenderEntity(n), _ = new this._pcRef.Entity(e, this.app);
+          _.addChild(f), o.forEach((w) => {
+            w.instantiated && w.instantiated(_);
+          }), this.loading = !1;
+          const u = (M = p.resource.data.gltf.extensions) == null ? void 0 : M.VRMC_vrm, g = (m = p.resource.data.gltf.extensions) == null ? void 0 : m.VRM;
+          l({ entity: _, asset: p, version: u ? "v1" : g ? "v0" : null });
         };
-        if (!source) {
-          reject("GLTFLoader Error: Please pass the asset or url to parse.");
-        }
-        this.loading = true;
-        if (source instanceof this._pcRef.Asset) {
-          if (source.type === "container") {
-            if (source.loaded) {
-              parsedCallBack(null, source);
-            } else {
-              source.once("load", () => {
-                parsedCallBack(null, source);
-              });
-              if (!this.app.assets.get(source.id))
-                this.app.assets.add(source);
-              this.app.assets.load(source);
-            }
-          } else if (source.type === "binary") {
-            loadGlbContainerFromAsset(
-              this._pcRef,
-              source,
-              options,
-              name,
-              parsedCallBack.bind(this),
-              this.app
-            );
-          } else {
-            reject("GLTFLoader Error: Please pass available asset or url to parse.");
-          }
-        } else {
-          loadGlbContainerFromUrl(
-            this._pcRef,
-            source,
-            options,
-            name,
-            parsedCallBack.bind(this),
-            this.app
-          );
-        }
+        t || h("GLTFLoader Error: Please pass the asset or url to parse."), this.loading = !0, t instanceof this._pcRef.Asset ? t.type === "container" ? t.loaded ? a(null, t) : (t.once("load", () => {
+          a(null, t);
+        }), this.app.assets.get(t.id) || this.app.assets.add(t), this.app.assets.load(t)) : t.type === "binary" ? Nt(
+          this._pcRef,
+          t,
+          i,
+          e,
+          a.bind(this),
+          this.app
+        ) : h("GLTFLoader Error: Please pass available asset or url to parse.") : nt(
+          this._pcRef,
+          t,
+          i,
+          e,
+          a.bind(this),
+          this.app
+        );
       }
     );
   }
   // Register Plugin to loader
-  register(name, callback) {
-    if (!__privateGet(this, _pluginsCallbacks).has(name)) {
-      __privateGet(this, _pluginsCallbacks).set(name, callback);
-    }
+  register(t, e) {
+    P(this, R).has(t) || P(this, R).set(t, e);
   }
   // Deregister Plugin to loader
-  deregister(name) {
-    if (__privateGet(this, _pluginsCallbacks).has(name)) {
-      __privateGet(this, _pluginsCallbacks).delete(name);
-    }
+  deregister(t) {
+    P(this, R).has(t) && P(this, R).delete(t);
   }
-  static registerAnimation(entity, animations, { useResourceName, defaultPlayIndex } = {
-    useResourceName: false,
+  static registerAnimation(t, e, { useResourceName: i, defaultPlayIndex: n } = {
+    useResourceName: !1,
     defaultPlayIndex: 0
   }) {
-    if (animations.length === 0) {
-      return;
-    }
-    entity.addComponent("anim", {
-      activate: true
-    });
-    animations.forEach((ani, i) => {
-      const resourceName = ani.resource.name.replace(".", "_");
-      if (entity.anim) {
-        entity.anim.assignAnimation(
-          useResourceName ? resourceName : `ANIMATION_${i}`,
-          ani.resource
-        );
-      }
-    });
-    if (defaultPlayIndex !== null) {
-      const defaultAnimationName = useResourceName ? animations[defaultPlayIndex].resource.name : `ANIMATION_${defaultPlayIndex}`;
-      if (entity.anim && entity.anim.baseLayer.states.find((state) => state === defaultAnimationName)) {
-        entity.anim.baseLayer.transition(defaultAnimationName);
-      }
+    if (e.length !== 0 && (t.addComponent("anim", {
+      activate: !0
+    }), e.forEach((s, o) => {
+      const l = s.resource.name.replace(".", "_");
+      t.anim && t.anim.assignAnimation(
+        i ? l : `ANIMATION_${o}`,
+        s.resource
+      );
+    }), n !== null)) {
+      const s = i ? e[n].resource.name : `ANIMATION_${n}`;
+      t.anim && t.anim.baseLayer.states.find((o) => o === s) && t.anim.baseLayer.transition(s);
     }
   }
 }
-_pluginsCallbacks = new WeakMap();
-_setExtensionsToNodes = new WeakSet();
-setExtensionsToNodes_fn = function(nodes, gltfNodes) {
-  nodes.forEach((node, index) => {
-    const gltfNodeExtensions = gltfNodes[index].extensions;
-    if (gltfNodeExtensions) {
-      node.extensions = gltfNodeExtensions;
-    }
+R = new WeakMap(), V = new WeakSet(), st = function(t, e) {
+  t.forEach((i, n) => {
+    const s = e[n].extensions;
+    s && (i.extensions = s);
   });
-};
-_addEssentialTags = new WeakSet();
-addEssentialTags_fn = function(assetData, plugins) {
-  const gltfNodes = assetData.gltf.nodes;
-  const nodes = assetData.nodes;
-  __privateMethod(this, _setExtensionsToNodes, setExtensionsToNodes_fn).call(this, nodes, gltfNodes);
-  assetData.scenes.forEach((scene) => {
-    const addedNodeSet = /* @__PURE__ */ new Set([]);
-    scene.forEach((node) => {
-      let isAdded = false;
-      let targetNodes = [];
-      assetData.nodes.forEach((originNode, index) => {
-        if (node.path === originNode.path) {
-          targetNodes.push(index);
-        }
-      });
-      targetNodes.forEach((targetIndex) => {
-        if (!addedNodeSet.has(targetIndex) && !isAdded) {
-          node.tags.add(`node_${targetIndex}`);
-          const extensions = assetData.nodes[targetIndex].extensions;
-          plugins.forEach((plugin) => {
-            if (plugin.parsedNodeAddTags)
-              plugin.parsedNodeAddTags(node, extensions);
-          });
-          addedNodeSet.add(targetIndex);
-          isAdded = true;
+}, C = new WeakSet(), ot = function(t, e) {
+  const i = t.gltf.nodes, n = t.nodes;
+  D(this, V, st).call(this, n, i), t.scenes.forEach((s) => {
+    const o = /* @__PURE__ */ new Set([]);
+    s.forEach((l) => {
+      let h = !1, a = [];
+      t.nodes.forEach((c, p) => {
+        l.path === c.path && a.push(p);
+      }), a.forEach((c) => {
+        if (!o.has(c) && !h) {
+          l.tags.add(`node_${c}`);
+          const p = t.nodes[c].extensions;
+          e.forEach((d) => {
+            d.parsedNodeAddTags && d.parsedNodeAddTags(l, p);
+          }), o.add(c), h = !0;
         }
       });
     });
   });
 };
 window.VRMLoader = {
-  VrmAnimation,
-  VrmExpression,
-  VrmSpringBone,
-  VrmMapList,
-  createFormattedVRMHumanoid
+  VrmAnimation: xt,
+  VrmExpression: Pt,
+  VrmSpringBone: kt,
+  VrmMapList: ut,
+  createFormattedVRMHumanoid: Ct
 };
-window.GLTFLoader = GLTFLoader;
+window.GLTFLoader = Dt;
 export {
-  GLTFLoader,
-  VrmAnimation,
-  VrmExpression,
-  VrmMapList,
-  VrmSpringBone,
-  createFormattedVRMHumanoid
+  Dt as GLTFLoader,
+  xt as VrmAnimation,
+  Pt as VrmExpression,
+  ut as VrmMapList,
+  kt as VrmSpringBone,
+  Ct as createFormattedVRMHumanoid
 };

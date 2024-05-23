@@ -47,7 +47,6 @@ const createAnimTrack = (pcRef: typeof pc, animTrack: pc.AnimTrack) => {
 const loadAnimation = (
   pcRef: typeof pc,
   animationAssets: IAnimationAsset[],
-  entity: pc.Entity,
   humanoid: VRMHumanoid,
   {
     vrmHipsHeight,
@@ -63,7 +62,6 @@ const loadAnimation = (
 ) => {
   const hipPositionOutputIndexes: { [key: number]: boolean } = {};
   const scaleOutputIndexes: { [key: number]: boolean } = {};
-  const calcQuat = new pcRef.Quat();
 
   return animationAssets
     .map((animationAsset: IAnimationAsset) => {
@@ -138,21 +136,14 @@ const loadAnimation = (
         animTrack.outputs.forEach((output, outputIndex) => {
           const isScaleOutput = scaleOutputIndexes[outputIndex];
 
-          const outputCurve = animTrack.curves.find((curve) => curve.output === outputIndex);
-
-          let entityPath = '';
-          if (outputCurve) {
-            const path = outputCurve.paths[0] as unknown as IMorphCurvePath;
-            const entityPaths = path.entityPath;
-            entityPath = entityPaths[entityPaths.length - 1];
-          }
+          // const outputCurve = animTrack.curves.find((curve) => curve.output === outputIndex);
 
           if (output.components === 3) {
             if (!isScaleOutput) {
               const newData = output.data.map((v, index) => {
                 let value = v;
 
-                if (version === 'v1' && index % 3 !== 1) {
+                if (version === 'v0' && index % 3 !== 1) {
                   value *= -1;
                 }
 
@@ -179,7 +170,7 @@ const loadAnimation = (
             }
           } else if (output.components === 4) {
             const newData = output.data.map((v, index) => {
-              if (version === 'v1' && index % 2 === 0) {
+              if (version === 'v0' && index % 2 === 0) {
                 return -v;
               } else {
                 return v;
@@ -211,7 +202,6 @@ export const createVRMAnimation = (
   pcRef: typeof pc,
   animationAssets: IAnimationAsset[],
   asset: pc.Asset,
-  entity: pc.Entity,
   humanoid?: VRMHumanoid | null,
   motionHipsHeight?: number,
 ) => {
@@ -232,7 +222,7 @@ export const createVRMAnimation = (
   const vrmHipsZ = vrmHipsPosition.z;
   const vrmHipsDeep = Math.abs(vrmHipsZ - 0);
 
-  return loadAnimation(pcRef, animationAssets, entity, humanoid, {
+  return loadAnimation(pcRef, animationAssets, humanoid, {
     vrmHipsHeight,
     vrmHipsDeep,
     ...(motionHipsHeight && { motionHipsHeight }),

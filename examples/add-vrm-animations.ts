@@ -50,7 +50,7 @@
 //           animationAssets,
 //           convertedAsset,
 //           rootEntity,
-//           humanoid (optional!),
+//           humanoid,
 //           motionHipsHeight (optional!)
 //         );
 //         if (loadedResources) {
