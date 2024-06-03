@@ -48,7 +48,6 @@
 //           pc,
 //           animationAssets,
 //           convertedAsset,
-//           rootEntity,
 //           humanoid,
 //           motionHipsHeight (optional!)
 //         );
