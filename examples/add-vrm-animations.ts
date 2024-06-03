@@ -41,16 +41,14 @@
 //         ];
 
 //         /**
-//          * Note: You can provide the humanoid and reuse it,
-//          * or you can recreate the humanoid every time you call the function.
+//          * Note: You need provide the humanoid and reuse it.
 //          */
 //         const humanoid = createFormattedVRMHumanoid(pc, asset, rootEntity);
 //         const loadedResources = VrmAnimation.createVRMAnimation(
 //           pc,
 //           animationAssets,
 //           convertedAsset,
-//           rootEntity,
-//           humanoid (optional!),
+//           humanoid,
 //           motionHipsHeight (optional!)
 //         );
 //         if (loadedResources) {
