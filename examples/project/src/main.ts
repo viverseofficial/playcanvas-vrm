@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 import avatarUrl from '/rara.vrm?url';
-import idleAnimUrl from '/Test_+Z_axes+z.glb?url';
+import idleAnimUrl from '/Idle_anim.glb?url';
 import runAnimUrl from '/Run_anim.glb?url';
 import mocapAnimUrl from '/mocap-animation.gltf?url';
 
@@ -149,7 +149,6 @@ const createAvatar = () => {
           asset: pc.Asset;
           version: 'v0' | 'v1' | null;
         }) => {
-          console.log('YYY version?', version);
           const rootEntity = new pc.Entity('VRM_AVATAR_ROOT');
           rootEntity.addChild(renderRootEntity);
 
