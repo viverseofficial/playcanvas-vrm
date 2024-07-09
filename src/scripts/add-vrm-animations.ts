@@ -53,11 +53,13 @@ const loadAnimation = (
     vrmHipsDeep,
     motionHipsHeight,
     version = 'v0',
+    negativeZAnimNames = [],
   }: {
     vrmHipsHeight: number;
     vrmHipsDeep: number;
     motionHipsHeight?: number;
     version?: 'v0' | 'v1';
+    negativeZAnimNames?: string[];
   },
 ) => {
   const hipPositionOutputIndexes: { [key: number]: boolean } = {};
@@ -66,12 +68,16 @@ const loadAnimation = (
   return animationAssets
     .map((animationAsset: IAnimationAsset) => {
       const resource =
-        animationAsset.asset.type === 'container'
-          ? animationAsset.asset.resource.animations[0]?.resource
+        animationAsset.asset.resource && animationAsset.asset.type === 'container'
+          ? animationAsset.asset.resource.animations?.[0]?.resource
           : animationAsset.asset.resource;
 
       if (resource) {
         const animTrack = createAnimTrack(pcRef, resource);
+        // Default animation skeleton forward is +z axis, so vrm version 0 needs to be converted.
+        // some animation forward is -z axis, convert to vrm version 1.
+        const isNegativeZAxis = negativeZAnimNames.includes(resource.name);
+        const needCovetVersion = isNegativeZAxis ? 'v1' : 'v0';
 
         // Try to get the animation hips node from asset
         let nodeMotionHipsHeight = 0;
@@ -85,6 +91,7 @@ const loadAnimation = (
         }
 
         motionHipsHeight = motionHipsHeight || nodeMotionHipsHeight || 0.855;
+
         const hipsPositionScaleY = vrmHipsHeight / motionHipsHeight;
 
         animTrack.curves.forEach((curve) => {
@@ -111,7 +118,7 @@ const loadAnimation = (
             const arrangedEntityPath = morphCurvePath.entityPath.map((path) => {
               const originalRigName = path;
               const vrmBoneName = VRMRigMap[originalRigName];
-              const vrmNodeName = humanoid.getNormalizedBoneNode(vrmBoneName)?.name;
+              const vrmNodeName = humanoid.getRawBoneNode(vrmBoneName)?.name;
 
               if (!vrmBoneName || !vrmNodeName) {
                 return path;
@@ -143,7 +150,7 @@ const loadAnimation = (
               const newData = output.data.map((v, index) => {
                 let value = v;
 
-                if (version === 'v0' && index % 3 !== 1) {
+                if (version === needCovetVersion && index % 3 !== 1) {
                   value *= -1;
                 }
 
@@ -170,7 +177,7 @@ const loadAnimation = (
             }
           } else if (output.components === 4) {
             const newData = output.data.map((v, index) => {
-              if (version === 'v0' && index % 2 === 0) {
+              if (version === needCovetVersion && index % 2 === 0) {
                 return -v;
               } else {
                 return v;
@@ -202,8 +209,14 @@ export const createVRMAnimation = (
   pcRef: typeof pc,
   animationAssets: IAnimationAsset[],
   asset: pc.Asset,
-  humanoid?: VRMHumanoid | null,
-  motionHipsHeight?: number,
+  humanoid: VRMHumanoid | null,
+  {
+    motionHipsHeight,
+    negativeZAnimNames,
+  }: {
+    motionHipsHeight?: number;
+    negativeZAnimNames?: string[];
+  },
 ) => {
   if (!humanoid) {
     console.error('CreateAnimation: Please provide "humanoid" or "asset and entity".');
@@ -227,6 +240,7 @@ export const createVRMAnimation = (
     vrmHipsDeep,
     ...(motionHipsHeight && { motionHipsHeight }),
     ...(version && { version }),
+    ...(negativeZAnimNames && { negativeZAnimNames }),
   });
 };
 

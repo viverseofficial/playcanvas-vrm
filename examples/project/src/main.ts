@@ -2,7 +2,8 @@ import * as pc from 'playcanvas';
 import avatarUrl from '/rara.vrm?url';
 import idleAnimUrl from '/Idle_anim.glb?url';
 import runAnimUrl from '/Run_anim.glb?url';
-import mocapAnimUrl from '/mocap-animation.gltf?url';
+import mocapV1AnimUrl from '/mocap-animation-v1.glb?url';
+import mocapV2AnimUrl from '/mocap-animation-v2.glb?url';
 
 import TestAAnimUrl from '/04_Salute.glb?url';
 import TestBAnimUrl from '/23_Laying.glb?url';
@@ -65,7 +66,8 @@ if (!(canvas instanceof HTMLCanvasElement)) {
 
 const AnimationIdle = new pc.Asset('Idle', 'animation', { url: idleAnimUrl });
 const AnimationRun = new pc.Asset('Run', 'animation', { url: runAnimUrl });
-const AnimationDance = new pc.Asset('Idle', 'container', { url: mocapAnimUrl });
+const AnimationMocapV1 = new pc.Asset('MocapA', 'container', { url: mocapV1AnimUrl });
+const AnimationMocapV2 = new pc.Asset('MocapB', 'container', { url: mocapV2AnimUrl });
 const AnimationA = new pc.Asset('ATest', 'animation', { url: TestAAnimUrl });
 const AnimationB = new pc.Asset('BTest', 'animation', { url: TestBAnimUrl });
 const AnimationC = new pc.Asset('CTest', 'animation', { url: TestCAnimUrl });
@@ -73,7 +75,8 @@ const AnimationD = new pc.Asset('DTest', 'animation', { url: TestDAnimUrl });
 const AnimationE = new pc.Asset('ETest', 'animation', { url: TestEAnimUrl });
 AnimationIdle.preload = true;
 AnimationRun.preload = true;
-AnimationDance.preload = true;
+AnimationMocapV1.preload = true;
+AnimationMocapV2.preload = true;
 AnimationA.preload = true;
 AnimationB.preload = true;
 AnimationC.preload = true;
@@ -110,7 +113,8 @@ const app = new pc.Application(canvas, {
 });
 app.assets.add(AnimationIdle);
 app.assets.add(AnimationRun);
-app.assets.add(AnimationDance);
+app.assets.add(AnimationMocapV1);
+app.assets.add(AnimationMocapV2);
 app.assets.add(AnimationA);
 app.assets.add(AnimationB);
 app.assets.add(AnimationC);
@@ -193,6 +197,9 @@ const createAvatar = () => {
               animationAssets,
               convertedAsset,
               humanoid,
+              {
+                negativeZAnimNames: ['viverse.combination', 'viverse.rp'],
+              },
             );
 
             if (loadedResources) {
@@ -203,8 +210,12 @@ const createAvatar = () => {
 
             const mocapAnimationAssets = [
               {
-                stateName: 'Dance',
-                asset: AnimationDance,
+                stateName: 'MocapA',
+                asset: AnimationMocapV1,
+              },
+              {
+                stateName: 'MocapB',
+                asset: AnimationMocapV2,
               },
             ];
 
@@ -213,6 +224,9 @@ const createAvatar = () => {
               mocapAnimationAssets,
               convertedAsset,
               humanoid,
+              {
+                negativeZAnimNames: ['viverse.combination', 'viverse.rp'],
+              },
             );
 
             if (mocapLoadedResources) {
@@ -265,6 +279,9 @@ const createAvatar = () => {
               animAssets,
               convertedAsset,
               humanoid,
+              {
+                negativeZAnimNames: ['viverse.combination', 'viverse.rp'],
+              },
             );
 
             if (resources) {
