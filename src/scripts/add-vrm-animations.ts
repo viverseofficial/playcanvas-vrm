@@ -77,7 +77,7 @@ const loadAnimation = (
         // Default animation skeleton forward is +z axis, so vrm version 0 needs to be converted.
         // some animation forward is -z axis, convert to vrm version 1.
         const isNegativeZAxis = negativeZAnimNames.includes(resource.name);
-        const needCovetVersion = isNegativeZAxis ? 'v1' : 'v0';
+        const needConvertVersion = isNegativeZAxis ? 'v1' : 'v0';
 
         // Try to get the animation hips node from asset
         let nodeMotionHipsHeight = 0;
@@ -150,7 +150,7 @@ const loadAnimation = (
               const newData = output.data.map((v, index) => {
                 let value = v;
 
-                if (version === needCovetVersion && index % 3 !== 1) {
+                if (version === needConvertVersion && index % 3 !== 1) {
                   value *= -1;
                 }
 
@@ -177,7 +177,7 @@ const loadAnimation = (
             }
           } else if (output.components === 4) {
             const newData = output.data.map((v, index) => {
-              if (version === needCovetVersion && index % 2 === 0) {
+              if (version === needConvertVersion && index % 2 === 0) {
                 return -v;
               } else {
                 return v;
