@@ -217,7 +217,7 @@ const applyMaterialMtoon = (asset: pc.Asset) => {
 
                   if (meshInstance.skinInstance) {
                     const {skin, rootBone} = meshInstance.skinInstance;
-                    shaderMeshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(skin, rootBone);
+                    shaderMeshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(skin, rootBone, render.entity);
                   }
 
                   if (shaderMeshInstance) {
