@@ -104,7 +104,7 @@ export class GLTFLoader {
   }
 
   // Register Plugin to loader
-  register(name: string, callback: () => void) {
+  register(name: string, callback: (asset:any) => void) {
     if (!this.#pluginsCallbacks.has(name)) {
       this.#pluginsCallbacks.set(name, callback);
     }

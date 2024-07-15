@@ -1,7 +1,7 @@
 {
   "name": "playcanvas-vrm",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -20,6 +20,6 @@
     "vite-plugin-mkcert": "^1.17.4"
   },
   "dependencies": {
-    "playcanvas": "^1.69.2"
+    "playcanvas": "^1.72.1"
   }
 }
