@@ -186,34 +186,6 @@ const applyMaterialMtoon = (asset: pc.Asset) => {
         }
       };
 
-      const applyVRMCOutlineShader2 = (gltfMaterial: any) => {
-        if (entity) {
-          const renders = entity.findComponents('render');
-
-          renders.forEach((renderComponent) => {
-            const render = renderComponent as pc.RenderComponent;
-            const meshInstances = render.meshInstances;
-            for (let i = 0; i < meshInstances.length; i++) {
-              const meshInstance = meshInstances[i];
-              const material = meshInstance.material;
-              if (material.name === gltfMaterial.name) {
-                const shaderBaseColorMap =
-                (material as any).diffuseMap || (material as any).emissiveMap;
-
-                if (shaderBaseColorMap && meshInstance) {
-                  const shaderMaterial = new VRMCMaterialsMToon.VRMCOutlineMaterial();
-                  shaderMaterial.copy(material as pc.StandardMaterial);
-                  shaderMaterial.parseGLTFAttrs(gltfMaterial);
-                  shaderMaterial.setBaseColorMap(shaderBaseColorMap);
-                  meshInstance.material = shaderMaterial;
-                  shaderMaterial.update();
-                }
-              }
-            }
-          });
-        }
-      };
-
       const outlineShaderMeshInstancesByRender: Map<pc.RenderComponent, pc.MeshInstance[]> = new Map();
 
       const applyVRMCOutlineShader = (gltfMaterial: any) => {
