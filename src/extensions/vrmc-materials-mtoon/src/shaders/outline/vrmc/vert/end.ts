@@ -6,8 +6,9 @@ export default /* glsl */ `
     
     // #ifdef OUTLINE_WIDTH_WORLD
         float worldNormalLength = length( transformedNormal );
-        vec3 outlineOffset = outlineWidthFactor * worldNormalLength * objectNormal;
-        gl_Position = matrix_viewProjection * matrix_model * vec4( outlineOffset + vertex_position, 1.0 );
+        vec3 outlineOffset = 1.0 * outlineWidthFactor * worldNormalLength * objectNormal;
+        // gl_Position = matrix_viewProjection * matrix_model * vec4( outlineOffset + vertex_position, 1.0 );
+        gl_Position = matrix_viewProjection * getModelMatrix()  * vec4( outlineOffset + vertex_position, 1.0 );
     // #endif
 
     gl_Position.z += 1E-6 * gl_Position.w; // anti-artifact magic

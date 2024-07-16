@@ -1,6 +1,5 @@
 import * as pc from 'playcanvas';
-import { SkinInstanceCache } from 'playcanvas/build/playcanvas/src/scene/skin-instance-cache';
-import avatarUrl from './examples/project/public/blue.vrm?url';
+import avatarUrl from './examples/project/public/rara.vrm?url';
 import idleAnimUrl from './examples/project/public/Idle_anim.glb?url';
 import runAnimUrl from './examples/project/public/Run_anim.glb?url';
 import mocapV1AnimUrl from './examples/project/public/mocap-animation-v1.glb?url';
@@ -186,11 +185,39 @@ const applyMaterialMtoon = (asset: pc.Asset) => {
         }
       };
 
-      const applyVRMCOutlineShader = (gltfMaterial: any) => {
+      const applyVRMCOutlineShader2 = (gltfMaterial: any) => {
         if (entity) {
           const renders = entity.findComponents('render');
 
-          const shaderMeshInstancesByRender: Map<pc.RenderComponent, pc.MeshInstance[]> = new Map();
+          renders.forEach((renderComponent) => {
+            const render = renderComponent as pc.RenderComponent;
+            const meshInstances = render.meshInstances;
+            for (let i = 0; i < meshInstances.length; i++) {
+              const meshInstance = meshInstances[i];
+              const material = meshInstance.material;
+              if (material.name === gltfMaterial.name) {
+                const shaderBaseColorMap =
+                (material as any).diffuseMap || (material as any).emissiveMap;
+
+                if (shaderBaseColorMap && meshInstance) {
+                  const shaderMaterial = new VRMCMaterialsMToon.VRMCOutlineMaterial();
+                  shaderMaterial.copy(material as pc.StandardMaterial);
+                  shaderMaterial.parseGLTFAttrs(gltfMaterial);
+                  shaderMaterial.setBaseColorMap(shaderBaseColorMap);
+                  meshInstance.material = shaderMaterial;
+                  shaderMaterial.update();
+                }
+              }
+            }
+          });
+        }
+      };
+
+      const outlineShaderMeshInstancesByRender: Map<pc.RenderComponent, pc.MeshInstance[]> = new Map();
+
+      const applyVRMCOutlineShader = (gltfMaterial: any) => {
+        if (entity) {
+          const renders = entity.findComponents('render');
 
           renders.forEach((renderComponent) => {
             const render = renderComponent as pc.RenderComponent;
@@ -206,6 +233,7 @@ const applyMaterialMtoon = (asset: pc.Asset) => {
                   (material as any).diffuseMap || (material as any).emissiveMap;
 
                 if (shaderBaseColorMap && meshInstance) {
+                  
                   const shaderMaterial = new VRMCMaterialsMToon.VRMCOutlineMaterial();
                   shaderMaterial.copy(material as pc.StandardMaterial);
                   shaderMaterial.name = material.name + '_outline';
@@ -215,27 +243,32 @@ const applyMaterialMtoon = (asset: pc.Asset) => {
                     render.entity,
                   );
 
-                  if (meshInstance.skinInstance) {
-                    const {skin, rootBone} = meshInstance.skinInstance;
-                    shaderMeshInstance.skinInstance = SkinInstanceCache.createCachedSkinInstance(skin, rootBone, render.entity);
-                  }
-
-                  if (shaderMeshInstance) {
-                    shaderMaterial.parseGLTFAttrs(gltfMaterial);
-                    shaderMeshInstance.material = shaderMaterial;
-                    shaderMaterial.setBaseColorMap(shaderBaseColorMap);
-                    shaderMaterial.update();
-                    shaderMeshInstances.push(shaderMeshInstance);
-                  }
+                  shaderMaterial.parseGLTFAttrs(gltfMaterial);
+                  shaderMeshInstance.material = shaderMaterial;
+                  shaderMaterial.setBaseColorMap(shaderBaseColorMap);
+                  shaderMaterial.update();
+                  shaderMeshInstances.push(shaderMeshInstance);
                 }
               }
             }
-            shaderMeshInstancesByRender.set(render, shaderMeshInstances);
-          });
 
+            const shaderMeshInstancesExist = outlineShaderMeshInstancesByRender.get(render);
+            if (shaderMeshInstancesExist) {
+              shaderMeshInstancesExist.push(...shaderMeshInstances);
+              outlineShaderMeshInstancesByRender.set(render, shaderMeshInstancesExist);
+            } else {
+              outlineShaderMeshInstancesByRender.set(render, shaderMeshInstances);
+            }
+          });
+        }
+      };
+
+      const finalizeOutlineShader = () => {
+        if (entity) {
+          const renders = entity.findComponents('render');
           renders.forEach((renderComponent) => {
             const render = renderComponent as pc.RenderComponent;
-            const shaderMeshInstances = shaderMeshInstancesByRender.get(render);
+            const shaderMeshInstances = outlineShaderMeshInstancesByRender.get(render);
             if (shaderMeshInstances && shaderMeshInstances.length > 0) {
               render.meshInstances.push(...shaderMeshInstances);
             }
@@ -259,6 +292,9 @@ const applyMaterialMtoon = (asset: pc.Asset) => {
               applyVRMCOutlineShader(material);
             }
           });
+
+          finalizeOutlineShader();
+
         } else if (gltf.extensionsUsed.includes(VRMCMaterialsMToon.EXTENSION_VRM)) {
           // convert VRM attributes from 0.0 to 1.0
           // base on https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_materials_mtoon-1.0/MToon_comparision.md
@@ -291,10 +327,12 @@ const applyMaterialMtoon = (asset: pc.Asset) => {
                 extension.shadeMultiplyTexture = asset.resource;
               }
               material.extensions[VRMCMaterialsMToon.EXTENSION_VRMC_MATERIALS_MTOON] = extension;
-              applyVRMCMtoonShader(material, gltf, extension);
+              applyVRMCMtoonShader(materialNew, gltf, extension);
               applyVRMCOutlineShader(material);
             }
           });
+
+          finalizeOutlineShader();
         }
       }
     },
@@ -361,15 +399,15 @@ const createAvatar = () => {
               },
             });
 
-            const animationAssets = [
+            const animationAssets:any[] = [
               {
                 stateName: 'Idle',
                 asset: AnimationIdle,
               },
-              {
-                stateName: 'Run',
-                asset: AnimationRun,
-              },
+              // {
+              //   stateName: 'Run',
+              //   asset: AnimationRun,
+              // },
             ];
 
             const loadedResources = VRMLoader.VrmAnimation.createVRMAnimation(
@@ -388,15 +426,15 @@ const createAvatar = () => {
               });
             }
 
-            const mocapAnimationAssets = [
-              {
-                stateName: 'MocapA',
-                asset: AnimationMocapV1,
-              },
-              {
-                stateName: 'MocapB',
-                asset: AnimationMocapV2,
-              },
+            const mocapAnimationAssets:any[] = [
+              // {
+              //   stateName: 'MocapA',
+              //   asset: AnimationMocapV1,
+              // },
+              // {
+              //   stateName: 'MocapB',
+              //   asset: AnimationMocapV2,
+              // },
             ];
 
             const mocapLoadedResources = VRMLoader.VrmAnimation.createVRMAnimation(
@@ -475,9 +513,11 @@ const createAvatar = () => {
             }
           };
 
+          applyMaterialMtoon(convertedAsset).instantiated(renderRootEntity);
+
           app.root.addChild(rootEntity);
 
-          applyMaterialMtoon(convertedAsset).instantiated(renderRootEntity);
+          console.log(rootEntity.findByName('Untitled'));
 
           app.on('update', (dt) => {
             timer += dt;

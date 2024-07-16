@@ -14,7 +14,7 @@ import TestEAnimUrl from '/25_Catwalk.glb?url';
 declare global {
   interface Window {
     createAnim(type: 'A' | 'B' | 'C' | 'D'): void;
-    avatar: pc.Entity;
+    // avatar: pc.Entity;
   }
 }
 

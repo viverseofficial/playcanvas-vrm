@@ -216,7 +216,7 @@ export const createVRMAnimation = (
   }: {
     motionHipsHeight?: number;
     negativeZAnimNames?: string[];
-  },
+  } = {},
 ) => {
   if (!humanoid) {
     console.error('CreateAnimation: Please provide "humanoid" or "asset and entity".');
