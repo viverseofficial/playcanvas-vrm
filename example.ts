@@ -1,5 +1,6 @@
 import * as pc from 'playcanvas';
-import avatarUrl from './examples/project/public/rara.vrm?url';
+import avatarUrl from './examples/project/public/blue2.vrm?url';
+import avatarUrl2 from './examples/project/public/rara.vrm?url';
 import idleAnimUrl from './examples/project/public/Idle_anim.glb?url';
 import runAnimUrl from './examples/project/public/Run_anim.glb?url';
 import mocapV1AnimUrl from './examples/project/public/mocap-animation-v1.glb?url';
@@ -346,7 +347,9 @@ app.once('start', async () => {
   VRMLoader.VrmSpringBone.importScript(pc);
   try {
     createLight();
-    const avatar = await createAvatar();
+    const avatar = await createAvatar(avatarUrl);
+    const avatar2 = await createAvatar(avatarUrl2);
+    avatar2.setPosition(0.5, 0, 0);
     createCamera(avatar);
   } catch (e) {
     console.error(e);
@@ -355,10 +358,10 @@ app.once('start', async () => {
 
 let timer = 0;
 
-const createAvatar = () => {
+const createAvatar = (url: string) => {
   return new Promise<pc.Entity>((resolve, reject) => {
     const loader = new GLTFLoader(pc, app);
-    const asset = new pc.Asset('avatar', 'container', { url: avatarUrl });
+    const asset = new pc.Asset('avatar', 'container', { url });
     loader
       .parse(asset, 'VRM_AVATAR_RENDER')
       .then(
@@ -404,10 +407,10 @@ const createAvatar = () => {
                 stateName: 'Idle',
                 asset: AnimationIdle,
               },
-              // {
-              //   stateName: 'Run',
-              //   asset: AnimationRun,
-              // },
+              {
+                stateName: 'Run',
+                asset: AnimationRun,
+              },
             ];
 
             const loadedResources = VRMLoader.VrmAnimation.createVRMAnimation(
@@ -427,14 +430,14 @@ const createAvatar = () => {
             }
 
             const mocapAnimationAssets:any[] = [
-              // {
-              //   stateName: 'MocapA',
-              //   asset: AnimationMocapV1,
-              // },
-              // {
-              //   stateName: 'MocapB',
-              //   asset: AnimationMocapV2,
-              // },
+              {
+                stateName: 'MocapA',
+                asset: AnimationMocapV1,
+              },
+              {
+                stateName: 'MocapB',
+                asset: AnimationMocapV2,
+              },
             ];
 
             const mocapLoadedResources = VRMLoader.VrmAnimation.createVRMAnimation(
