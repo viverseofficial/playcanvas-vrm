@@ -13,13 +13,7 @@
 // loader
 //   .parse(asset, 'VRM_AVATAR_RENDER')
 //   .then(
-//     ({
-//       entity: renderEntity,
-//       asset: convertedAsset,
-//     }: {
-//       entity: pc.Entity;
-//       asset: pc.Asset;
-//     }) => {
+//     ({ entity: renderEntity, asset: convertedAsset }: { entity: pc.Entity; asset: pc.Asset }) => {
 //       const rootEntity = new pc.Entity('VRM_AVATAR_ROOT');
 //       rootEntity.addChild(renderEntity);
 
@@ -29,37 +23,39 @@
 //         activate: true,
 //       });
 
-//         const animationAssets = [
-//           {
-//             stateName: 'Idle',
-//             asset: AnimationIdle,
-//           },
-//           {
-//             stateName: 'Run',
-//             asset: AnimationRun,
-//           },
-//         ];
+//       const animationAssets = [
+//         {
+//           stateName: 'Idle',
+//           asset: AnimationIdle,
+//         },
+//         {
+//           stateName: 'Run',
+//           asset: AnimationRun,
+//         },
+//       ];
 
-//         /**
-//          * Note: You need provide the humanoid and reuse it.
-//          */
-//         const humanoid = createFormattedVRMHumanoid(pc, asset, rootEntity);
-//         const loadedResources = VrmAnimation.createVRMAnimation(
-//           pc,
-//           animationAssets,
-//           convertedAsset,
-//           humanoid,
-//           motionHipsHeight (optional!)
-//         );
-//         if (loadedResources) {
-//           loadedResources.forEach((resource) => {
-//             VrmAnimation.assignAnimation(rootEntity, resource);
-//           });
-//         }
+//       /**
+//        * Note: You need provide the humanoid and reuse it.
+//        */
+//       const humanoid = createFormattedVRMHumanoid(pc, asset, rootEntity);
+//       const loadedResources = VrmAnimation.createVRMAnimation(
+//         pc,
+//         animationAssets,
+//         convertedAsset,
+//         humanoid,
+//         {
+//           motionHipsHeight: 0.5, (optional)
+//           negativeZAnimNames: [], (optional)
+//         },
+//       );
+//       if (loadedResources) {
+//         loadedResources.forEach((resource) => {
+//           VrmAnimation.assignAnimation(rootEntity, resource);
+//         });
 //       }
+//     },
 
 //       app.root.addChild(rootEntity);
-//     },
 //   )
 //   .catch((error: Error) => {
 //     console.error(error);

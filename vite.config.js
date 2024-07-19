@@ -7,6 +7,8 @@ import pkg from './package.json'
 // For npm typescript version
 // import dts from 'vite-plugin-dts';
 
+const isDevMode = process.env.DEV_MODE === 'true'
+
 export default defineConfig({
   server: { https: true },
   plugins: [
@@ -25,6 +27,6 @@ export default defineConfig({
     rollupOptions: {
       external: ['playcanvas'], 
     },
-    minify: true,
+    minify: !isDevMode,
   },
 });

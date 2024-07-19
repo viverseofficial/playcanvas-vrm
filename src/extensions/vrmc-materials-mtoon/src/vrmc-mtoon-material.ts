@@ -1,6 +1,6 @@
-import * as pc from "playcanvas";
+import * as pc from 'playcanvas';
 
-import { shaderChunksMtoon } from "./shaders/mtoon/vrmc/shader-chunk";
+import { shaderChunksMtoon } from './shaders/mtoon/vrmc/shader-chunk';
 
 export class VRMCMtoonMaterial extends pc.StandardMaterial {
   litFactor: pc.Color = new pc.Color(1.0, 1.0, 1.0, 1.0);
@@ -51,24 +51,24 @@ export class VRMCMtoonMaterial extends pc.StandardMaterial {
   }
 
   parseGLTFAttrs(gltfMaterial: any, _: any, attrs: any) {
-    if (gltfMaterial.hasOwnProperty("alphaMode")) {
+    if (gltfMaterial.hasOwnProperty('alphaMode')) {
       switch (gltfMaterial.alphaMode) {
-        case "MASK":
+        case 'MASK':
           this.blendType = pc.BLEND_NONE;
-          if (gltfMaterial.hasOwnProperty("alphaCutoff")) {
+          if (gltfMaterial.hasOwnProperty('alphaCutoff')) {
             this.alphaTest = gltfMaterial.alphaCutoff;
           } else {
             this.alphaTest = 0.5;
           }
           break;
-        case "BLEND":
+        case 'BLEND':
           this.blendType = pc.BLEND_NORMAL;
 
           // note: by default don't write depth on semitransparent materials
           this.depthWrite = false;
           break;
         default:
-        case "OPAQUE":
+        case 'OPAQUE':
           this.blendType = pc.BLEND_NONE;
           break;
       }
@@ -82,7 +82,7 @@ export class VRMCMtoonMaterial extends pc.StandardMaterial {
         Math.pow(emissiveFactor[0], 1 / 2.2),
         Math.pow(emissiveFactor[1], 1 / 2.2),
         Math.pow(emissiveFactor[2], 1 / 2.2),
-        1.0
+        1.0,
       );
     }
 
@@ -93,7 +93,7 @@ export class VRMCMtoonMaterial extends pc.StandardMaterial {
         Math.pow(baseColorFactor[0], 1 / 2.2),
         Math.pow(baseColorFactor[1], 1 / 2.2),
         Math.pow(baseColorFactor[2], 1 / 2.2),
-        baseColorFactor[3]
+        baseColorFactor[3],
       );
     }
 
@@ -115,7 +115,7 @@ export class VRMCMtoonMaterial extends pc.StandardMaterial {
       outlineLightingMixFactor,
     } = attrs;
 
-    if (version == "0.0") {
+    if (version == '0.0') {
       this.emissiveIntensity = 0.0;
     }
 
@@ -124,7 +124,7 @@ export class VRMCMtoonMaterial extends pc.StandardMaterial {
         Math.pow(shadeColorFactor[0], 1 / 2.2),
         Math.pow(shadeColorFactor[1], 1 / 2.2),
         Math.pow(shadeColorFactor[2], 1 / 2.2),
-        1.0
+        1.0,
       );
     }
 
@@ -137,7 +137,7 @@ export class VRMCMtoonMaterial extends pc.StandardMaterial {
         Math.pow(parametricRimColorFactor[0], 1 / 2.2),
         Math.pow(parametricRimColorFactor[1], 1 / 2.2),
         Math.pow(parametricRimColorFactor[2], 1 / 2.2),
-        1.0
+        1.0,
       );
     }
 
@@ -150,7 +150,7 @@ export class VRMCMtoonMaterial extends pc.StandardMaterial {
         Math.pow(outlineColorFactor[0], 1 / 2.2),
         Math.pow(outlineColorFactor[1], 1 / 2.2),
         Math.pow(outlineColorFactor[2], 1 / 2.2),
-        1.0
+        1.0,
       );
     }
 
@@ -196,68 +196,53 @@ export class VRMCMtoonMaterial extends pc.StandardMaterial {
   }
 
   setShaderParameters() {
-    this.setParameter("opacity", this.opacity);
+    this.setParameter('opacity', this.opacity);
 
-    this.setParameter("litFactor", [
-      this.litFactor.r,
-      this.litFactor.g,
-      this.litFactor.b,
-    ]);
+    this.setParameter('litFactor', [this.litFactor.r, this.litFactor.g, this.litFactor.b]);
 
     if (this.baseColorMap) {
-      this.setParameter("baseColorMap", this.baseColorMap);
+      this.setParameter('baseColorMap', this.baseColorMap);
     }
 
-    this.setParameter("shadeColorFactor", [
+    this.setParameter('shadeColorFactor', [
       this.shadeColorFactor.r,
       this.shadeColorFactor.g,
       this.shadeColorFactor.b,
     ]);
     if (this.shadeMultiplyTexture) {
-      this.setParameter("shadeMultiplyTexture", this.shadeMultiplyTexture);
+      this.setParameter('shadeMultiplyTexture', this.shadeMultiplyTexture);
     }
-    this.setParameter("shadingShiftFactor", this.shadingShiftFactor);
-    this.setParameter("shadingToonyFactor", this.shadingToonyFactor);
+    this.setParameter('shadingShiftFactor', this.shadingShiftFactor);
+    this.setParameter('shadingToonyFactor', this.shadingToonyFactor);
 
     if (this.emissive) {
-      this.setParameter("emissive", [
-        this.emissive.r,
-        this.emissive.g,
-        this.emissive.b,
-      ]);
+      this.setParameter('emissive', [this.emissive.r, this.emissive.g, this.emissive.b]);
     }
 
     if (this.emissiveIntensity) {
-      this.setParameter("emissiveIntensity", this.emissiveIntensity);
+      this.setParameter('emissiveIntensity', this.emissiveIntensity);
     }
 
-    this.setParameter("parametricRimColorFactor", [
+    this.setParameter('parametricRimColorFactor', [
       this.parametricRimColorFactor.r,
       this.parametricRimColorFactor.g,
       this.parametricRimColorFactor.b,
     ]);
 
-    this.setParameter("rimLightingMixFactor", this.rimLightingMixFactor);
-    this.setParameter(
-      "parametricRimFresnelPowerFactor",
-      this.parametricRimFresnelPowerFactor
-    );
-    this.setParameter("parametricRimLiftFactor", this.parametricRimLiftFactor);
+    this.setParameter('rimLightingMixFactor', this.rimLightingMixFactor);
+    this.setParameter('parametricRimFresnelPowerFactor', this.parametricRimFresnelPowerFactor);
+    this.setParameter('parametricRimLiftFactor', this.parametricRimLiftFactor);
 
     if (this.emissiveMap) {
-      this.setParameter("emissiveMap", this.emissiveMap);
+      this.setParameter('emissiveMap', this.emissiveMap);
     }
   }
 
   setLightDirection(direction: pc.Vec3) {
-    this.setParameter("lightDirection", [
-      direction.x,
-      direction.y,
-      direction.z,
-    ]);
+    this.setParameter('lightDirection', [direction.x, direction.y, direction.z]);
   }
 
   setLightColor(color: pc.Color) {
-    this.setParameter("lightColor", [color.r, color.g, color.b]);
+    this.setParameter('lightColor', [color.r, color.g, color.b]);
   }
 }

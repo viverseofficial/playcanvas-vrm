@@ -4,7 +4,7 @@
   "version": "1.2.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "watch": "nodemon --watch src --ext '*' --exec 'DEV_MODE=true pnpm build' --verbose",
     "build": "tsc && vite build",
     "preview": "vite preview"
   },
@@ -12,6 +12,7 @@
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "eslint": "^8.57.0",
+    "nodemon": "^3.1.4",
     "prettier": "^3.2.5",
     "typescript": "^5.2.2",
     "vite": "^5.1.6",
