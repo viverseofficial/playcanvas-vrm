@@ -1,6 +1,5 @@
 import * as pc from 'playcanvas';
 import { preloadAssets } from './assets';
-import PLAYCANVAS_VRM_URL from '../../../dist/playcanvas-vrm.js?url';
 
 export const createScene = (app: pc.Application) => {
   const plane = new pc.Entity('Plane');
@@ -58,7 +57,7 @@ export const loadScript = () =>
   new Promise<void>((resolve, reject) => {
     const script = document.createElement('script');
     script.type = 'module';
-    script.src = PLAYCANVAS_VRM_URL;
+    script.src = '/playcanvas-vrm.js?url';
     script.async = false;
     document.head.appendChild(script);
 

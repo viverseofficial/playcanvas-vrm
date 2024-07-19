@@ -3,6 +3,7 @@ import { resolve } from 'path';
 import mkcert from 'vite-plugin-mkcert';
 import banner from 'vite-plugin-banner'
 import pkg from './package.json'
+import { viteStaticCopy } from 'vite-plugin-static-copy'
 
 // For npm typescript version
 // import dts from 'vite-plugin-dts';
@@ -16,6 +17,14 @@ export default defineConfig({
     banner(
       `/**\n * name: ${pkg.name}\n * version: v${pkg.version}\n */`
     ),
+    viteStaticCopy({
+      targets: [
+        {
+          src: 'dist/playcanvas-vrm.js',
+          dest: '../examples/project/public'
+        }
+      ]
+    })
   ],
   build: {
     lib: {

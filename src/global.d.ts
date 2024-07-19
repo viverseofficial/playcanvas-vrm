@@ -4,7 +4,7 @@ import * as VrmSpringBone from './scripts/vrm-spring-bone';
 import { createFormattedVRMHumanoid } from './extensions/vrm-humanoid/vrm-humanoid-utils';
 import { GLTFLoader } from './gltf-loader/GLTFLoader';
 import * as VrmMapList from './extensions/vrm-map-list';
-export * as VrmcMaterialsMtoon from './extensions/vrmc-materials-mtoon'
+export * as VrmcMaterialsMtoon from './extensions/vrmc-materials-mtoon';
 
 declare global {
   interface Window {

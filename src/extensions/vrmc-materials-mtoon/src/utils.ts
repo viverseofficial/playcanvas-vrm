@@ -1,39 +1,36 @@
-import * as pc from "playcanvas";
+import * as pc from 'playcanvas';
 
 export const gammaEOTF = (e: number): number => {
   return Math.pow(e, 2.2);
 };
 
 export const parseV0MToonProperties = (
+  pcRef: typeof pc,
   materialProperties: any,
-  schemaMaterial: any
+  schemaMaterial: any,
 ): any => {
-  const isTransparent =
-    materialProperties.keywordMap?.["_ALPHABLEND_ON"] ?? false;
-  const enabledZWrite = materialProperties.floatProperties?.["_ZWrite"] === 1;
+  const isTransparent = materialProperties.keywordMap?.['_ALPHABLEND_ON'] ?? false;
+  const enabledZWrite = materialProperties.floatProperties?.['_ZWrite'] === 1;
   const transparentWithZWrite = enabledZWrite && isTransparent;
 
   // const renderQueueOffsetNumber =
   //   this._v0ParseRenderQueue(materialProperties);
 
-  const isCutoff = materialProperties.keywordMap?.["_ALPHATEST_ON"] ?? false;
-  const alphaMode = isTransparent ? "BLEND" : isCutoff ? "MASK" : "OPAQUE";
-  const alphaCutoff = isCutoff
-    ? materialProperties.floatProperties?.["_Cutoff"] ?? 0.5
-    : undefined;
+  const isCutoff = materialProperties.keywordMap?.['_ALPHATEST_ON'] ?? false;
+  const alphaMode = isTransparent ? 'BLEND' : isCutoff ? 'MASK' : 'OPAQUE';
+  const alphaCutoff = isCutoff ? materialProperties.floatProperties?.['_Cutoff'] ?? 0.5 : undefined;
 
-  const cullMode = materialProperties.floatProperties?.["_CullMode"] ?? 2; // enum, { Off, Front, Back }
+  const cullMode = materialProperties.floatProperties?.['_CullMode'] ?? 2; // enum, { Off, Front, Back }
   const doubleSided = cullMode === 0;
 
   // const textureTransformExt = this._portTextureTransform(materialProperties);
 
   const baseColorFactor = (
-    materialProperties.vectorProperties?.["_Color"] ?? [1.0, 1.0, 1.0, 1.0]
+    materialProperties.vectorProperties?.['_Color'] ?? [1.0, 1.0, 1.0, 1.0]
   ).map(
-    (v: number, i: number) => (i === 3 ? v : gammaEOTF(v)) // alpha channel is stored in linear
+    (v: number, i: number) => (i === 3 ? v : gammaEOTF(v)), // alpha channel is stored in linear
   );
-  const baseColorTextureIndex =
-    materialProperties.textureProperties?.["_MainTex"];
+  const baseColorTextureIndex = materialProperties.textureProperties?.['_MainTex'];
   const baseColorTexture =
     baseColorTextureIndex != null
       ? {
@@ -44,9 +41,8 @@ export const parseV0MToonProperties = (
         }
       : undefined;
 
-  const normalTextureScale =
-    materialProperties.floatProperties?.["_BumpScale"] ?? 1.0;
-  const normalTextureIndex = materialProperties.textureProperties?.["_BumpMap"];
+  const normalTextureScale = materialProperties.floatProperties?.['_BumpScale'] ?? 1.0;
+  const normalTextureIndex = materialProperties.textureProperties?.['_BumpMap'];
   const normalTexture =
     normalTextureIndex != null
       ? {
@@ -59,12 +55,9 @@ export const parseV0MToonProperties = (
       : undefined;
 
   const emissiveFactor = (
-    materialProperties.vectorProperties?.["_EmissionColor"] ?? [
-      0.0, 0.0, 0.0, 1.0,
-    ]
+    materialProperties.vectorProperties?.['_EmissionColor'] ?? [0.0, 0.0, 0.0, 1.0]
   ).map(gammaEOTF);
-  const emissiveTextureIndex =
-    materialProperties.textureProperties?.["_EmissionMap"];
+  const emissiveTextureIndex = materialProperties.textureProperties?.['_EmissionMap'];
   const emissiveTexture =
     emissiveTextureIndex != null
       ? {
@@ -76,12 +69,9 @@ export const parseV0MToonProperties = (
       : undefined;
 
   const shadeColorFactor = (
-    materialProperties.vectorProperties?.["_ShadeColor"] ?? [
-      0.97, 0.81, 0.86, 1.0,
-    ]
+    materialProperties.vectorProperties?.['_ShadeColor'] ?? [0.97, 0.81, 0.86, 1.0]
   ).map(gammaEOTF);
-  const shadeMultiplyTextureIndex =
-    materialProperties.textureProperties?.["_ShadeTexture"];
+  const shadeMultiplyTextureIndex = materialProperties.textureProperties?.['_ShadeTexture'];
   const shadeMultiplyTexture =
     shadeMultiplyTextureIndex != null
       ? {
@@ -93,25 +83,15 @@ export const parseV0MToonProperties = (
       : undefined;
 
   // // convert v0 shade shift / shade toony
-  let shadingShiftFactor =
-    materialProperties.floatProperties?.["_ShadeShift"] ?? 0.0;
-  let shadingToonyFactor =
-    materialProperties.floatProperties?.["_ShadeToony"] ?? 0.9;
-  shadingToonyFactor = pc.math.lerp(
-    shadingToonyFactor,
-    1.0,
-    0.5 + 0.5 * shadingShiftFactor
-  );
+  let shadingShiftFactor = materialProperties.floatProperties?.['_ShadeShift'] ?? 0.0;
+  let shadingToonyFactor = materialProperties.floatProperties?.['_ShadeToony'] ?? 0.9;
+  shadingToonyFactor = pcRef.math.lerp(shadingToonyFactor, 1.0, 0.5 + 0.5 * shadingShiftFactor);
   shadingShiftFactor = -shadingShiftFactor - (1.0 - shadingToonyFactor);
 
-  const giIntensityFactor =
-    materialProperties.floatProperties?.["_IndirectLightIntensity"] ?? 0.1;
-  const giEqualizationFactor = giIntensityFactor
-    ? 1.0 - giIntensityFactor
-    : undefined;
+  const giIntensityFactor = materialProperties.floatProperties?.['_IndirectLightIntensity'] ?? 0.1;
+  const giEqualizationFactor = giIntensityFactor ? 1.0 - giIntensityFactor : undefined;
 
-  const matcapTextureIndex =
-    materialProperties.textureProperties?.["_SphereAdd"];
+  const matcapTextureIndex = materialProperties.textureProperties?.['_SphereAdd'];
   const matcapFactor = matcapTextureIndex != null ? [1.0, 1.0, 1.0] : undefined;
   const matcapTexture =
     matcapTextureIndex != null
@@ -120,10 +100,8 @@ export const parseV0MToonProperties = (
         }
       : undefined;
 
-  const rimLightingMixFactor =
-    materialProperties.floatProperties?.["_RimLightingMix"] ?? 0.0;
-  const rimMultiplyTextureIndex =
-    materialProperties.textureProperties?.["_RimTexture"];
+  const rimLightingMixFactor = materialProperties.floatProperties?.['_RimLightingMix'] ?? 0.0;
+  const rimMultiplyTextureIndex = materialProperties.textureProperties?.['_RimTexture'];
   const rimMultiplyTexture =
     rimMultiplyTextureIndex != null
       ? {
@@ -135,24 +113,22 @@ export const parseV0MToonProperties = (
       : undefined;
 
   const parametricRimColorFactor = (
-    materialProperties.vectorProperties?.["_RimColor"] ?? [0.0, 0.0, 0.0, 1.0]
+    materialProperties.vectorProperties?.['_RimColor'] ?? [0.0, 0.0, 0.0, 1.0]
   ).map(gammaEOTF);
   const parametricRimFresnelPowerFactor =
-    materialProperties.floatProperties?.["_RimFresnelPower"] ?? 1.0;
-  const parametricRimLiftFactor =
-    materialProperties.floatProperties?.["_RimLift"] ?? 0.0;
+    materialProperties.floatProperties?.['_RimFresnelPower'] ?? 1.0;
+  const parametricRimLiftFactor = materialProperties.floatProperties?.['_RimLift'] ?? 0.0;
 
-  const outlineWidthMode = ["none", "worldCoordinates", "screenCoordinates"][
-    materialProperties.floatProperties?.["_OutlineWidthMode"] ?? 0
+  const outlineWidthMode = ['none', 'worldCoordinates', 'screenCoordinates'][
+    materialProperties.floatProperties?.['_OutlineWidthMode'] ?? 0
   ];
 
   // v0 outlineWidthFactor is in centimeter
-  let outlineWidthFactor =
-    materialProperties.floatProperties?.["_OutlineWidth"] ?? 0.0;
+  let outlineWidthFactor = materialProperties.floatProperties?.['_OutlineWidth'] ?? 0.0;
   outlineWidthFactor = 0.01 * outlineWidthFactor;
 
   const outlineWidthMultiplyTextureIndex =
-    materialProperties.textureProperties?.["_OutlineWidthTexture"];
+    materialProperties.textureProperties?.['_OutlineWidthTexture'];
   const outlineWidthMultiplyTexture =
     outlineWidthMultiplyTextureIndex != null
       ? {
@@ -164,17 +140,15 @@ export const parseV0MToonProperties = (
       : undefined;
 
   const outlineColorFactor = (
-    materialProperties.vectorProperties?.["_OutlineColor"] ?? [0.0, 0.0, 0.0]
+    materialProperties.vectorProperties?.['_OutlineColor'] ?? [0.0, 0.0, 0.0]
   ).map(gammaEOTF);
-  const outlineColorMode =
-    materialProperties.floatProperties?.["_OutlineColorMode"] ?? 0; // enum, { Fixed, Mixed }
+  const outlineColorMode = materialProperties.floatProperties?.['_OutlineColorMode'] ?? 0; // enum, { Fixed, Mixed }
   const outlineLightingMixFactor =
     outlineColorMode === 1
-      ? materialProperties.floatProperties?.["_OutlineLightingMix"] ?? 1.0
+      ? materialProperties.floatProperties?.['_OutlineLightingMix'] ?? 1.0
       : 0.0;
 
-  const uvAnimationMaskTextureIndex =
-    materialProperties.textureProperties?.["_UvAnimMaskTexture"];
+  const uvAnimationMaskTextureIndex = materialProperties.textureProperties?.['_UvAnimMaskTexture'];
   const uvAnimationMaskTexture =
     uvAnimationMaskTextureIndex != null
       ? {
@@ -186,20 +160,19 @@ export const parseV0MToonProperties = (
       : undefined;
 
   const uvAnimationScrollXSpeedFactor =
-    materialProperties.floatProperties?.["_UvAnimScrollX"] ?? 0.0;
+    materialProperties.floatProperties?.['_UvAnimScrollX'] ?? 0.0;
 
   // uvAnimationScrollYSpeedFactor will be opposite between V0 and V1
-  let uvAnimationScrollYSpeedFactor =
-    materialProperties.floatProperties?.["_UvAnimScrollY"] ?? 0.0;
+  let uvAnimationScrollYSpeedFactor = materialProperties.floatProperties?.['_UvAnimScrollY'] ?? 0.0;
   if (uvAnimationScrollYSpeedFactor != null) {
     uvAnimationScrollYSpeedFactor = -uvAnimationScrollYSpeedFactor;
   }
 
   const uvAnimationRotationSpeedFactor =
-    materialProperties.floatProperties?.["_UvAnimRotation"] ?? 0.0;
+    materialProperties.floatProperties?.['_UvAnimRotation'] ?? 0.0;
 
   const mtoonExtension = {
-    specVersion: "1.0",
+    specVersion: '1.0',
     transparentWithZWrite,
     // renderQueueOffsetNumber,
     shadeColorFactor,

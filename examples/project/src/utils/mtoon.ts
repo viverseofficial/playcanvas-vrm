@@ -35,7 +35,8 @@ export const applyMaterialMtoon = (asset: pc.Asset, VRMLoader: any) => {
               const meshInstance = meshInstances[i];
               const material = meshInstance.material;
               if (material.name === gltfMaterial.name) {
-                const shaderMaterial = new VRMLoader.VrmcMaterialsMtoon.VRMCMtoonMaterial();
+                const VRMCMtoonMaterial = VRMLoader.VrmcMaterialsMtoon.createVRMCMtoonMaterial(pc);
+                const shaderMaterial = new VRMCMtoonMaterial();
                 shaderMaterial.copy(material as pc.StandardMaterial);
 
                 shaderMaterial.parseGLTFAttrs(gltfMaterial, gltf, attrs);
@@ -70,7 +71,9 @@ export const applyMaterialMtoon = (asset: pc.Asset, VRMLoader: any) => {
                   (material as any).diffuseMap || (material as any).emissiveMap;
 
                 if (shaderBaseColorMap && meshInstance) {
-                  const shaderMaterial = new VRMLoader.VrmcMaterialsMtoon.VRMCOutlineMaterial();
+                  const VRMCOutlineMaterial =
+                    VRMLoader.VrmcMaterialsMtoon.createVRMCOutlineMaterial(pc);
+                  const shaderMaterial = new VRMCOutlineMaterial();
                   shaderMaterial.copy(material as pc.StandardMaterial);
                   shaderMaterial.name = material.name + '_outline';
                   const shaderMeshInstance = new pc.MeshInstance(
@@ -142,6 +145,7 @@ export const applyMaterialMtoon = (asset: pc.Asset, VRMLoader: any) => {
             materialProperties.forEach((materialProperty: any) => {
               if (materialProperty.name === material.name) {
                 const materialNew = VRMLoader.VrmcMaterialsMtoon.parseV0MToonProperties(
+                  pc,
                   materialProperty,
                   material,
                 );

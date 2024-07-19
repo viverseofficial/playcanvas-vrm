@@ -9,9 +9,12 @@ importers:
   .:
     dependencies:
       playcanvas:
-        specifier: ^1.72.1
-        version: 1.72.1
+        specifier: ^1.73.0
+        version: 1.73.0
     devDependencies:
+      '@types/playcanvas':
+        specifier: ^1.23.0
+        version: 1.23.0
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.3.1
         version: 7.3.1(@typescript-eslint/parser@7.3.1(eslint@8.57.0)(typescript@5.4.2))(eslint@8.57.0)(typescript@5.4.2)
@@ -42,6 +45,9 @@ importers:
       vite-plugin-mkcert:
         specifier: ^1.17.4
         version: 1.17.4(vite@5.1.6(@types/node@20.14.11))
+      vite-plugin-static-copy:
+        specifier: ^1.0.6
+        version: 1.0.6(vite@5.1.6(@types/node@20.14.11))
 
 packages:
 
@@ -410,6 +416,10 @@ packages:
   '@types/node@20.14.11':
     resolution: {integrity: sha512-kprQpL8MMeszbz6ojB5/tU8PLN4kesnN8Gjzw349rDlNgsSzg90lAVj3llK99Dh7JON+t9AuscPPFW6mPbTnSA==}
 
+  '@types/playcanvas@1.23.0':
+    resolution: {integrity: sha512-K2JXbADGY4acqA0x0glkNO2QJLq3Ag4+5plzhlap5X7lM23dONuZ31qaOhyVjQNoguc5onh432L3kHca7bN7jA==}
+    deprecated: This is a stub types definition. playcanvas provides its own type definitions, so you do not need this installed.
+
   '@types/semver@7.5.8':
     resolution: {integrity: sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==}
 
@@ -503,8 +513,8 @@ packages:
   '@vue/shared@3.4.21':
     resolution: {integrity: sha512-PuJe7vDIi6VYSinuEbUIQgMIRZGgM8e4R+G+/dQTk0X1NEdvgvvgv7m+rfmDH1gZzyA1OjjoWskvHlfRNfQf3g==}
 
-  '@webgpu/types@0.1.40':
-    resolution: {integrity: sha512-/BBkHLS6/eQjyWhY2H7Dx5DHcVrS2ICj9owvSRdgtQT6KcafLZA86tPze0xAOsd4FbsYKCUBUQyNi87q7gV7kw==}
+  '@webgpu/types@0.1.44':
+    resolution: {integrity: sha512-JDpYJN5E/asw84LTYhKyvPpxGnD+bAKPtpW9Ilurf7cZpxaTbxkQcGwOd7jgB9BPBrTYQ+32ufo4HiuomTjHNQ==}
 
   acorn-jsx@5.3.2:
     resolution: {integrity: sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==}
@@ -735,6 +745,10 @@ packages:
     resolution: {integrity: sha512-ETEklSGi5t0QMZuiXoA/Q6vcnxcLQP5vdugSpuAyi6SVGi2clPPp+xgEhuMaHC+zGgn31Kd235W35f7Hykkaww==}
     engines: {node: '>= 6'}
 
+  fs-extra@11.2.0:
+    resolution: {integrity: sha512-PmDi3uwK5nFuXh7XDTlVnS17xJS7vW36is2+w3xcv8SVxiB4NyATf4ctkVY5bkSjX0Y4nbvZCq1/EjtEyr9ktw==}
+    engines: {node: '>=14.14'}
+
   fs-extra@7.0.1:
     resolution: {integrity: sha512-YJDaCJZEnBmcbw13fvdAM9AwNOJwOzrE4pqMqBq5nFiEqXUqHwlK4B+3pUw6JNvfSPtX05xFHtYy/1ni01eGCw==}
     engines: {node: '>=6 <7 || >=8'}
@@ -861,6 +875,9 @@ packages:
   jsonfile@4.0.0:
     resolution: {integrity: sha512-m6F1R3z8jjlf2imQHS2Qez5sjKWQzbuuhuJ/FKYFRZvPE3PuHcSMVZzfsLhGVOkfd20obL5SWEBew5ShlquNxg==}
 
+  jsonfile@6.1.0:
+    resolution: {integrity: sha512-5dgndWOriYSm5cnYaJNhalLNDKOqFwyDB/rr1E9ZsGciGvKPs8R2xYGCacuf3z6K1YKDz182fd+fY3cn3pMqXQ==}
+
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
@@ -985,8 +1002,8 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
 
-  playcanvas@1.72.1:
-    resolution: {integrity: sha512-I6mx9wzi5yTCU+YLPI0S876R0Kf9K/t554/u7r2syRd4+Or/QjBqu6YJYtTMcSFtp2s0gtVjwVZKHcsg//NtvQ==}
+  playcanvas@1.73.0:
+    resolution: {integrity: sha512-XYGu9IRHJyg38bwMwSgEMDXqfmXuZPLGBBv6P1udj9V7JzFL0kmT+2VEtejg+oecYNyvCEtie0LkG4bsrJSXrA==}
     engines: {node: '>=18.0.0'}
 
   postcss@8.4.36:
@@ -1159,6 +1176,10 @@ packages:
     resolution: {integrity: sha512-rBJeI5CXAlmy1pV+617WB9J63U6XcazHHF2f2dbJix4XzpUF0RS3Zbj0FGIOCAva5P/d/GBOYaACQ1w+0azUkg==}
     engines: {node: '>= 4.0.0'}
 
+  universalify@2.0.1:
+    resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
+    engines: {node: '>= 10.0.0'}
+
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
 
@@ -1184,6 +1205,12 @@ packages:
     engines: {node: '>=v16.7.0'}
     peerDependencies:
       vite: '>=3'
+
+  vite-plugin-static-copy@1.0.6:
+    resolution: {integrity: sha512-3uSvsMwDVFZRitqoWHj0t4137Kz7UynnJeq1EZlRW7e25h2068fyIZX4ORCCOAkfp1FklGxJNVJBkBOD+PZIew==}
+    engines: {node: ^18.0.0 || >=20.0.0}
+    peerDependencies:
+      vite: ^5.0.0
 
   vite@5.1.6:
     resolution: {integrity: sha512-yYIAZs9nVfRJ/AiOLCA91zzhjsHUgMjB+EigzFb6W2XTLO8JixBCKCjvhKZaye+NKYHCrkv3Oh50dH9EdLU2RA==}
@@ -1555,6 +1582,10 @@ snapshots:
       undici-types: 5.26.5
     optional: true
 
+  '@types/playcanvas@1.23.0':
+    dependencies:
+      playcanvas: 1.73.0
+
   '@types/semver@7.5.8': {}
 
   '@types/webxr@0.5.19': {}
@@ -1689,7 +1720,7 @@ snapshots:
 
   '@vue/shared@3.4.21': {}
 
-  '@webgpu/types@0.1.40': {}
+  '@webgpu/types@0.1.44': {}
 
   acorn-jsx@5.3.2(acorn@8.11.3):
     dependencies:
@@ -1967,6 +1998,12 @@ snapshots:
       combined-stream: 1.0.8
       mime-types: 2.1.35
 
+  fs-extra@11.2.0:
+    dependencies:
+      graceful-fs: 4.2.11
+      jsonfile: 6.1.0
+      universalify: 2.0.1
+
   fs-extra@7.0.1:
     dependencies:
       graceful-fs: 4.2.11
@@ -2077,6 +2114,12 @@ snapshots:
   json-stable-stringify-without-jsonify@1.0.1: {}
 
   jsonfile@4.0.0:
+    optionalDependencies:
+      graceful-fs: 4.2.11
+
+  jsonfile@6.1.0:
+    dependencies:
+      universalify: 2.0.1
     optionalDependencies:
       graceful-fs: 4.2.11
 
@@ -2192,10 +2235,10 @@ snapshots:
 
   picomatch@2.3.1: {}
 
-  playcanvas@1.72.1:
+  playcanvas@1.73.0:
     dependencies:
       '@types/webxr': 0.5.19
-      '@webgpu/types': 0.1.40
+      '@webgpu/types': 0.1.44
 
   postcss@8.4.36:
     dependencies:
@@ -2338,6 +2381,8 @@ snapshots:
 
   universalify@0.1.2: {}
 
+  universalify@2.0.1: {}
+
   uri-js@4.4.1:
     dependencies:
       punycode: 2.3.1
@@ -2371,6 +2416,14 @@ snapshots:
       vite: 5.1.6(@types/node@20.14.11)
     transitivePeerDependencies:
       - supports-color
+
+  vite-plugin-static-copy@1.0.6(vite@5.1.6(@types/node@20.14.11)):
+    dependencies:
+      chokidar: 3.6.0
+      fast-glob: 3.3.2
+      fs-extra: 11.2.0
+      picocolors: 1.0.0
+      vite: 5.1.6(@types/node@20.14.11)
 
   vite@5.1.6(@types/node@20.14.11):
     dependencies:

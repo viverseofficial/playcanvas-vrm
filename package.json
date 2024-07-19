@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@types/playcanvas": "^1.23.0",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "eslint": "^8.57.0",
@@ -18,9 +19,10 @@
     "vite": "^5.1.6",
     "vite-plugin-banner": "^0.7.1",
     "vite-plugin-dts": "^3.7.3",
-    "vite-plugin-mkcert": "^1.17.4"
+    "vite-plugin-mkcert": "^1.17.4",
+    "vite-plugin-static-copy": "^1.0.6"
   },
   "dependencies": {
-    "playcanvas": "^1.72.1"
+    "playcanvas": "^1.73.0"
   }
 }
