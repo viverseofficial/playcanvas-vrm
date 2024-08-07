@@ -1,7 +1,6 @@
 import type { ExpressionPresetName } from './ExpressionPresetName';
 import type { HumanoidHumanBoneName } from './HumanoidBoneName';
 
-
 interface Expression {
   node: number;
   extensions?: { [name: string]: any };
@@ -17,7 +16,6 @@ interface Expressions {
     [key: string]: Expression;
   };
 }
-
 
 interface HumanoidHumanBone {
   node: number;

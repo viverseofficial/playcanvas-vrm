@@ -8,8 +8,6 @@ import { createAnimationFromVRMA } from './utils/animations2';
 import avatarUrl from '/Avatar_v1.vrm?url'; // v1
 import avatarUrl2 from '/rara.vrm?url'; // v0
 
-
-
 declare global {
   interface Window {
     createAnim(type: 'A' | 'B' | 'C' | 'D'): void;
@@ -21,7 +19,6 @@ await loadScript();
 const VRMLoader: any = window.VRMLoader;
 const GLTFLoader: any = window.GLTFLoader;
 
-
 const createAvatar = (url: string) => {
   return new Promise<{
     avatarEntity: pc.Entity;
@@ -32,7 +29,6 @@ const createAvatar = (url: string) => {
     const loader = new GLTFLoader(pc, app);
     const asset = new pc.Asset('avatar', 'container', { url });
     let timer = 0;
-
 
     loader
       .parse(asset, 'VRM_AVATAR_RENDER')
@@ -61,13 +57,11 @@ const createAvatar = (url: string) => {
             activate: true,
           });
 
-
           // Idle
           // createDefaultAnimations(animatedEntity, convertedAsset, humanoid, VRMLoader);
-          
-          // VRMA 
-          createAnimationFromVRMA(animatedEntity, convertedAsset, humanoid, VRMLoader);
 
+          // VRMA
+          createAnimationFromVRMA(animatedEntity, convertedAsset, humanoid, VRMLoader);
 
           rootEntity.addComponent('script');
           if (rootEntity.script) {
@@ -118,7 +112,6 @@ const setupAvatar = async (app: pc.Application) => {
   app.root.addChild(avatarA);
   app.root.addChild(avatarB);
   avatarB.setPosition(0.5, 0, 0);
-
 };
 
 const app = setupApplication();
@@ -130,9 +123,6 @@ app.once('start', async () => {
   VRMLoader.VrmExpression.importScript(pc);
   VRMLoader.VrmSpringBone.importScript(pc);
   setupAvatar(app);
-
 });
 
 app.start();
-
-

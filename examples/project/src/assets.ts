@@ -17,8 +17,6 @@ import VrmaAUrl from '/VRMA_01.vrma?url';
 import VrmaBUrl from '/VRMA_02.vrma?url';
 import VrmaCUrl from '/VRMA_03.vrma?url';
 
-
-
 const AnimationIdle = new pc.Asset('Idle', 'animation', { url: idleAnimUrl });
 const AnimationRun = new pc.Asset('Run', 'animation', { url: runAnimUrl });
 const AnimationMocapV1 = new pc.Asset('MocapA', 'container', { url: mocapV1AnimUrl });
@@ -36,8 +34,6 @@ const AnimationVrmaA = new pc.Asset('VrmaA', 'container', { url: VrmaAUrl });
 const AnimationVrmaB = new pc.Asset('VrmaA', 'container', { url: VrmaBUrl });
 const AnimationVrmaC = new pc.Asset('VrmaA', 'container', { url: VrmaCUrl });
 
-
-
 export const preloadAssets = {
   AnimationIdle,
   AnimationRun,
@@ -49,7 +45,7 @@ export const preloadAssets = {
   AnimationD,
   AnimationE,
   AnimationVrmaTest, //vrma
-  AnimationVrmaA, 
-  AnimationVrmaB, 
-  AnimationVrmaC, 
+  AnimationVrmaA,
+  AnimationVrmaB,
+  AnimationVrmaC,
 };

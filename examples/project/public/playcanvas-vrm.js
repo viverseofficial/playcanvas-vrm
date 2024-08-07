@@ -454,10 +454,10 @@ const VrmAnimation = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.define
 }, Symbol.toStringTag, { value: "Module" }));
 class VRMAnimation {
   /*     public expressionTracks: {
-        preset: Map<VRMExpressionPresetName, IVrmaTrack>;
-        custom: Map<string, IVrmaTrack>; 
-      };
-      public lookAtTrack: IVrmaTrack | null;  */
+      preset: Map<VRMExpressionPresetName, IVrmaTrack>;
+      custom: Map<string, IVrmaTrack>; 
+    };
+    public lookAtTrack: IVrmaTrack | null;  */
   constructor(pcRef) {
     this.duration = 0;
     this.restHipsPosition = new pcRef.Vec3();
@@ -688,13 +688,23 @@ function createVRMAnimTrack(pcRef, name, vrmAnimation, humanoid, metaVersion = "
   const outputs = [];
   const curves = [];
   const vrmaTracks = [];
-  const humanoidTracks = createVRMAnimationHumanoidTracks(pcRef, vrmAnimation, humanoid, metaVersion);
+  const humanoidTracks = createVRMAnimationHumanoidTracks(
+    pcRef,
+    vrmAnimation,
+    humanoid,
+    metaVersion
+  );
   vrmaTracks.push(...humanoidTracks.translation.values());
   vrmaTracks.push(...humanoidTracks.rotation.values());
   for (let i = 0; i < vrmaTracks.length; i++) {
     inputs.push(vrmaTracks[i].input);
     outputs.push(vrmaTracks[i].output);
-    const _curve = new pcRef.AnimCurve(vrmaTracks[i].curve.paths, i, i, vrmaTracks[i].curve.interpolation);
+    const _curve = new pcRef.AnimCurve(
+      vrmaTracks[i].curve.paths,
+      i,
+      i,
+      vrmaTracks[i].curve.interpolation
+    );
     curves.push(_curve);
     const vrmaCurve = vrmaTracks[i].curve;
     vrmaCurve.paths.forEach((graph) => {
@@ -732,20 +742,32 @@ function createVRMAnimationHumanoidTracks(pcRef, vrmAnimation, humanoid, metaVer
       const humanoidHipsPosition = ((_b = humanoid.rawHumanBones.hips) == null ? void 0 : _b.node.getPosition()) || new pcRef.Vec3();
       const humanoidY = humanoidHipsPosition.y;
       const scale = humanoidY / animationY;
-      const outputData = origTrack.output.data.map((v, i) => (metaVersion === "v0" && i % 3 !== 1 ? -v : v) * scale);
+      const outputData = origTrack.output.data.map(
+        (v, i) => (metaVersion === "v0" && i % 3 !== 1 ? -v : v) * scale
+      );
       const _outputData = new Float32Array(outputData);
       const _output = new pcRef.AnimData(origTrack.output.components, _outputData);
-      const vrmaTrack = { curve: origTrack.curve, input: origTrack.input, output: _output };
+      const vrmaTrack = {
+        curve: origTrack.curve,
+        input: origTrack.input,
+        output: _output
+      };
       translation.set(name, vrmaTrack);
     }
   }
   for (const [name, origTrack] of vrmAnimation.humanoidTracks.rotation.entries()) {
     const nodeName = (_c = humanoid.getNormalizedBoneNode(name)) == null ? void 0 : _c.name;
     if (nodeName != null) {
-      const outputData = origTrack.output.data.map((v, i) => metaVersion === "v0" && i % 2 === 0 ? -v : v);
+      const outputData = origTrack.output.data.map(
+        (v, i) => metaVersion === "v0" && i % 2 === 0 ? -v : v
+      );
       const _outputData = new Float32Array(outputData);
       const _output = new pcRef.AnimData(origTrack.output.components, _outputData);
-      const vrmaTrack = { curve: origTrack.curve, input: origTrack.input, output: _output };
+      const vrmaTrack = {
+        curve: origTrack.curve,
+        input: origTrack.input,
+        output: _output
+      };
       rotation.set(name, vrmaTrack);
     }
   }
@@ -760,7 +782,13 @@ function createVRMAResources(pcRef, vrmAsset, vrmaAssets, humanoid) {
   vrmaAssets.forEach((vrmaAsset) => {
     const vrmAnimations = createVRMA(pcRef, vrmaAsset.asset);
     if (vrmAnimations) {
-      const animTrack = createVRMAnimTrack(pcRef, vrmaAsset.stateName, vrmAnimations[0], humanoid, version);
+      const animTrack = createVRMAnimTrack(
+        pcRef,
+        vrmaAsset.stateName,
+        vrmAnimations[0],
+        humanoid,
+        version
+      );
       rescources.push({ stateName: vrmaAsset.stateName, animTrack });
     }
   });
