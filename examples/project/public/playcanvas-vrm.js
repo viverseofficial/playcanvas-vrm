@@ -493,285 +493,305 @@ function applyMatrix4(pcRef, v3, m) {
   return new pcRef.Vec3(_x, _y, _z);
 }
 const POSSIBLE_SPEC_VERSIONS = /* @__PURE__ */ new Set(["1.0", "1.0-draft"]);
-function createVRMA(pcRef, vrmaAsset) {
-  var _a, _b, _c;
-  const defGltf = vrmaAsset.resource.data.gltf;
-  const defExtensionsUsed = defGltf.extensionsUsed;
-  if (defExtensionsUsed == null || defExtensionsUsed.indexOf("VRMC_vrm_animation") == -1) {
-    console.warn("CreateVRMAnimation: Please check. It is not a vrma.");
-    return;
+class VRMAnimationLoader {
+  constructor(pcRef) {
+    this.pcRef = pcRef;
   }
-  const defExtension = (_a = defGltf.extensions) == null ? void 0 : _a["VRMC_vrm_animation"];
-  if (defExtension == null) {
-    console.warn("CreateVRMAnimation: Please check. It is not a vrma.");
-    return;
-  }
-  const specVersion = defExtension.specVersion;
-  if (!POSSIBLE_SPEC_VERSIONS.has(specVersion)) {
-    console.warn(`CreateVRMAnimation: Unknown VRMC_vrm_animation spec version: ${specVersion}`);
-    return;
-  }
-  if (specVersion === "1.0-draft") {
-    console.warn(
-      "CreateVRMAnimation: Using a draft spec version: 1.0-draft. Some behaviors may be different. Consider updating the animation file."
-    );
-  }
-  const pcNodes = vrmaAsset.resource.data.nodes;
-  const nodeMap = _createNodeMap(defGltf, defExtension);
-  const worldMatrixMap = _createBoneWorldMatrixMap(pcRef, pcNodes, defExtension);
-  const hipsNode = (_c = (_b = defExtension.humanoid) == null ? void 0 : _b.humanBones["hips"]) == null ? void 0 : _c.node;
-  const hips = hipsNode != null ? pcNodes[hipsNode] : null;
-  const restHipsPosition = hips == null ? void 0 : hips.getPosition();
-  const animTracks = vrmaAsset.resource.data.animations;
-  const animations = animTracks.map((animTrack, index) => {
-    const defAnimation = defGltf.animations[index];
-    const animation = _parseAnimation(pcRef, animTrack, defAnimation, nodeMap, worldMatrixMap);
-    animation.restHipsPosition = restHipsPosition;
-    return animation;
-  });
-  return animations;
-}
-function _createNodeMap(defGltf, defExtension) {
-  var _a, _b, _c, _d;
-  const origNameToHumanoidIndex = /* @__PURE__ */ new Map();
-  const humanoidIndexToName = /* @__PURE__ */ new Map();
-  const expressionsIndexToName = /* @__PURE__ */ new Map();
-  const origNodes = defGltf.nodes;
-  if (origNodes) {
-    origNodes.forEach((value, index) => {
-      if (value.name) {
-        origNameToHumanoidIndex.set(value.name, index);
-      }
+  loadVRMA(vrmaAsset) {
+    var _a, _b, _c;
+    const defGltf = vrmaAsset.resource.data.gltf;
+    const defExtensionsUsed = defGltf.extensionsUsed;
+    if (defExtensionsUsed == null || defExtensionsUsed.indexOf("VRMC_vrm_animation") == -1) {
+      console.warn("CreateVRMAnimation: Please check. It is not a vrma.");
+      return;
+    }
+    const defExtension = (_a = defGltf.extensions) == null ? void 0 : _a["VRMC_vrm_animation"];
+    if (defExtension == null) {
+      console.warn("CreateVRMAnimation: Please check. It is not a vrma.");
+      return;
+    }
+    const specVersion = defExtension.specVersion;
+    if (!POSSIBLE_SPEC_VERSIONS.has(specVersion)) {
+      console.warn(`CreateVRMAnimation: Unknown VRMC_vrm_animation spec version: ${specVersion}`);
+      return;
+    }
+    if (specVersion === "1.0-draft") {
+      console.warn(
+        "CreateVRMAnimation: Using a draft spec version: 1.0-draft. Some behaviors may be different. Consider updating the animation file."
+      );
+    }
+    const pcNodes = vrmaAsset.resource.data.nodes;
+    const nodeMap = this._createNodeMap(defGltf, defExtension);
+    const worldMatrixMap = this._createBoneWorldMatrixMap(pcNodes, defExtension);
+    const hipsNode = (_c = (_b = defExtension.humanoid) == null ? void 0 : _b.humanBones["hips"]) == null ? void 0 : _c.node;
+    const hips = hipsNode != null ? pcNodes[hipsNode] : null;
+    const restHipsPosition = hips == null ? void 0 : hips.getPosition();
+    const animTracks = vrmaAsset.resource.data.animations;
+    const animations = animTracks.map((animTrack, index) => {
+      const defAnimation = defGltf.animations[index];
+      const animation = this._parseAnimation(animTrack, defAnimation, nodeMap, worldMatrixMap);
+      animation.restHipsPosition = restHipsPosition;
+      return animation;
     });
+    return animations;
   }
-  const humanBones = (_a = defExtension.humanoid) == null ? void 0 : _a.humanBones;
-  if (humanBones) {
-    Object.entries(humanBones).forEach(([name, bone]) => {
-      const node = bone == null ? void 0 : bone.node;
-      if (node != null) {
-        humanoidIndexToName.set(node, name);
-      }
-    });
-  }
-  const preset = (_b = defExtension.expressions) == null ? void 0 : _b.preset;
-  if (preset) {
-    Object.entries(preset).forEach(([name, expression]) => {
-      const node = expression == null ? void 0 : expression.node;
-      if (node != null) {
+  _createNodeMap(defGltf, defExtension) {
+    var _a, _b, _c, _d;
+    const origNameToHumanoidIndex = /* @__PURE__ */ new Map();
+    const humanoidIndexToName = /* @__PURE__ */ new Map();
+    const expressionsIndexToName = /* @__PURE__ */ new Map();
+    const origNodes = defGltf.nodes;
+    if (origNodes) {
+      origNodes.forEach((value, index) => {
+        if (value.name) {
+          origNameToHumanoidIndex.set(value.name, index);
+        }
+      });
+    }
+    const humanBones = (_a = defExtension.humanoid) == null ? void 0 : _a.humanBones;
+    if (humanBones) {
+      Object.entries(humanBones).forEach(([name, bone]) => {
+        const node = bone == null ? void 0 : bone.node;
+        if (node != null) {
+          humanoidIndexToName.set(node, name);
+        }
+      });
+    }
+    const preset = (_b = defExtension.expressions) == null ? void 0 : _b.preset;
+    if (preset) {
+      Object.entries(preset).forEach(([name, expression]) => {
+        const node = expression == null ? void 0 : expression.node;
+        if (node != null) {
+          expressionsIndexToName.set(node, name);
+        }
+      });
+    }
+    const custom = (_c = defExtension.expressions) == null ? void 0 : _c.custom;
+    if (custom) {
+      Object.entries(custom).forEach(([name, expression]) => {
+        const { node } = expression;
         expressionsIndexToName.set(node, name);
+      });
+    }
+    const lookAtIndex = ((_d = defExtension.lookAt) == null ? void 0 : _d.node) ?? null;
+    return { origNameToHumanoidIndex, humanoidIndexToName, expressionsIndexToName, lookAtIndex };
+  }
+  //In THREE, it's async
+  _createBoneWorldMatrixMap(pcNodes, defExtension) {
+    var _a;
+    const worldMatrixMap = /* @__PURE__ */ new Map();
+    if (defExtension.humanoid == null) {
+      return worldMatrixMap;
+    }
+    for (const [boneName, humanBone] of Object.entries(defExtension.humanoid.humanBones)) {
+      const node = humanBone == null ? void 0 : humanBone.node;
+      if (node != null) {
+        const pcNode = pcNodes[node];
+        worldMatrixMap.set(boneName, pcNode.getWorldTransform());
+        const MAT4_IDENTITY = new this.pcRef.Mat4();
+        if (boneName === "hips") {
+          worldMatrixMap.set("hipsParent", ((_a = pcNode.parent) == null ? void 0 : _a.getWorldTransform()) ?? MAT4_IDENTITY);
+        }
       }
-    });
-  }
-  const custom = (_c = defExtension.expressions) == null ? void 0 : _c.custom;
-  if (custom) {
-    Object.entries(custom).forEach(([name, expression]) => {
-      const { node } = expression;
-      expressionsIndexToName.set(node, name);
-    });
-  }
-  const lookAtIndex = ((_d = defExtension.lookAt) == null ? void 0 : _d.node) ?? null;
-  return { origNameToHumanoidIndex, humanoidIndexToName, expressionsIndexToName, lookAtIndex };
-}
-function _createBoneWorldMatrixMap(pcRef, pcNodes, defExtension) {
-  var _a;
-  const worldMatrixMap = /* @__PURE__ */ new Map();
-  if (defExtension.humanoid == null) {
+    }
     return worldMatrixMap;
   }
-  for (const [boneName, humanBone] of Object.entries(defExtension.humanoid.humanBones)) {
-    const node = humanBone == null ? void 0 : humanBone.node;
-    if (node != null) {
-      const pcNode = pcNodes[node];
-      worldMatrixMap.set(boneName, pcNode.getWorldTransform());
-      const MAT4_IDENTITY = new pcRef.Mat4();
-      if (boneName === "hips") {
-        worldMatrixMap.set("hipsParent", ((_a = pcNode.parent) == null ? void 0 : _a.getWorldTransform()) ?? MAT4_IDENTITY);
-      }
-    }
-  }
-  return worldMatrixMap;
-}
-function _parseAnimation(pcRef, animTrack, defAnimation, nodeMap, worldMatrixMap) {
-  const inputs = animTrack.inputs.map((input) => new pcRef.AnimData(input.components, input.data));
-  const outputs = animTrack.outputs.map(
-    // the outputs represent values that are correspond to the keyframe times
-    (output) => new pcRef.AnimData(output.components, output.data)
-  );
-  const curves = animTrack.curves.map((curve) => {
-    const curvePaths = curve.paths.map((graph) => {
-      const morphCurvePath = graph;
-      return {
-        component: morphCurvePath.component,
-        entityPath: [...morphCurvePath.entityPath],
-        propertyPath: [...morphCurvePath.propertyPath]
-      };
-    });
-    return new pcRef.AnimCurve(curvePaths, curve.input, curve.output, curve.interpolation);
-  });
-  const defChannels = defAnimation.channels;
-  const result = new VRMAnimation(pcRef);
-  result.duration = animTrack.duration;
-  defChannels.forEach((channel, index) => {
-    const { node, path } = channel.target;
-    const input = inputs[index];
-    const output = outputs[index];
-    const curve = curves[index];
-    if (node == null) {
-      return;
-    }
-    const boneName = nodeMap.humanoidIndexToName.get(node);
-    if (boneName != null) {
-      let parentBoneName = VRMHumanBoneParentMap[boneName];
-      while (parentBoneName != null && worldMatrixMap.get(parentBoneName) == null) {
-        parentBoneName = VRMHumanBoneParentMap[parentBoneName];
-      }
-      parentBoneName ?? (parentBoneName = "hipsParent");
-      curve.paths.forEach((graph) => {
+  _parseAnimation(animTrack, defAnimation, nodeMap, worldMatrixMap) {
+    const inputs = animTrack.inputs.map(
+      (input) => new this.pcRef.AnimData(input.components, input.data)
+    );
+    const outputs = animTrack.outputs.map(
+      // the outputs represent values that are correspond to the keyframe times
+      (output) => new this.pcRef.AnimData(output.components, output.data)
+    );
+    const curves = animTrack.curves.map((curve) => {
+      const curvePaths = curve.paths.map((graph) => {
         const morphCurvePath = graph;
-        const arrangedEntityPath = morphCurvePath.entityPath.map((path2) => {
-          const nodeIndex = nodeMap.origNameToHumanoidIndex.get(path2);
-          if (nodeIndex) {
-            const _boneName = nodeMap.humanoidIndexToName.get(nodeIndex);
-            return _boneName ? _boneName : boneName;
-          } else {
-            return boneName;
-          }
-        });
-        morphCurvePath.entityPath = arrangedEntityPath;
+        return {
+          component: morphCurvePath.component,
+          entityPath: [...morphCurvePath.entityPath],
+          propertyPath: [...morphCurvePath.propertyPath]
+        };
       });
-      if (path === "translation") {
-        if (boneName !== "hips") {
-          console.warn(
-            `The loading animation contains a translation track for ${boneName}, which is not permitted in the VRMC_vrm_animation spec. ignoring the track`
-          );
-        } else {
-          const hipsParentWorldMatrix = worldMatrixMap.get("hipsParent");
-          const outputData = arrayChunk(output.data, 3).flatMap((v) => {
-            let _vec3 = new pcRef.Vec3(v[0], v[1], v[2]);
-            _vec3 = applyMatrix4(pcRef, _vec3, hipsParentWorldMatrix);
-            return [_vec3.x, _vec3.y, _vec3.z];
+      return new this.pcRef.AnimCurve(
+        curvePaths,
+        curve.input,
+        curve.output,
+        curve.interpolation
+      );
+    });
+    const defChannels = defAnimation.channels;
+    const result = new VRMAnimation(this.pcRef);
+    result.duration = animTrack.duration;
+    defChannels.forEach((channel, index) => {
+      const { node, path } = channel.target;
+      const input = inputs[index];
+      const output = outputs[index];
+      const curve = curves[index];
+      if (node == null) {
+        return;
+      }
+      const boneName = nodeMap.humanoidIndexToName.get(node);
+      if (boneName != null) {
+        let parentBoneName = VRMHumanBoneParentMap[boneName];
+        while (parentBoneName != null && worldMatrixMap.get(parentBoneName) == null) {
+          parentBoneName = VRMHumanBoneParentMap[parentBoneName];
+        }
+        parentBoneName ?? (parentBoneName = "hipsParent");
+        curve.paths.forEach((graph) => {
+          const morphCurvePath = graph;
+          const arrangedEntityPath = morphCurvePath.entityPath.map((path2) => {
+            const nodeIndex = nodeMap.origNameToHumanoidIndex.get(path2);
+            if (nodeIndex) {
+              const _boneName = nodeMap.humanoidIndexToName.get(nodeIndex);
+              return _boneName ? _boneName : boneName;
+            } else {
+              return boneName;
+            }
+          });
+          morphCurvePath.entityPath = arrangedEntityPath;
+        });
+        if (path === "translation") {
+          if (boneName !== "hips") {
+            console.warn(
+              `The loading animation contains a translation track for ${boneName}, which is not permitted in the VRMC_vrm_animation spec. ignoring the track`
+            );
+          } else {
+            const hipsParentWorldMatrix = worldMatrixMap.get("hipsParent");
+            const outputData = arrayChunk(output.data, 3).flatMap((v) => {
+              let _vec3 = new this.pcRef.Vec3(v[0], v[1], v[2]);
+              _vec3 = applyMatrix4(this.pcRef, _vec3, hipsParentWorldMatrix);
+              return [_vec3.x, _vec3.y, _vec3.z];
+            });
+            const _outputData = new Float32Array(outputData);
+            const _output = new this.pcRef.AnimData(output.components, _outputData);
+            const vrmaTrack = { curve, input, output: _output };
+            result.humanoidTracks.translation.set(boneName, vrmaTrack);
+          }
+        } else if (path === "rotation") {
+          const worldMatrix = worldMatrixMap.get(boneName);
+          const parentWorldMatrix = worldMatrixMap.get(parentBoneName);
+          const worldMatrixRotation = worldMatrix.getEulerAngles();
+          const worldMatrixQuat = new this.pcRef.Quat();
+          worldMatrixQuat.setFromEulerAngles(worldMatrixRotation);
+          worldMatrixQuat.invert();
+          const parentWorldMatrixRotation = parentWorldMatrix.getEulerAngles();
+          const parentWorldMatrixQuat = new this.pcRef.Quat();
+          parentWorldMatrixQuat.setFromEulerAngles(parentWorldMatrixRotation);
+          const outputData = arrayChunk(output.data, 4).flatMap((q) => {
+            let _quat = new this.pcRef.Quat(q[0], q[1], q[2], q[3]);
+            _quat = _quat.mul2(parentWorldMatrixQuat, _quat).mul(worldMatrixQuat);
+            return [_quat.x, _quat.y, _quat.z, _quat.w];
           });
           const _outputData = new Float32Array(outputData);
-          const _output = new pcRef.AnimData(output.components, _outputData);
+          const _output = new this.pcRef.AnimData(output.components, _outputData);
           const vrmaTrack = { curve, input, output: _output };
-          result.humanoidTracks.translation.set(boneName, vrmaTrack);
+          result.humanoidTracks.rotation.set(boneName, vrmaTrack);
+        } else {
+          throw new Error(`Invalid path "${path}"`);
         }
-      } else if (path === "rotation") {
-        const worldMatrix = worldMatrixMap.get(boneName);
-        const parentWorldMatrix = worldMatrixMap.get(parentBoneName);
-        const worldMatrixRotation = worldMatrix.getEulerAngles();
-        const worldMatrixQuat = new pcRef.Quat();
-        worldMatrixQuat.setFromEulerAngles(worldMatrixRotation);
-        worldMatrixQuat.invert();
-        const parentWorldMatrixRotation = parentWorldMatrix.getEulerAngles();
-        const parentWorldMatrixQuat = new pcRef.Quat();
-        parentWorldMatrixQuat.setFromEulerAngles(parentWorldMatrixRotation);
-        const outputData = arrayChunk(output.data, 4).flatMap((q) => {
-          let _quat = new pcRef.Quat(q[0], q[1], q[2], q[3]);
-          _quat = _quat.mul2(parentWorldMatrixQuat, _quat).mul(worldMatrixQuat);
-          return [_quat.x, _quat.y, _quat.z, _quat.w];
-        });
-        const _outputData = new Float32Array(outputData);
-        const _output = new pcRef.AnimData(output.components, _outputData);
-        const vrmaTrack = { curve, input, output: _output };
-        result.humanoidTracks.rotation.set(boneName, vrmaTrack);
-      } else {
-        throw new Error(`Invalid path "${path}"`);
+        return;
       }
-      return;
-    }
-  });
-  return result;
-}
-function createVRMAnimTrack(pcRef, name, vrmAnimation, humanoid, metaVersion = "v0") {
-  const inputs = [];
-  const outputs = [];
-  const curves = [];
-  const vrmaTracks = [];
-  const humanoidTracks = createVRMAnimationHumanoidTracks(
-    pcRef,
-    vrmAnimation,
-    humanoid,
-    metaVersion
-  );
-  vrmaTracks.push(...humanoidTracks.translation.values());
-  vrmaTracks.push(...humanoidTracks.rotation.values());
-  for (let i = 0; i < vrmaTracks.length; i++) {
-    inputs.push(vrmaTracks[i].input);
-    outputs.push(vrmaTracks[i].output);
-    const _curve = new pcRef.AnimCurve(
-      vrmaTracks[i].curve.paths,
-      i,
-      i,
-      vrmaTracks[i].curve.interpolation
-    );
-    curves.push(_curve);
-    const vrmaCurve = vrmaTracks[i].curve;
-    vrmaCurve.paths.forEach((graph) => {
-      const morphCurvePath = graph;
-      const entityPath = morphCurvePath.entityPath;
-      if (entityPath.length == 1 && entityPath[0] == "hips") {
-        entityPath.unshift("SkeletonRoot");
-      }
-      const arrangedEntityPath = entityPath.map((path) => {
-        var _a;
-        const originalRigName = path;
-        const vrmBoneName = VRMRigMap[originalRigName];
-        const vrmNodeName = (_a = humanoid.getRawBoneNode(vrmBoneName)) == null ? void 0 : _a.name;
-        if (!vrmBoneName || !vrmNodeName) {
-          return path;
-        }
-        return vrmNodeName;
-      });
-      if (arrangedEntityPath.length == 1 && arrangedEntityPath[0] == "hips") {
-        arrangedEntityPath.unshift("SkeletonRoot");
-      }
-      morphCurvePath.entityPath = arrangedEntityPath;
     });
+    return result;
   }
-  return new pcRef.AnimTrack(name, vrmAnimation.duration, inputs, outputs, curves);
 }
-function createVRMAnimationHumanoidTracks(pcRef, vrmAnimation, humanoid, metaVersion) {
-  var _a, _b, _c;
-  const translation = /* @__PURE__ */ new Map();
-  const rotation = /* @__PURE__ */ new Map();
-  for (const [name, origTrack] of vrmAnimation.humanoidTracks.translation.entries()) {
-    const nodeName = (_a = humanoid.getNormalizedBoneNode(name)) == null ? void 0 : _a.name;
-    if (nodeName != null) {
-      const animationY = vrmAnimation.restHipsPosition.y;
-      const humanoidHipsPosition = ((_b = humanoid.rawHumanBones.hips) == null ? void 0 : _b.node.getPosition()) || new pcRef.Vec3();
-      const humanoidY = humanoidHipsPosition.y;
-      const scale = humanoidY / animationY;
-      const outputData = origTrack.output.data.map(
-        (v, i) => (metaVersion === "v0" && i % 3 !== 1 ? -v : v) * scale
-      );
-      const _outputData = new Float32Array(outputData);
-      const _output = new pcRef.AnimData(origTrack.output.components, _outputData);
-      const vrmaTrack = {
-        curve: origTrack.curve,
-        input: origTrack.input,
-        output: _output
-      };
-      translation.set(name, vrmaTrack);
-    }
+class VRMAnimationTrack {
+  constructor(pcRef, name, vrmAnimation, humanoid, metaVersion = "v0") {
+    this.pcRef = pcRef;
+    this.vrmAnimation = vrmAnimation;
+    this.name = name;
+    this.humanoid = humanoid;
+    this.metaVersion = metaVersion;
   }
-  for (const [name, origTrack] of vrmAnimation.humanoidTracks.rotation.entries()) {
-    const nodeName = (_c = humanoid.getNormalizedBoneNode(name)) == null ? void 0 : _c.name;
-    if (nodeName != null) {
-      const outputData = origTrack.output.data.map(
-        (v, i) => metaVersion === "v0" && i % 2 === 0 ? -v : v
-      );
-      const _outputData = new Float32Array(outputData);
-      const _output = new pcRef.AnimData(origTrack.output.components, _outputData);
-      const vrmaTrack = {
-        curve: origTrack.curve,
-        input: origTrack.input,
-        output: _output
-      };
-      rotation.set(name, vrmaTrack);
-    }
+  get result() {
+    return this.createVRMAnimTrack();
   }
-  return { translation, rotation };
+  createVRMAnimTrack() {
+    const inputs = [];
+    const outputs = [];
+    const curves = [];
+    const vrmaTracks = [];
+    const humanoidTracks = this._createVRMAnimationHumanoidTracks();
+    vrmaTracks.push(...humanoidTracks.translation.values());
+    vrmaTracks.push(...humanoidTracks.rotation.values());
+    for (let i = 0; i < vrmaTracks.length; i++) {
+      inputs.push(vrmaTracks[i].input);
+      outputs.push(vrmaTracks[i].output);
+      const _curve = new this.pcRef.AnimCurve(
+        vrmaTracks[i].curve.paths,
+        i,
+        i,
+        vrmaTracks[i].curve.interpolation
+      );
+      curves.push(_curve);
+      const vrmaCurve = vrmaTracks[i].curve;
+      vrmaCurve.paths.forEach((graph) => {
+        const morphCurvePath = graph;
+        const entityPath = morphCurvePath.entityPath;
+        if (entityPath.length == 1 && entityPath[0] == "hips") {
+          entityPath.unshift("SkeletonRoot");
+        }
+        const arrangedEntityPath = entityPath.map((path) => {
+          var _a;
+          const originalRigName = path;
+          const vrmBoneName = VRMRigMap[originalRigName];
+          const vrmNodeName = (_a = this.humanoid.getRawBoneNode(vrmBoneName)) == null ? void 0 : _a.name;
+          if (!vrmBoneName || !vrmNodeName) {
+            return path;
+          }
+          return vrmNodeName;
+        });
+        if (arrangedEntityPath.length == 1 && arrangedEntityPath[0] == "hips") {
+          arrangedEntityPath.unshift("SkeletonRoot");
+        }
+        morphCurvePath.entityPath = arrangedEntityPath;
+      });
+    }
+    return new this.pcRef.AnimTrack(this.name, this.vrmAnimation.duration, inputs, outputs, curves);
+  }
+  _createVRMAnimationHumanoidTracks() {
+    var _a, _b, _c;
+    const translation = /* @__PURE__ */ new Map();
+    const rotation = /* @__PURE__ */ new Map();
+    for (const [name, origTrack] of this.vrmAnimation.humanoidTracks.translation.entries()) {
+      const nodeName = (_a = this.humanoid.getNormalizedBoneNode(name)) == null ? void 0 : _a.name;
+      if (nodeName != null) {
+        const animationY = this.vrmAnimation.restHipsPosition.y;
+        const humanoidHipsPosition = ((_b = this.humanoid.rawHumanBones.hips) == null ? void 0 : _b.node.getPosition()) || new this.pcRef.Vec3();
+        const humanoidY = humanoidHipsPosition.y;
+        const scale = humanoidY / animationY;
+        const outputData = origTrack.output.data.map(
+          (v, i) => (this.metaVersion === "v0" && i % 3 !== 1 ? -v : v) * scale
+        );
+        const _outputData = new Float32Array(outputData);
+        const _output = new this.pcRef.AnimData(origTrack.output.components, _outputData);
+        const vrmaTrack = {
+          curve: origTrack.curve,
+          input: origTrack.input,
+          output: _output
+        };
+        translation.set(name, vrmaTrack);
+      }
+    }
+    for (const [name, origTrack] of this.vrmAnimation.humanoidTracks.rotation.entries()) {
+      const nodeName = (_c = this.humanoid.getNormalizedBoneNode(name)) == null ? void 0 : _c.name;
+      if (nodeName != null) {
+        const outputData = origTrack.output.data.map(
+          (v, i) => this.metaVersion === "v0" && i % 2 === 0 ? -v : v
+        );
+        const _outputData = new Float32Array(outputData);
+        const _output = new this.pcRef.AnimData(origTrack.output.components, _outputData);
+        const vrmaTrack = {
+          curve: origTrack.curve,
+          input: origTrack.input,
+          output: _output
+        };
+        rotation.set(name, vrmaTrack);
+      }
+    }
+    return { translation, rotation };
+  }
 }
 function createVRMAResources(pcRef, vrmAsset, vrmaAssets, humanoid) {
   var _a, _b;
@@ -780,15 +800,16 @@ function createVRMAResources(pcRef, vrmAsset, vrmaAssets, humanoid) {
   const version = isV1Used ? "v1" : isV0Used ? "v0" : null;
   const rescources = [];
   vrmaAssets.forEach((vrmaAsset) => {
-    const vrmAnimations = createVRMA(pcRef, vrmaAsset.asset);
+    const loader = new VRMAnimationLoader(pcRef);
+    const vrmAnimations = loader.loadVRMA(vrmaAsset.asset);
     if (vrmAnimations) {
-      const animTrack = createVRMAnimTrack(
+      const animTrack = new VRMAnimationTrack(
         pcRef,
         vrmaAsset.stateName,
         vrmAnimations[0],
         humanoid,
         version
-      );
+      ).result;
       rescources.push({ stateName: vrmaAsset.stateName, animTrack });
     }
   });

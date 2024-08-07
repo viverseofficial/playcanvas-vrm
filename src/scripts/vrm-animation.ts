@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 import { VRMHumanoid } from '../extensions/vrm-humanoid/VRMHumanoid';
-import { createVRMA } from '../extensions/vrm-animation/createVRMA';
-import { createVRMAnimTrack } from '../extensions/vrm-animation/createVRMAnimTrack';
+import { VRMAnimationLoader } from '../extensions/vrm-animation/VRMAnimationLoader';
+import { VRMAnimationTrack } from '../extensions/vrm-animation/VRMAnimationTrack';
 import type { VRMAnimation } from '../extensions/vrm-animation/VRMAnimation';
 
 interface IAnimationSetting {
@@ -39,16 +39,18 @@ export function createVRMAResources(
   const rescources: IVRMAResource[] = [];
 
   vrmaAssets.forEach((vrmaAsset) => {
-    const vrmAnimations: VRMAnimation[] | undefined = createVRMA(pcRef, vrmaAsset.asset);
+    const loader = new VRMAnimationLoader(pcRef);
+    const vrmAnimations: VRMAnimation[] | undefined = loader.loadVRMA(vrmaAsset.asset);
 
     if (vrmAnimations) {
-      const animTrack: pc.AnimTrack = createVRMAnimTrack(
+      const animTrack: pc.AnimTrack = new VRMAnimationTrack(
         pcRef,
         vrmaAsset.stateName,
         vrmAnimations[0],
         humanoid,
         version,
-      );
+      ).result;
+
       rescources.push({ stateName: vrmaAsset.stateName, animTrack: animTrack });
     }
   });
