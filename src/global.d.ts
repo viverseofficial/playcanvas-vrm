@@ -1,5 +1,5 @@
 import * as VrmAnimation from './scripts/add-vrm-animations';
-import * as VrmAnimation2 from './scripts/vrma/vrm-animations'; //temp
+import * as VrmAnimation2 from './scripts/vrm-animation'; //temp
 
 import * as VrmExpression from './scripts/vrm-expression';
 import * as VrmSpringBone from './scripts/vrm-spring-bone';

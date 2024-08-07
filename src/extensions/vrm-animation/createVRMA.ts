@@ -2,9 +2,9 @@ import * as pc from 'playcanvas';
 
 import { GLTF as GLTFSchema } from './types/gltf';
 import { VRMCVRMAnimation } from './types/VRMCVRMAnimation';
-import { VRMHumanBoneName } from '../../extensions/vrm-humanoid/vrm-humanoid';
+import { VRMHumanBoneName } from '../vrm-humanoid/vrm-humanoid';
 // import { VRMExpressionPresetName, VRMHumanBoneParentMap } from '../../extensions/vrm-map-list';
-import { VRMHumanBoneParentMap } from '../../extensions/vrm-map-list';
+import { VRMHumanBoneParentMap } from '../vrm-map-list';
 
 import { VRMAnimation, IVrmaTrack, IMorphCurvePath } from './VRMAnimation';
 import { arrayChunk } from './utils/arrayChunk';

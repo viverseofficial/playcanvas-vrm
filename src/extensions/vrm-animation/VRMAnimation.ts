@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 // import { VRMExpressionPresetName } from '../../extensions//vrm-map-list';
-import { VRMHumanBoneName } from '../../extensions//vrm-humanoid/vrm-humanoid';
+import { VRMHumanBoneName } from '../vrm-humanoid/vrm-humanoid';
 
 export interface IVrmaTrack {
   curve: pc.AnimCurve;

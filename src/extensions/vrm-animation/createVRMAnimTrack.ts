@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
-import { VRMHumanoid } from '../../extensions/vrm-humanoid/VRMHumanoid';
-import { VRMHumanBoneName } from '../../extensions/vrm-humanoid/vrm-humanoid';
-import { VRMRigMap } from '../../extensions/vrm-map-list';
+import { VRMHumanoid } from '../vrm-humanoid/VRMHumanoid';
+import { VRMHumanBoneName } from '../vrm-humanoid/vrm-humanoid';
+import { VRMRigMap } from '../vrm-map-list';
 import { VRMAnimation, IVrmaTrack, IMorphCurvePath } from './VRMAnimation';
 // import { VRMLookAtQuaternionProxy } from './VRMLookAtQuaternionProxy';
 

@@ -1,8 +1,8 @@
 import * as pc from 'playcanvas';
-import { VRMHumanoid } from '../../extensions/vrm-humanoid/VRMHumanoid';
-import { createVRMA } from './createVRMA';
-import { createVRMAnimTrack } from './createVRMAnimTrack';
-import type { VRMAnimation } from './VRMAnimation';
+import { VRMHumanoid } from '../extensions/vrm-humanoid/VRMHumanoid';
+import { createVRMA } from '../extensions/vrm-animation/createVRMA';
+import { createVRMAnimTrack } from '../extensions/vrm-animation/createVRMAnimTrack';
+import type { VRMAnimation } from '../extensions/vrm-animation/VRMAnimation';
 
 interface IAnimationSetting {
   speed?: number;
