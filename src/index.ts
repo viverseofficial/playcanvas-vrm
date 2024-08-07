@@ -1,4 +1,6 @@
 import * as VrmAnimation from './scripts/add-vrm-animations';
+import * as VrmAnimation2 from './scripts/vrma/vrm-animations'; //temp
+
 import * as VrmExpression from './scripts/vrm-expression';
 import * as VrmSpringBone from './scripts/vrm-spring-bone';
 import * as VrmMapList from './extensions/vrm-map-list';
@@ -7,6 +9,8 @@ import { createFormattedVRMHumanoid } from './extensions/vrm-humanoid/vrm-humano
 import { GLTFLoader } from './gltf-loader/GLTFLoader';
 
 export * as VrmAnimation from './scripts/add-vrm-animations';
+export * as VrmAnimation2 from './scripts/vrma/vrm-animations'; //temp
+
 export * as VrmExpression from './scripts/vrm-expression';
 export * as VrmSpringBone from './scripts/vrm-spring-bone';
 export * as VrmMapList from './extensions/vrm-map-list';
@@ -16,6 +20,7 @@ export { GLTFLoader } from './gltf-loader/GLTFLoader';
 
 window.VRMLoader = {
   VrmAnimation,
+  VrmAnimation2, //temp
   VrmExpression,
   VrmSpringBone,
   VrmMapList,

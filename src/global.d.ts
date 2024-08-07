@@ -1,4 +1,6 @@
 import * as VrmAnimation from './scripts/add-vrm-animations';
+import * as VrmAnimation2 from './scripts/vrma/vrm-animations'; //temp
+
 import * as VrmExpression from './scripts/vrm-expression';
 import * as VrmSpringBone from './scripts/vrm-spring-bone';
 import { createFormattedVRMHumanoid } from './extensions/vrm-humanoid/vrm-humanoid-utils';
@@ -10,6 +12,7 @@ declare global {
   interface Window {
     VRMLoader: {
       VrmAnimation: typeof VrmAnimation;
+      VrmAnimation2: typeof VrmAnimation2;
       VrmExpression: typeof VrmExpression;
       VrmSpringBone: typeof VrmSpringBone;
       VrmMapList: typeof VrmMapList;

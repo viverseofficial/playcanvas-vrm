@@ -11,6 +11,14 @@ import TestCAnimUrl from '/24_Praying.glb?url';
 import TestDAnimUrl from '/07_2 Pointing.glb?url';
 import TestEAnimUrl from '/25_Catwalk.glb?url';
 
+// import VRMA
+import VrmaTestUrl from '/VRMA_test.vrma?url';
+import VrmaAUrl from '/VRMA_01.vrma?url';
+import VrmaBUrl from '/VRMA_02.vrma?url';
+import VrmaCUrl from '/VRMA_03.vrma?url';
+
+
+
 const AnimationIdle = new pc.Asset('Idle', 'animation', { url: idleAnimUrl });
 const AnimationRun = new pc.Asset('Run', 'animation', { url: runAnimUrl });
 const AnimationMocapV1 = new pc.Asset('MocapA', 'container', { url: mocapV1AnimUrl });
@@ -20,6 +28,15 @@ const AnimationB = new pc.Asset('BTest', 'animation', { url: TestBAnimUrl });
 const AnimationC = new pc.Asset('CTest', 'animation', { url: TestCAnimUrl });
 const AnimationD = new pc.Asset('DTest', 'animation', { url: TestDAnimUrl });
 const AnimationE = new pc.Asset('ETest', 'animation', { url: TestEAnimUrl });
+
+// create VRMA assets
+const AnimationVrmaTest = new pc.Asset('VrmaTest', 'container', { url: VrmaTestUrl });
+
+const AnimationVrmaA = new pc.Asset('VrmaA', 'container', { url: VrmaAUrl });
+const AnimationVrmaB = new pc.Asset('VrmaA', 'container', { url: VrmaBUrl });
+const AnimationVrmaC = new pc.Asset('VrmaA', 'container', { url: VrmaCUrl });
+
+
 
 export const preloadAssets = {
   AnimationIdle,
@@ -31,4 +48,8 @@ export const preloadAssets = {
   AnimationC,
   AnimationD,
   AnimationE,
+  AnimationVrmaTest, //vrma
+  AnimationVrmaA, 
+  AnimationVrmaB, 
+  AnimationVrmaC, 
 };
