@@ -9,6 +9,10 @@ export const createDefaultAnimations = (
 ) => {
   const animationAssets = [
     {
+      stateName: 'Test',
+      asset: preloadAssets.AnimationVrmaTest,
+    },
+    {
       stateName: 'Idle',
       asset: preloadAssets.AnimationIdle,
     },
@@ -18,10 +22,10 @@ export const createDefaultAnimations = (
     },
   ];
 
-  const loadedResources = VRMLoader.VrmAnimation.createVRMAnimation(
+  const loadedResources = VRMLoader.VrmAnimation.createVRMAnimResources(
     pc,
-    animationAssets,
     asset,
+    animationAssets,
     humanoid,
     {
       negativeZAnimNames: ['viverse.combination', 'viverse.rp'],
@@ -45,10 +49,10 @@ export const createDefaultAnimations = (
     },
   ];
 
-  const mocapLoadedResources = VRMLoader.VrmAnimation.createVRMAnimation(
+  const mocapLoadedResources = VRMLoader.VrmAnimation.createVRMAnimResources(
     pc,
-    mocapAnimationAssets,
     asset,
+    mocapAnimationAssets,
     humanoid,
     {
       negativeZAnimNames: ['viverse.combination', 'viverse.rp'],
@@ -68,7 +72,7 @@ export const createWindowTestAnimation = (
   humanoid: any,
   VRMLoader: any,
 ) => {
-  window.createAnim = (type: 'A' | 'B' | 'C' | 'D' | 'E') => {
+  window.createAnim = (type: 'A' | 'B' | 'C' | 'D' | 'E' | 'V' | 'R' | 'M' | 'T') => {
     let animAssets = [];
     switch (type) {
       case 'A':
@@ -101,10 +105,40 @@ export const createWindowTestAnimation = (
           asset: preloadAssets.AnimationE,
         });
         break;
+      case 'V':
+        animAssets.push({
+          stateName: 'V',
+          asset: preloadAssets.AnimationVrmaA,
+        });
+        break;
+      case 'R':
+        animAssets.push({
+          stateName: 'R',
+          asset: preloadAssets.AnimationVrmaB,
+        });
+        break;
+      case 'M':
+        animAssets.push({
+          stateName: 'M',
+          asset: preloadAssets.AnimationVrmaC,
+        });
+        break;
+      case 'T':
+        animAssets.push({
+          stateName: 'T',
+          asset: preloadAssets.AnimationVrmaTest,
+        });
+        break;
     }
-    const resources = VRMLoader.VrmAnimation.createVRMAnimation(pc, animAssets, asset, humanoid, {
-      negativeZAnimNames: ['viverse.combination', 'viverse.rp'],
-    });
+    const resources = VRMLoader.VrmAnimation.createVRMAnimResources(
+      pc,
+      asset,
+      animAssets,
+      humanoid,
+      {
+        negativeZAnimNames: ['viverse.combination', 'viverse.rp'],
+      },
+    );
 
     if (resources) {
       resources.forEach((resource: any) => {

@@ -1,7 +1,6 @@
 import * as pc from 'playcanvas';
 import setupApplication, { createCamera, createLight, loadScript, createScene } from './setup';
-import { /* createDefaultAnimations, */ createWindowTestAnimation } from './utils/animations';
-import { createAnimationFromVRMA } from './utils/animations2';
+import { createDefaultAnimations, createWindowTestAnimation } from './utils/animations';
 
 // import { applyMaterialMtoon } from './utils/mtoon';
 
@@ -57,11 +56,8 @@ const createAvatar = (url: string) => {
             activate: true,
           });
 
-          // Idle
-          // createDefaultAnimations(animatedEntity, convertedAsset, humanoid, VRMLoader);
-
-          // VRMA
-          createAnimationFromVRMA(animatedEntity, convertedAsset, humanoid, VRMLoader);
+          // Idle or Run
+          createDefaultAnimations(animatedEntity, convertedAsset, humanoid, VRMLoader);
 
           rootEntity.addComponent('script');
           if (rootEntity.script) {

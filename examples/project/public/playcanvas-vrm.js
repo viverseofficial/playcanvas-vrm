@@ -275,183 +275,6 @@ const VrmMapList = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePr
   v0ExpressionMaterialColorMap,
   v0v1PresetNameMap
 }, Symbol.toStringTag, { value: "Module" }));
-const createAnimTrack = (pcRef, animTrack) => {
-  const inputs = animTrack.inputs.map((input) => new pcRef.AnimData(input.components, input.data));
-  const outputs = animTrack.outputs.map(
-    (output) => new pcRef.AnimData(output.components, output.data)
-  );
-  const curves = animTrack.curves.map((curve) => {
-    const curvePaths = curve.paths.map((path) => {
-      const morphCurvePath = path;
-      return {
-        component: morphCurvePath.component,
-        entityPath: [...morphCurvePath.entityPath],
-        propertyPath: [...morphCurvePath.propertyPath]
-      };
-    });
-    return new pcRef.AnimCurve(curvePaths, curve.input, curve.output, curve.interpolation);
-  });
-  return new pcRef.AnimTrack(animTrack.name, animTrack.duration, inputs, outputs, curves);
-};
-const loadAnimation = (pcRef, animationAssets, humanoid, {
-  vrmHipsHeight,
-  vrmHipsDeep,
-  motionHipsHeight,
-  version = "v0",
-  negativeZAnimNames = []
-}) => {
-  const hipPositionOutputIndexes = {};
-  const scaleOutputIndexes = {};
-  return animationAssets.map((animationAsset) => {
-    var _a, _b;
-    const resource = animationAsset.asset.resource && animationAsset.asset.type === "container" ? (_b = (_a = animationAsset.asset.resource.animations) == null ? void 0 : _a[0]) == null ? void 0 : _b.resource : animationAsset.asset.resource;
-    if (resource) {
-      const animTrack = createAnimTrack(pcRef, resource);
-      const isNegativeZAxis = negativeZAnimNames.includes(resource.name);
-      const needConvertVersion = isNegativeZAxis ? "v1" : "v0";
-      let nodeMotionHipsHeight = 0;
-      if (animationAsset.asset.type === "container") {
-        const motionHipsNode = animationAsset.asset.resource.data.nodes.find(
-          (node) => node.name === VRMRigMap.hips
-        );
-        if (motionHipsNode) {
-          nodeMotionHipsHeight = motionHipsNode.getPosition().y;
-        }
-      }
-      motionHipsHeight = motionHipsHeight || nodeMotionHipsHeight || 0.855;
-      const hipsPositionScaleY = vrmHipsHeight / motionHipsHeight;
-      animTrack.curves.forEach((curve) => {
-        curve.paths.forEach((graph) => {
-          const morphCurvePath = graph;
-          const isPosition = morphCurvePath.propertyPath.find((path) => path === "localPosition");
-          const isHipsTarget = morphCurvePath.entityPath[morphCurvePath.entityPath.length - 1] === VRMRigMap["hips"];
-          if (isPosition && isHipsTarget && !hipPositionOutputIndexes[curve.output]) {
-            hipPositionOutputIndexes[curve.output] = true;
-          }
-        });
-      });
-      animTrack.curves.forEach((curve) => {
-        let isLocalScale = false;
-        curve.paths.forEach((graph) => {
-          const morphCurvePath = graph;
-          const arrangedEntityPath = morphCurvePath.entityPath.map((path) => {
-            var _a2;
-            const originalRigName = path;
-            const vrmBoneName = VRMRigMap[originalRigName];
-            const vrmNodeName = (_a2 = humanoid.getRawBoneNode(vrmBoneName)) == null ? void 0 : _a2.name;
-            if (!vrmBoneName || !vrmNodeName) {
-              return path;
-            }
-            return vrmNodeName;
-          });
-          morphCurvePath.entityPath = arrangedEntityPath;
-          if (morphCurvePath.propertyPath.find((path) => path === "localScale")) {
-            isLocalScale = true;
-          }
-        });
-        if (isLocalScale && !scaleOutputIndexes[curve.output]) {
-          scaleOutputIndexes[curve.output] = true;
-        }
-      });
-      animTrack.outputs.forEach((output, outputIndex) => {
-        const isScaleOutput = scaleOutputIndexes[outputIndex];
-        if (output.components === 3) {
-          if (!isScaleOutput) {
-            const newData = output.data.map((v, index) => {
-              let value = v;
-              if (version === needConvertVersion && index % 3 !== 1) {
-                value *= -1;
-              }
-              if (hipPositionOutputIndexes[outputIndex] && index % 3 === 1) {
-                if (animationAsset.removeY) {
-                  return vrmHipsHeight;
-                }
-                if (animationAsset.removeUpperY && v * hipsPositionScaleY > vrmHipsHeight) {
-                  return vrmHipsHeight;
-                }
-              }
-              if (hipPositionOutputIndexes[outputIndex] && index % 3 === 2) {
-                if (animationAsset.removeZ) {
-                  return vrmHipsDeep;
-                }
-              }
-              return value * hipsPositionScaleY;
-            });
-            output._data = newData;
-          }
-        } else if (output.components === 4) {
-          const newData = output.data.map((v, index) => {
-            if (version === needConvertVersion && index % 2 === 0) {
-              return -v;
-            } else {
-              return v;
-            }
-          });
-          output._data = newData;
-        }
-      });
-      return {
-        name: animationAsset.stateName,
-        resource: animTrack,
-        ...animationAsset.setting && {
-          setting: animationAsset.setting
-        }
-      };
-    } else {
-      console.error(
-        `AddVrmAnimation: loadAnimation can't find available resource from ${animationAsset.stateName} asset.`
-      );
-      return null;
-    }
-  }).filter((animationAsset) => animationAsset);
-};
-const createVRMAnimation = (pcRef, animationAssets, asset, humanoid, {
-  motionHipsHeight,
-  negativeZAnimNames
-} = {}) => {
-  var _a, _b, _c;
-  if (!humanoid) {
-    console.error('CreateAnimation: Please provide "humanoid" or "asset and entity".');
-    return null;
-  }
-  const isV1Used = (_a = asset.resource.data.gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
-  const isV0Used = (_b = asset.resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
-  const version = isV1Used ? "v1" : isV0Used ? "v0" : null;
-  const vrmHipsPosition = ((_c = humanoid.rawHumanBones.hips) == null ? void 0 : _c.node.getPosition()) || new pcRef.Vec3();
-  const vrmHipsY = vrmHipsPosition.y;
-  const vrmHipsHeight = Math.abs(vrmHipsY - 0);
-  const vrmHipsZ = vrmHipsPosition.z;
-  const vrmHipsDeep = Math.abs(vrmHipsZ - 0);
-  return loadAnimation(pcRef, animationAssets, humanoid, {
-    vrmHipsHeight,
-    vrmHipsDeep,
-    ...motionHipsHeight && { motionHipsHeight },
-    ...version && { version },
-    ...negativeZAnimNames && { negativeZAnimNames }
-  });
-};
-const assignAnimation$1 = (entity, {
-  name,
-  resource,
-  setting
-}) => {
-  if (entity.anim) {
-    entity.anim.assignAnimation(
-      name,
-      resource,
-      setting && setting.layerName !== void 0 ? setting.layerName : void 0,
-      setting && setting.speed !== void 0 ? setting.speed : 1,
-      setting && setting.loop !== void 0 ? setting.loop : true
-    );
-  } else {
-    console.error("assignAnimation: Please set the anim component on the entity.");
-  }
-};
-const VrmAnimation = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-  __proto__: null,
-  assignAnimation: assignAnimation$1,
-  createVRMAnimation
-}, Symbol.toStringTag, { value: "Module" }));
 class VRMAnimation {
   /*     public expressionTracks: {
       preset: Map<VRMExpressionPresetName, IVrmaTrack>;
@@ -793,27 +616,57 @@ class VRMAnimationTrack {
     return { translation, rotation };
   }
 }
-function createVRMAResources(pcRef, vrmAsset, vrmaAssets, humanoid) {
+function createVRMAnimResources(pcRef, vrmAsset, animationAssets, humanoid, extraSettings = {}) {
   var _a, _b;
   const isV1Used = (_a = vrmAsset.resource.data.gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
   const isV0Used = (_b = vrmAsset.resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
   const version = isV1Used ? "v1" : isV0Used ? "v0" : null;
-  const rescources = [];
-  vrmaAssets.forEach((vrmaAsset) => {
-    const loader = new VRMAnimationLoader(pcRef);
-    const vrmAnimations = loader.loadVRMA(vrmaAsset.asset);
-    if (vrmAnimations) {
-      const animTrack = new VRMAnimationTrack(
-        pcRef,
-        vrmaAsset.stateName,
-        vrmAnimations[0],
-        humanoid,
-        version
-      ).result;
-      rescources.push({ stateName: vrmaAsset.stateName, animTrack });
+  const resources = [];
+  animationAssets.forEach((animationAsset) => {
+    var _a2;
+    const assetType = animationAsset.asset.type;
+    let resource;
+    if (!humanoid) {
+      console.error('CreateAnimation: Please provide "humanoid" or "asset and entity".');
+      return;
+    }
+    const checkAnimType = () => {
+      if (assetType == "animation") {
+        return false;
+      } else if (assetType == "container") {
+        const extensionsUsed = animationAsset.asset.resource.data.gltf.extensionsUsed;
+        if (extensionsUsed && extensionsUsed.includes("VRMC_vrm_animation") && extensionsUsed.indexOf("VRMC_vrm_animation") !== -1) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+      return false;
+    };
+    const isVRMA = checkAnimType();
+    if (isVRMA) {
+      resource = createVRMAResource(pcRef, animationAsset, humanoid, version);
+    } else {
+      const vrmHipsPosition = ((_a2 = humanoid.rawHumanBones.hips) == null ? void 0 : _a2.node.getPosition()) || new pcRef.Vec3();
+      const vrmHipsY = vrmHipsPosition.y;
+      const vrmHipsHeight = Math.abs(vrmHipsY - 0);
+      const vrmHipsZ = vrmHipsPosition.z;
+      const vrmHipsDeep = Math.abs(vrmHipsZ - 0);
+      resource = createViverseAnimResource(pcRef, animationAsset, humanoid, {
+        vrmHipsHeight,
+        vrmHipsDeep,
+        ...extraSettings.motionHipsHeight && { motionHipsHeight: extraSettings.motionHipsHeight },
+        ...version && { version },
+        ...extraSettings.negativeZAnimNames && {
+          negativeZAnimNames: extraSettings.negativeZAnimNames
+        }
+      });
+    }
+    if (resource) {
+      resources.push(resource);
     }
   });
-  return rescources;
+  return resources;
 }
 const assignAnimation = (entity, resource) => {
   if (entity.anim) {
@@ -828,10 +681,157 @@ const assignAnimation = (entity, resource) => {
     console.error("assignAnimation: Please set the anim component on the entity.");
   }
 };
-const VrmAnimation2 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+function createVRMAResource(pcRef, animationAsset, humanoid, version) {
+  const vrmaLoader = new VRMAnimationLoader(pcRef);
+  const vrmAnimations = vrmaLoader.loadVRMA(animationAsset.asset);
+  if (vrmAnimations) {
+    const animTrack = new VRMAnimationTrack(
+      pcRef,
+      animationAsset.stateName,
+      vrmAnimations[0],
+      humanoid,
+      version
+    ).result;
+    return { stateName: animationAsset.stateName, animTrack };
+  }
+  return;
+}
+const createViverseAnimResource = (pcRef, animationAsset, humanoid, {
+  vrmHipsHeight,
+  vrmHipsDeep,
+  motionHipsHeight,
+  version = "v0",
+  negativeZAnimNames = []
+}) => {
+  const hipPositionOutputIndexes = {};
+  const scaleOutputIndexes = {};
+  const parseAnimAsset = () => {
+    var _a, _b;
+    const resource = animationAsset.asset.resource && animationAsset.asset.type === "container" ? (_b = (_a = animationAsset.asset.resource.animations) == null ? void 0 : _a[0]) == null ? void 0 : _b.resource : animationAsset.asset.resource;
+    if (resource) {
+      const animTrack = createAnimTrack(pcRef, resource);
+      const isNegativeZAxis = negativeZAnimNames.includes(resource.name);
+      const needConvertVersion = isNegativeZAxis ? "v1" : "v0";
+      let nodeMotionHipsHeight = 0;
+      if (animationAsset.asset.type === "container") {
+        const motionHipsNode = animationAsset.asset.resource.data.nodes.find(
+          (node) => node.name === VRMRigMap.hips
+        );
+        if (motionHipsNode) {
+          nodeMotionHipsHeight = motionHipsNode.getPosition().y;
+        }
+      }
+      motionHipsHeight = motionHipsHeight || nodeMotionHipsHeight || 0.855;
+      const hipsPositionScaleY = vrmHipsHeight / motionHipsHeight;
+      animTrack.curves.forEach((curve) => {
+        curve.paths.forEach((graph) => {
+          const morphCurvePath = graph;
+          const isPosition = morphCurvePath.propertyPath.find((path) => path === "localPosition");
+          const isHipsTarget = morphCurvePath.entityPath[morphCurvePath.entityPath.length - 1] === VRMRigMap["hips"];
+          if (isPosition && isHipsTarget && !hipPositionOutputIndexes[curve.output]) {
+            hipPositionOutputIndexes[curve.output] = true;
+          }
+        });
+      });
+      animTrack.curves.forEach((curve) => {
+        let isLocalScale = false;
+        curve.paths.forEach((graph) => {
+          const morphCurvePath = graph;
+          const arrangedEntityPath = morphCurvePath.entityPath.map((path) => {
+            var _a2;
+            const originalRigName = path;
+            const vrmBoneName = VRMRigMap[originalRigName];
+            const vrmNodeName = (_a2 = humanoid.getRawBoneNode(vrmBoneName)) == null ? void 0 : _a2.name;
+            if (!vrmBoneName || !vrmNodeName) {
+              return path;
+            }
+            return vrmNodeName;
+          });
+          morphCurvePath.entityPath = arrangedEntityPath;
+          if (morphCurvePath.propertyPath.find((path) => path === "localScale")) {
+            isLocalScale = true;
+          }
+        });
+        if (isLocalScale && !scaleOutputIndexes[curve.output]) {
+          scaleOutputIndexes[curve.output] = true;
+        }
+      });
+      animTrack.outputs.forEach((output, outputIndex) => {
+        const isScaleOutput = scaleOutputIndexes[outputIndex];
+        if (output.components === 3) {
+          if (!isScaleOutput) {
+            const newData = output.data.map((v, index) => {
+              let value = v;
+              if (version === needConvertVersion && index % 3 !== 1) {
+                value *= -1;
+              }
+              if (hipPositionOutputIndexes[outputIndex] && index % 3 === 1) {
+                if (animationAsset.removeY) {
+                  return vrmHipsHeight;
+                }
+                if (animationAsset.removeUpperY && v * hipsPositionScaleY > vrmHipsHeight) {
+                  return vrmHipsHeight;
+                }
+              }
+              if (hipPositionOutputIndexes[outputIndex] && index % 3 === 2) {
+                if (animationAsset.removeZ) {
+                  return vrmHipsDeep;
+                }
+              }
+              return value * hipsPositionScaleY;
+            });
+            output._data = newData;
+          }
+        } else if (output.components === 4) {
+          const newData = output.data.map((v, index) => {
+            if (version === needConvertVersion && index % 2 === 0) {
+              return -v;
+            } else {
+              return v;
+            }
+          });
+          output._data = newData;
+        }
+      });
+      return {
+        stateName: animationAsset.stateName,
+        animTrack,
+        ...animationAsset.setting && {
+          setting: animationAsset.setting
+        }
+      };
+    } else {
+      console.error(
+        `AddVrmAnimation: loadAnimation can't find available resource from ${animationAsset.stateName} asset.`
+      );
+      return;
+    }
+  };
+  const parsedAnimAsset = parseAnimAsset();
+  return parsedAnimAsset;
+};
+const createAnimTrack = (pcRef, animTrack) => {
+  const inputs = animTrack.inputs.map((input) => new pcRef.AnimData(input.components, input.data));
+  const outputs = animTrack.outputs.map(
+    (output) => new pcRef.AnimData(output.components, output.data)
+  );
+  const curves = animTrack.curves.map((curve) => {
+    const curvePaths = curve.paths.map((path) => {
+      const morphCurvePath = path;
+      return {
+        component: morphCurvePath.component,
+        entityPath: [...morphCurvePath.entityPath],
+        propertyPath: [...morphCurvePath.propertyPath]
+      };
+    });
+    return new pcRef.AnimCurve(curvePaths, curve.input, curve.output, curve.interpolation);
+  });
+  return new pcRef.AnimTrack(animTrack.name, animTrack.duration, inputs, outputs, curves);
+};
+const VrmAnimation = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   assignAnimation,
-  createVRMAResources
+  createVRMAnimResources
 }, Symbol.toStringTag, { value: "Module" }));
 class Timer {
   constructor(name) {
@@ -3468,8 +3468,7 @@ addEssentialTags_fn = function(assetData, plugins) {
 };
 window.VRMLoader = {
   VrmAnimation,
-  VrmAnimation2,
-  //temp
+  // VrmAnimation2, //temp
   VrmExpression,
   VrmSpringBone,
   VrmMapList,
@@ -3480,7 +3479,6 @@ window.GLTFLoader = GLTFLoader;
 export {
   GLTFLoader,
   VrmAnimation,
-  VrmAnimation2,
   VrmExpression,
   VrmMapList,
   VrmSpringBone,
