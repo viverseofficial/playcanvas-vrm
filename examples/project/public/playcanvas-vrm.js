@@ -3468,7 +3468,6 @@ addEssentialTags_fn = function(assetData, plugins) {
 };
 window.VRMLoader = {
   VrmAnimation,
-  // VrmAnimation2, //temp
   VrmExpression,
   VrmSpringBone,
   VrmMapList,

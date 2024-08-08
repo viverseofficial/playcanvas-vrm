@@ -4,7 +4,6 @@ import { VRMHumanoid } from '../extensions/vrm-humanoid/VRMHumanoid';
 import { VRMAnimationLoader } from '../extensions/vrm-animation/VRMAnimationLoader';
 import { VRMAnimationTrack } from '../extensions/vrm-animation/VRMAnimationTrack';
 import type { VRMAnimation } from '../extensions/vrm-animation/VRMAnimation';
-// import { load } from './add-vrm-animations';
 
 interface IAnimationSetting {
   speed?: number;
