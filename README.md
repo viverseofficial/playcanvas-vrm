@@ -69,3 +69,31 @@ document.head.appendChild(script);
     };
 });
 ```
+
+### VRM Animation
+
+
+#### Potential Issue:
+VRMA without translation move 'hips' to orgin.
+
+##### Temporary Solution:
+In VRMAnimationTrack.ts, add the following code. 
+
+```ts
+if (this.vrmAnimation.humanoidTracks.translation.size == 0) {
+  const emptyPath = {
+    component: 'graph',
+    entityPath: ['SkeletonRoot', 'hips'],
+    propertyPath: ['localPosition'],
+  };
+  const emptyPaths = [emptyPath];
+
+  const emptyTranslateTrack: IVrmaTrack = {
+    // @ts-ignore
+    curve: new this.pcRef.AnimCurve(emptyPaths, 0, 0, 1),
+    input: new this.pcRef.AnimData(1, new Float32Array([0])),
+    output: new this.pcRef.AnimData(3, new Float32Array([0, 0, 0])),
+  };
+  this.vrmAnimation.humanoidTracks.translation.set('hips', emptyTranslateTrack);
+}
+```
