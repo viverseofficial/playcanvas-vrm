@@ -2,7 +2,8 @@ import * as pc from 'playcanvas';
 import { VRMHumanoid } from '../vrm-humanoid/VRMHumanoid';
 import { VRMHumanBoneName } from '../vrm-humanoid/vrm-humanoid';
 import { VRMRigMap } from '../vrm-map-list';
-import { VRMAnimation, IVrmaTrack, IMorphCurvePath } from './VRMAnimation';
+import { VRMAnimation } from './VRMAnimation';
+import { IVrmaTrack, IMorphCurvePath } from './vrm-animation-interfaces';
 // import { VRMLookAtQuaternionProxy } from './VRMLookAtQuaternionProxy';
 
 /**
@@ -140,6 +141,23 @@ export class VRMAnimationTrack {
     const translation = new Map<'hips', IVrmaTrack>();
     const rotation = new Map<VRMHumanBoneName, IVrmaTrack>();
 
+    // //check if no translation data, add hips data
+    // if (this.vrmAnimation.humanoidTracks.translation.size == 0) {
+    //   const emptyPath = {
+    //     component: 'graph',
+    //     entityPath: ['SkeletonRoot', 'hips'],
+    //     propertyPath: ['localPosition'],
+    //   };
+    //   const emptyPaths = [emptyPath];
+
+    //   const emptyTranslateTrack: IVrmaTrack = {
+    //     curve: new this.pcRef.AnimCurve(emptyPaths, 0, 0, 1),
+    //     input: new this.pcRef.AnimData(1, new Float32Array([0])),
+    //     output: new this.pcRef.AnimData(3, new Float32Array([0, 0, 0])),
+    //   };
+    //   this.vrmAnimation.humanoidTracks.translation.set('hips', emptyTranslateTrack);
+    // }
+
     for (const [name, origTrack] of this.vrmAnimation.humanoidTracks.translation.entries()) {
       const nodeName = this.humanoid.getNormalizedBoneNode(name)?.name;
 
@@ -164,6 +182,7 @@ export class VRMAnimationTrack {
           input: origTrack.input,
           output: _output,
         };
+        // console.log(vrmaTrack);
 
         translation.set(name, vrmaTrack);
       }

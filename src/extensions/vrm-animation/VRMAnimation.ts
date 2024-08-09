@@ -1,18 +1,7 @@
 import * as pc from 'playcanvas';
 // import { VRMExpressionPresetName } from '../../extensions//vrm-map-list';
 import { VRMHumanBoneName } from '../vrm-humanoid/vrm-humanoid';
-
-export interface IVrmaTrack {
-  curve: pc.AnimCurve;
-  input: pc.AnimData; //each input represents a sequence a keyframe times
-  output: pc.AnimData; //values that correspond to the keyframe times
-}
-
-export interface IMorphCurvePath {
-  entityPath: string[];
-  component: string;
-  propertyPath: string[];
-}
+import { IVrmaTrack } from './vrm-animation-interfaces';
 
 export class VRMAnimation {
   public duration: number;

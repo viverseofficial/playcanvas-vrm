@@ -4,7 +4,8 @@ import { VRMCVRMAnimation } from './types/VRMCVRMAnimation';
 import { VRMHumanBoneName } from '../vrm-humanoid/vrm-humanoid';
 // import { VRMExpressionPresetName, VRMHumanBoneParentMap } from '../../extensions/vrm-map-list';
 import { VRMHumanBoneParentMap } from '../vrm-map-list';
-import { VRMAnimation, IVrmaTrack, IMorphCurvePath } from './VRMAnimation';
+import { VRMAnimation } from './VRMAnimation';
+import { IMorphCurvePath, IVrmaTrack } from './vrm-animation-interfaces';
 import { arrayChunk } from './utils/arrayChunk';
 import { applyMatrix4 } from './utils/applyMatrix4';
 
