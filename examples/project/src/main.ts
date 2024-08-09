@@ -56,7 +56,6 @@ const createAvatar = (url: string) => {
             activate: true,
           });
 
-          // Idle or Run
           createDefaultAnimations(animatedEntity, convertedAsset, humanoid, VRMLoader);
 
           rootEntity.addComponent('script');

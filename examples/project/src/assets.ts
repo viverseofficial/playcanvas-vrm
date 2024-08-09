@@ -29,7 +29,6 @@ const AnimationE = new pc.Asset('ETest', 'animation', { url: TestEAnimUrl });
 
 // create VRMA assets
 const AnimationVrmaTest = new pc.Asset('VrmaTest', 'container', { url: VrmaTestUrl });
-
 const AnimationVrmaA = new pc.Asset('VrmaA', 'container', { url: VrmaAUrl });
 const AnimationVrmaB = new pc.Asset('VrmaA', 'container', { url: VrmaBUrl });
 const AnimationVrmaC = new pc.Asset('VrmaA', 'container', { url: VrmaCUrl });
