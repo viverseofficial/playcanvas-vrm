@@ -38,6 +38,23 @@ export function createVRMAnimResources(
   const isV0Used = vrmAsset.resource.data.gltf.extensions?.VRM;
   const version = isV1Used ? 'v1' : isV0Used ? 'v0' : null;
 
+  const checkAnimType = (assetType: string, extensionsUsed: any) => {
+    if (assetType == 'animation') {
+      return false;
+    } else if (assetType == 'container') {
+      if (
+        extensionsUsed &&
+        extensionsUsed.includes('VRMC_vrm_animation') &&
+        extensionsUsed.indexOf('VRMC_vrm_animation') !== -1
+      ) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return false;
+  };
+
   const resources: IAnimationResource[] = [];
 
   animationAssets.forEach((animationAsset) => {
@@ -51,24 +68,8 @@ export function createVRMAnimResources(
         `createVRMAnimResources: loadAnimation can't find available resource from ${animationAsset.stateName} asset.`,
       );
     } else {
-      const checkAnimType = () => {
-        if (assetType == 'animation') {
-          return false;
-        } else if (assetType == 'container') {
-          const extensionsUsed = assetResource.data.gltf.extensionsUsed;
-          if (
-            extensionsUsed &&
-            extensionsUsed.includes('VRMC_vrm_animation') &&
-            extensionsUsed.indexOf('VRMC_vrm_animation') !== -1
-          ) {
-            return true;
-          } else {
-            return false;
-          }
-        }
-        return false;
-      };
-      const isVRMA: boolean = checkAnimType();
+      const extensionsUsed = assetResource.data?.gltf.extensionsUsed;
+      const isVRMA: boolean = checkAnimType(assetType, extensionsUsed);
       if (isVRMA) {
         // Load VRMA
         resource = createVRMAResource(pcRef, animationAsset, humanoid, version);
