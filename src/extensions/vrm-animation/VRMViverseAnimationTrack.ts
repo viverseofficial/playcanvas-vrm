@@ -2,6 +2,7 @@ import * as pc from 'playcanvas';
 import { VRMHumanoid } from '../vrm-humanoid/VRMHumanoid';
 import { IAnimationAsset, IAnimExtraSettings, IMorphCurvePath } from './vrm-animation-interfaces';
 import { VRMRigMap } from '../vrm-map-list';
+import { cloneAnimTrack } from './utils/cloneAnimTrack';
 
 export class VRMViverseAnimationTrack {
   private pcRef: typeof pc;
@@ -49,7 +50,7 @@ export class VRMViverseAnimationTrack {
       negativeZAnimNames = [];
     }
 
-    const animTrack: pc.AnimTrack = this._cloneAnimTrack();
+    const animTrack: pc.AnimTrack = cloneAnimTrack(this.pcRef, this.origAnimTrack);
     // Default animation skeleton forward is +z axis, so vrm version 0 needs to be converted.
     // some animation forward is -z axis, convert to vrm version 1.
     const isNegativeZAxis = negativeZAnimNames.includes(this.origAnimTrack.name);
@@ -164,39 +165,5 @@ export class VRMViverseAnimationTrack {
       }
     });
     return animTrack;
-  }
-
-  _cloneAnimTrack() {
-    const inputs = this.origAnimTrack.inputs.map(
-      (input) => new this.pcRef.AnimData(input.components, input.data),
-    );
-    const outputs = this.origAnimTrack.outputs.map(
-      (output) => new this.pcRef.AnimData(output.components, output.data),
-    );
-    const curves = this.origAnimTrack.curves.map((curve) => {
-      const curvePaths = curve.paths.map((path) => {
-        const morphCurvePath = path as unknown as IMorphCurvePath;
-        return {
-          component: morphCurvePath.component,
-          entityPath: [...morphCurvePath.entityPath],
-          propertyPath: [...morphCurvePath.propertyPath],
-        };
-      });
-
-      return new this.pcRef.AnimCurve(
-        curvePaths as any,
-        curve.input,
-        curve.output,
-        curve.interpolation,
-      );
-    });
-
-    return new this.pcRef.AnimTrack(
-      this.origAnimTrack.name,
-      this.origAnimTrack.duration,
-      inputs,
-      outputs,
-      curves,
-    );
   }
 }

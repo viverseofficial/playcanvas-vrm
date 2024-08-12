@@ -8,6 +8,7 @@ import { VRMAnimation } from './VRMAnimation';
 import { IMorphCurvePath, IVrmaTrack } from './vrm-animation-interfaces';
 import { arrayChunk } from './utils/arrayChunk';
 import { applyMatrix4 } from './utils/applyMatrix4';
+import { cloneAnimTrack } from './utils/cloneAnimTrack';
 
 const POSSIBLE_SPEC_VERSIONS = new Set(['1.0', '1.0-draft']);
 // const vrmExpressionPresetNameSet: Set<string> = new Set(Object.values(VRMExpressionPresetName));
@@ -173,32 +174,7 @@ export class VRMAnimationLoader {
     nodeMap: VRMANodeMap,
     worldMatrixMap: VRMAWorldMatrixMap,
   ): VRMAnimation {
-    // make copies of pc.animations properties: inputs, outputs, curves
-    const inputs = animTrack.inputs.map(
-      (input) => new this.pcRef.AnimData(input.components, input.data),
-    ); //the inputs represent keyframe times
-    const outputs = animTrack.outputs.map(
-      // the outputs represent values that are correspond to the keyframe times
-      (output) => new this.pcRef.AnimData(output.components, output.data),
-    );
-    const curves = animTrack.curves.map((curve) => {
-      const curvePaths = curve.paths.map((graph) => {
-        const morphCurvePath = graph as unknown as IMorphCurvePath;
-
-        return {
-          component: morphCurvePath.component,
-          entityPath: [...morphCurvePath.entityPath],
-          propertyPath: [...morphCurvePath.propertyPath],
-        };
-      });
-
-      return new this.pcRef.AnimCurve(
-        curvePaths as any,
-        curve.input,
-        curve.output,
-        curve.interpolation,
-      );
-    });
+    const { inputs, outputs, curves } = cloneAnimTrack(this.pcRef, animTrack);
 
     // mapping data to gltf vrm
     const defChannels = defAnimation.channels;
@@ -228,7 +204,7 @@ export class VRMAnimationLoader {
         }
         parentBoneName ?? (parentBoneName = 'hipsParent');
 
-        // Map curve
+        // Map curve path
         curve.paths.forEach((graph) => {
           const morphCurvePath = graph as unknown as IMorphCurvePath;
           // assign vrma bone name
@@ -241,7 +217,6 @@ export class VRMAnimationLoader {
               return boneName;
             }
           });
-
           morphCurvePath.entityPath = arrangedEntityPath;
         });
 
