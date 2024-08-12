@@ -67,7 +67,7 @@ export class VRMAnimationLoader {
     const hipsNode = defExtension.humanoid?.humanBones['hips']?.node;
     const hips = hipsNode != null ? (pcNodes[hipsNode] as pc.GraphNode) : null;
 
-    const restHipsPosition = hips?.getPosition() as pc.Vec3;
+    const restHipsPosition = hips ? hips.getPosition() : new this.pcRef.Vec3();
 
     // get Playcanvas animation
     const animTracks: pc.AnimTrack[] = vrmaAsset.resource.data.animations;
