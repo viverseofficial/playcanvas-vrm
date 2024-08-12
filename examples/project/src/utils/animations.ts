@@ -9,10 +9,6 @@ export const createDefaultAnimations = (
 ) => {
   const animationAssets = [
     {
-      stateName: 'Test',
-      asset: preloadAssets.AnimationVrmaTest,
-    },
-    {
       stateName: 'Idle',
       asset: preloadAssets.AnimationIdle,
     },
