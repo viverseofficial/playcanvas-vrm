@@ -315,6 +315,26 @@ function applyMatrix4(pcRef, v3, m) {
   const _z = (e[2] * v3.x + e[6] * v3.y + e[10] * v3.z + e[14]) * w;
   return new pcRef.Vec3(_x, _y, _z);
 }
+function cloneAnimTrack(pcRef, origAnimTrack) {
+  const inputs = origAnimTrack.inputs.map(
+    (input) => new pcRef.AnimData(input.components, input.data)
+  );
+  const outputs = origAnimTrack.outputs.map(
+    (output) => new pcRef.AnimData(output.components, output.data)
+  );
+  const curves = origAnimTrack.curves.map((curve) => {
+    const curvePaths = curve.paths.map((path) => {
+      const morphCurvePath = path;
+      return {
+        component: morphCurvePath.component,
+        entityPath: [...morphCurvePath.entityPath],
+        propertyPath: [...morphCurvePath.propertyPath]
+      };
+    });
+    return new pcRef.AnimCurve(curvePaths, curve.input, curve.output, curve.interpolation);
+  });
+  return new pcRef.AnimTrack(origAnimTrack.name, origAnimTrack.duration, inputs, outputs, curves);
+}
 const POSSIBLE_SPEC_VERSIONS = /* @__PURE__ */ new Set(["1.0", "1.0-draft"]);
 class VRMAnimationLoader {
   constructor(pcRef) {
@@ -348,7 +368,7 @@ class VRMAnimationLoader {
     const worldMatrixMap = this._createBoneWorldMatrixMap(pcNodes, defExtension);
     const hipsNode = (_c = (_b = defExtension.humanoid) == null ? void 0 : _b.humanBones["hips"]) == null ? void 0 : _c.node;
     const hips = hipsNode != null ? pcNodes[hipsNode] : null;
-    const restHipsPosition = hips == null ? void 0 : hips.getPosition();
+    const restHipsPosition = hips ? hips.getPosition() : new this.pcRef.Vec3();
     const animTracks = vrmaAsset.resource.data.animations;
     const animations = animTracks.map((animTrack, index) => {
       const defAnimation = defGltf.animations[index];
@@ -420,29 +440,7 @@ class VRMAnimationLoader {
     return worldMatrixMap;
   }
   _parseAnimation(animTrack, defAnimation, nodeMap, worldMatrixMap) {
-    const inputs = animTrack.inputs.map(
-      (input) => new this.pcRef.AnimData(input.components, input.data)
-    );
-    const outputs = animTrack.outputs.map(
-      // the outputs represent values that are correspond to the keyframe times
-      (output) => new this.pcRef.AnimData(output.components, output.data)
-    );
-    const curves = animTrack.curves.map((curve) => {
-      const curvePaths = curve.paths.map((graph) => {
-        const morphCurvePath = graph;
-        return {
-          component: morphCurvePath.component,
-          entityPath: [...morphCurvePath.entityPath],
-          propertyPath: [...morphCurvePath.propertyPath]
-        };
-      });
-      return new this.pcRef.AnimCurve(
-        curvePaths,
-        curve.input,
-        curve.output,
-        curve.interpolation
-      );
-    });
+    const { inputs, outputs, curves } = cloneAnimTrack(this.pcRef, animTrack);
     const defChannels = defAnimation.channels;
     const result = new VRMAnimation(this.pcRef);
     result.duration = animTrack.duration;
@@ -641,7 +639,7 @@ class VRMViverseAnimationTrack {
     if (!negativeZAnimNames) {
       negativeZAnimNames = [];
     }
-    const animTrack = this._cloneAnimTrack();
+    const animTrack = cloneAnimTrack(this.pcRef, this.origAnimTrack);
     const isNegativeZAxis = negativeZAnimNames.includes(this.origAnimTrack.name);
     const needConvertVersion = isNegativeZAxis ? "v1" : "v0";
     let nodeMotionHipsHeight = 0;
@@ -727,37 +725,16 @@ class VRMViverseAnimationTrack {
     });
     return animTrack;
   }
-  _cloneAnimTrack() {
-    const inputs = this.origAnimTrack.inputs.map(
-      (input) => new this.pcRef.AnimData(input.components, input.data)
-    );
-    const outputs = this.origAnimTrack.outputs.map(
-      (output) => new this.pcRef.AnimData(output.components, output.data)
-    );
-    const curves = this.origAnimTrack.curves.map((curve) => {
-      const curvePaths = curve.paths.map((path) => {
-        const morphCurvePath = path;
-        return {
-          component: morphCurvePath.component,
-          entityPath: [...morphCurvePath.entityPath],
-          propertyPath: [...morphCurvePath.propertyPath]
-        };
-      });
-      return new this.pcRef.AnimCurve(
-        curvePaths,
-        curve.input,
-        curve.output,
-        curve.interpolation
-      );
-    });
-    return new this.pcRef.AnimTrack(
-      this.origAnimTrack.name,
-      this.origAnimTrack.duration,
-      inputs,
-      outputs,
-      curves
-    );
-  }
+}
+function createVRMAnimation(pcRef, animationAssets, asset, humanoid, {
+  motionHipsHeight,
+  negativeZAnimNames
+} = {}) {
+  const extraSettings = { motionHipsHeight, negativeZAnimNames };
+  console.warn(
+    "Warning: createVRMAnimation is deprecated. Please use createVRMAnimResources instead."
+  );
+  return createVRMAnimResources(pcRef, asset, animationAssets, humanoid, extraSettings);
 }
 function createVRMAnimResources(pcRef, vrmAsset, animationAssets, humanoid, extraSettings = {}) {
   var _a, _b;
@@ -776,31 +753,32 @@ function createVRMAnimResources(pcRef, vrmAsset, animationAssets, humanoid, extr
   const isV1Used = (_a = vrmAsset.resource.data.gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
   const isV0Used = (_b = vrmAsset.resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
   const version = isV1Used ? "v1" : isV0Used ? "v0" : null;
+  const checkAnimType = (assetType, extensionsUsed) => {
+    if (assetType == "animation") {
+      return false;
+    } else if (assetType == "container") {
+      if (extensionsUsed && extensionsUsed.includes("VRMC_vrm_animation") && extensionsUsed.indexOf("VRMC_vrm_animation") !== -1) {
+        return true;
+      } else {
+        return false;
+      }
+    }
+    return false;
+  };
   const resources = [];
   animationAssets.forEach((animationAsset) => {
+    var _a2;
     const assetResource = animationAsset.asset.resource;
     const assetType = animationAsset.asset.type;
     let resource;
     if (!assetResource) {
-      resource = void 0;
+      resource = null;
       console.warn(
         `createVRMAnimResources: loadAnimation can't find available resource from ${animationAsset.stateName} asset.`
       );
     } else {
-      const checkAnimType = () => {
-        if (assetType == "animation") {
-          return false;
-        } else if (assetType == "container") {
-          const extensionsUsed = assetResource.data.gltf.extensionsUsed;
-          if (extensionsUsed && extensionsUsed.includes("VRMC_vrm_animation") && extensionsUsed.indexOf("VRMC_vrm_animation") !== -1) {
-            return true;
-          } else {
-            return false;
-          }
-        }
-        return false;
-      };
-      const isVRMA = checkAnimType();
+      const extensionsUsed = (_a2 = assetResource.data) == null ? void 0 : _a2.gltf.extensionsUsed;
+      const isVRMA = checkAnimType(assetType, extensionsUsed);
       if (isVRMA) {
         resource = createVRMAResource(pcRef, animationAsset, humanoid, version);
       } else {
@@ -833,21 +811,25 @@ const assignAnimation = (entity, resource) => {
   }
 };
 function createVRMAResource(pcRef, animationAsset, humanoid, version) {
+  var _a, _b, _c, _d;
   const vrmaLoader = new VRMAnimationLoader(pcRef);
   const vrmAnimations = vrmaLoader.loadVRMA(animationAsset.asset);
+  let name = (_d = (_c = (_b = (_a = animationAsset.asset.resource.animations) == null ? void 0 : _a[0]) == null ? void 0 : _b.resources) == null ? void 0 : _c[0]) == null ? void 0 : _d.name;
+  if (!name)
+    name = "";
   if (vrmAnimations) {
     const animTrack = new VRMAnimationTrack(
       pcRef,
-      animationAsset.stateName,
+      name,
       vrmAnimations[0],
       humanoid,
       version
     ).result;
     return { stateName: animationAsset.stateName, animTrack };
   }
-  return;
+  return null;
 }
-const createViverseAnimResource = (pcRef, animationAsset, humanoid, version, extraSettings) => {
+function createViverseAnimResource(pcRef, animationAsset, humanoid, version, extraSettings) {
   var _a, _b;
   const origAnimTrack = animationAsset.asset.type === "container" ? (_b = (_a = animationAsset.asset.resource.animations) == null ? void 0 : _a[0]) == null ? void 0 : _b.resource : animationAsset.asset.resource;
   if (origAnimTrack) {
@@ -871,13 +853,14 @@ const createViverseAnimResource = (pcRef, animationAsset, humanoid, version, ext
     console.error(
       `CreateViverseAnimResource: loadAnimation can't find valid resource from ${animationAsset.stateName} asset.`
     );
-    return;
+    return null;
   }
-};
+}
 const VrmAnimation = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   assignAnimation,
-  createVRMAnimResources
+  createVRMAnimResources,
+  createVRMAnimation
 }, Symbol.toStringTag, { value: "Module" }));
 class Timer {
   constructor(name) {
