@@ -9,12 +9,31 @@ import {
   IAnimationResource,
   IAnimExtraSettings,
 } from '../extensions/vrm-animation/vrm-animation-interfaces';
+export function createVRMAnimation(
+  pcRef: typeof pc,
+  animationAssets: IAnimationAsset[],
+  asset: pc.Asset,
+  humanoid: VRMHumanoid | null,
+  {
+    motionHipsHeight,
+    negativeZAnimNames,
+  }: {
+    motionHipsHeight?: number;
+    negativeZAnimNames?: string[];
+  } = {},
+): IAnimationResource[] | undefined {
+  const extraSettings: IAnimExtraSettings = { motionHipsHeight, negativeZAnimNames };
+  console.warn(
+    'Warning: createVRMAnimation is deprecated. Please use createVRMAnimResources instead.',
+  );
+  return createVRMAnimResources(pcRef, asset, animationAssets, humanoid, extraSettings);
+}
 
 export function createVRMAnimResources(
   pcRef: typeof pc,
   vrmAsset: pc.Asset,
   animationAssets: IAnimationAsset[],
-  humanoid: VRMHumanoid,
+  humanoid: VRMHumanoid | null,
   extraSettings: IAnimExtraSettings = {},
 ): IAnimationResource[] | undefined {
   // Validate inputs
