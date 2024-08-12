@@ -1,5 +1,5 @@
-import type { ExpressionPresetName } from './ExpressionPresetName';
-import type { HumanoidHumanBoneName } from './HumanoidBoneName';
+import type { ExpressionPresetName } from '../../../types/types-vrmc-vrm-1.0';
+import type { HumanoidHumanBoneName } from '../../../types/types-vrmc-vrm-1.0';
 
 interface Expression {
   node: number;
