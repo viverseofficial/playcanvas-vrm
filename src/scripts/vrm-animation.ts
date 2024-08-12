@@ -44,9 +44,9 @@ export function createVRMAnimResources(
     const assetResource = animationAsset.asset.resource;
     const assetType = animationAsset.asset.type;
 
-    let resource: IAnimationResource | undefined;
+    let resource: IAnimationResource | null;
     if (!assetResource) {
-      resource = undefined;
+      resource = null;
       console.warn(
         `createVRMAnimResources: loadAnimation can't find available resource from ${animationAsset.stateName} asset.`,
       );
@@ -112,7 +112,7 @@ function createVRMAResource(
   animationAsset: IAnimationAsset,
   humanoid: VRMHumanoid,
   version: 'v0' | 'v1' | null,
-): IAnimationResource | undefined {
+): IAnimationResource | null {
   const vrmaLoader = new VRMAnimationLoader(pcRef);
   const vrmAnimations: VRMAnimation[] | undefined = vrmaLoader.loadVRMA(animationAsset.asset);
   let name: string | undefined =
@@ -129,16 +129,16 @@ function createVRMAResource(
     ).result;
     return { stateName: animationAsset.stateName, animTrack: animTrack };
   }
-  return;
+  return null;
 }
 
-const createViverseAnimResource = (
+function createViverseAnimResource(
   pcRef: typeof pc,
   animationAsset: IAnimationAsset,
   humanoid: VRMHumanoid,
   version: 'v0' | 'v1' | null,
   extraSettings: IAnimExtraSettings,
-) => {
+): IAnimationResource | null {
   const origAnimTrack =
     animationAsset.asset.type === 'container'
       ? animationAsset.asset.resource.animations?.[0]?.resource
@@ -165,6 +165,6 @@ const createViverseAnimResource = (
     console.error(
       `CreateViverseAnimResource: loadAnimation can't find valid resource from ${animationAsset.stateName} asset.`,
     );
-    return;
+    return null;
   }
-};
+}
