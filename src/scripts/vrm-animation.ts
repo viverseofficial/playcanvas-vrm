@@ -115,11 +115,14 @@ function createVRMAResource(
 ): IAnimationResource | undefined {
   const vrmaLoader = new VRMAnimationLoader(pcRef);
   const vrmAnimations: VRMAnimation[] | undefined = vrmaLoader.loadVRMA(animationAsset.asset);
+  let name: string | undefined =
+    animationAsset.asset.resource.animations?.[0]?.resources?.[0]?.name;
+  if (!name) name = '';
 
   if (vrmAnimations) {
     const animTrack: pc.AnimTrack = new VRMAnimationTrack(
       pcRef,
-      animationAsset.stateName,
+      name,
       vrmAnimations[0],
       humanoid,
       version,
