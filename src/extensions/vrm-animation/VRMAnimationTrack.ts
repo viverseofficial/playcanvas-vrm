@@ -67,15 +67,15 @@ export class VRMAnimationTrack {
         const morphCurvePath = graph as unknown as IMorphCurvePath;
 
         /**
-         * Add 'SkeletonRoot' to 'hips'
+         * Add 'SkeletonRoot'
          *
          * In Playcanvas, the 'SkeletonRoot' is automaticaly assigned to an 'animation' asset.
          * However, vrma file is defined as a 'container' asset, thus, the 'SkeltonRoot' needs to be assigned manually
          */
         const entityPath = morphCurvePath.entityPath;
-        if (entityPath.length == 1 && entityPath[0] == 'hips') {
-          entityPath.unshift('SkeletonRoot');
-        }
+        // if (entityPath.length == 1 && entityPath[0] == 'hips') {
+        entityPath.unshift('SkeletonRoot');
+        // }
 
         // Revise bone name to vrm model bone name
         const arrangedEntityPath = entityPath.map((path) => {
