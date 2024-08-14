@@ -20,8 +20,8 @@ export const createDefaultAnimations = (
 
   const loadedResources = VRMLoader.VrmAnimation.createVRMAnimResources(
     pc,
-    asset,
     animationAssets,
+    asset,
     humanoid,
     {
       negativeZAnimNames: ['viverse.combination', 'viverse.rp'],
@@ -47,8 +47,8 @@ export const createDefaultAnimations = (
 
   const mocapLoadedResources = VRMLoader.VrmAnimation.createVRMAnimResources(
     pc,
-    asset,
     mocapAnimationAssets,
+    asset,
     humanoid,
     {
       negativeZAnimNames: ['viverse.combination', 'viverse.rp'],
@@ -134,8 +134,8 @@ export const createWindowTestAnimation = (
     }
     const resources = VRMLoader.VrmAnimation.createVRMAnimResources(
       pc,
-      asset,
       animAssets,
+      asset,
       humanoid,
       {
         negativeZAnimNames: ['viverse.combination', 'viverse.rp'],

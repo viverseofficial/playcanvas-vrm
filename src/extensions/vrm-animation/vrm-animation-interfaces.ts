@@ -14,8 +14,8 @@ export interface IAnimationAsset {
 }
 
 export interface IAnimationResource {
-  stateName: string;
-  animTrack: pc.AnimTrack;
+  name: string;
+  resource: pc.AnimTrack;
   setting?: IAnimationSetting;
 }
 

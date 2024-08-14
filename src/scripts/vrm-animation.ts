@@ -9,6 +9,7 @@ import {
   IAnimationResource,
   IAnimExtraSettings,
 } from '../extensions/vrm-animation/vrm-animation-interfaces';
+
 export function createVRMAnimation(
   pcRef: typeof pc,
   animationAssets: IAnimationAsset[],
@@ -26,13 +27,13 @@ export function createVRMAnimation(
   console.warn(
     'Warning: createVRMAnimation is deprecated. Please use createVRMAnimResources instead.',
   );
-  return createVRMAnimResources(pcRef, asset, animationAssets, humanoid, extraSettings);
+  return createVRMAnimResources(pcRef, animationAssets, asset, humanoid, extraSettings);
 }
 
 export function createVRMAnimResources(
   pcRef: typeof pc,
-  vrmAsset: pc.Asset,
   animationAssets: IAnimationAsset[],
+  vrmAsset: pc.Asset,
   humanoid: VRMHumanoid | null,
   extraSettings: IAnimExtraSettings = {},
 ): IAnimationResource[] | undefined {
@@ -113,8 +114,8 @@ export function createVRMAnimResources(
 export const assignAnimation = (entity: pc.Entity, resource: IAnimationResource) => {
   if (entity.anim) {
     entity.anim.assignAnimation(
-      resource.stateName,
-      resource.animTrack,
+      resource.name,
+      resource.resource,
       resource.setting && resource.setting.layerName !== undefined
         ? resource.setting.layerName
         : undefined,
@@ -147,7 +148,7 @@ function createVRMAResource(
       humanoid,
       version,
     ).result;
-    return { stateName: animationAsset.stateName, animTrack: animTrack };
+    return { name: animationAsset.stateName, resource: animTrack };
   }
   return null;
 }
@@ -174,8 +175,8 @@ function createViverseAnimResource(
       origAnimTrack,
     ).result;
     const parsedAnimAsset = {
-      stateName: animationAsset.stateName,
-      animTrack: animTrack,
+      name: animationAsset.stateName,
+      resource: animTrack,
       ...(animationAsset.setting && {
         setting: animationAsset.setting,
       }),
