@@ -11,6 +11,8 @@ import TestCAnimUrl from '/24_Praying.glb?url';
 import TestDAnimUrl from '/07_2 Pointing.glb?url';
 import TestEAnimUrl from '/25_Catwalk.glb?url';
 
+import WaveUpperAnimUrl from '/Wave_Upper.glb?url';
+
 // import VRMA
 import VrmaTestUrl from '/VRMA_test.vrma?url';
 import VrmaAUrl from '/VRMA_01.vrma?url';
@@ -26,6 +28,8 @@ const AnimationB = new pc.Asset('BTest', 'animation', { url: TestBAnimUrl });
 const AnimationC = new pc.Asset('CTest', 'animation', { url: TestCAnimUrl });
 const AnimationD = new pc.Asset('DTest', 'animation', { url: TestDAnimUrl });
 const AnimationE = new pc.Asset('ETest', 'animation', { url: TestEAnimUrl });
+
+const AnimationWaveUpper = new pc.Asset('WaveUpper', 'animation', { url: WaveUpperAnimUrl });
 
 // create VRMA assets
 const AnimationVrmaTest = new pc.Asset('VrmaTest', 'container', { url: VrmaTestUrl });
@@ -43,6 +47,7 @@ export const preloadAssets = {
   AnimationC,
   AnimationD,
   AnimationE,
+  AnimationWaveUpper,
   AnimationVrmaTest, //vrma
   AnimationVrmaA,
   AnimationVrmaB,

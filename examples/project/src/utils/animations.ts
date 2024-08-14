@@ -68,7 +68,7 @@ export const createWindowTestAnimation = (
   humanoid: any,
   VRMLoader: any,
 ) => {
-  window.createAnim = (type: 'A' | 'B' | 'C' | 'D' | 'E' | 'V' | 'R' | 'M' | 'T') => {
+  window.createAnim = (type: 'A' | 'B' | 'C' | 'D' | 'E' | 'V' | 'R' | 'M' | 'T' | 'W') => {
     let animAssets = [];
     switch (type) {
       case 'A':
@@ -123,6 +123,12 @@ export const createWindowTestAnimation = (
         animAssets.push({
           stateName: 'T',
           asset: preloadAssets.AnimationVrmaTest,
+        });
+        break;
+      case 'W':
+        animAssets.push({
+          stateName: 'W',
+          asset: preloadAssets.AnimationWaveUpper,
         });
         break;
     }
