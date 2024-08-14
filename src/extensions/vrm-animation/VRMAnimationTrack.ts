@@ -73,9 +73,7 @@ export class VRMAnimationTrack {
          * However, vrma file is defined as a 'container' asset, thus, the 'SkeltonRoot' needs to be assigned manually
          */
         const entityPath = morphCurvePath.entityPath;
-        // if (entityPath.length == 1 && entityPath[0] == 'hips') {
         entityPath.unshift('SkeletonRoot');
-        // }
 
         // Revise bone name to vrm model bone name
         const arrangedEntityPath = entityPath.map((path) => {
@@ -140,23 +138,6 @@ export class VRMAnimationTrack {
   } {
     const translation = new Map<'hips', IVrmaTrack>();
     const rotation = new Map<VRMHumanBoneName, IVrmaTrack>();
-
-    // //check if no translation data, add hips data
-    // if (this.vrmAnimation.humanoidTracks.translation.size == 0) {
-    //   const emptyPath = {
-    //     component: 'graph',
-    //     entityPath: ['SkeletonRoot', 'hips'],
-    //     propertyPath: ['localPosition'],
-    //   };
-    //   const emptyPaths = [emptyPath];
-
-    //   const emptyTranslateTrack: IVrmaTrack = {
-    //     curve: new this.pcRef.AnimCurve(emptyPaths, 0, 0, 1),
-    //     input: new this.pcRef.AnimData(1, new Float32Array([0])),
-    //     output: new this.pcRef.AnimData(3, new Float32Array([0, 0, 0])),
-    //   };
-    //   this.vrmAnimation.humanoidTracks.translation.set('hips', emptyTranslateTrack);
-    // }
 
     for (const [name, origTrack] of this.vrmAnimation.humanoidTracks.translation.entries()) {
       const nodeName = this.humanoid.getNormalizedBoneNode(name)?.name;
