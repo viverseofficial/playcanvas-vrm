@@ -1,4 +1,4 @@
-import { traverseAncestorsFromRoot } from '../../entity-util';
+import { traverseAncestorsFromRoot } from '../../entity-utils';
 import { ExtensionManagerNameType } from '../extensions';
 import { VRMSpringBoneJoint } from './VRMSpringBoneJoint';
 

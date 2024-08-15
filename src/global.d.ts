@@ -19,6 +19,8 @@ declare global {
         vrmAsset: pc.Asset,
         renderEntity: pc.Entity,
       ) => VRMHumanoid | null;
+      addIndexToNodeTags: (asset: pc.Asset) => void;
+      getVersion: (asset: pc.Asset) => 'v1' | 'v0' | null;
     };
     GLTFLoader: typeof GLTFLoader;
   }

@@ -5,6 +5,7 @@ import * as VrmMapList from './extensions/vrm-map-list';
 import * as VrmcMaterialsMtoon from './extensions/vrmc-materials-mtoon';
 import { createFormattedVRMHumanoid } from './extensions/vrm-humanoid/vrm-humanoid-utils';
 import { GLTFLoader } from './gltf-loader/GLTFLoader';
+import { addIndexToNodeTags, getVersion } from './gltf-loader/utils/asset-utils';
 
 export * as VrmAnimation from './scripts/vrm-animation';
 export * as VrmExpression from './scripts/vrm-expression';
@@ -13,6 +14,7 @@ export * as VrmMapList from './extensions/vrm-map-list';
 export * as VrmcMaterialsMtoon from './extensions/vrmc-materials-mtoon';
 export { createFormattedVRMHumanoid } from './extensions/vrm-humanoid/vrm-humanoid-utils';
 export { GLTFLoader } from './gltf-loader/GLTFLoader';
+export { addIndexToNodeTags, getVersion } from './gltf-loader/utils/asset-utils';
 
 window.VRMLoader = {
   VrmAnimation,
@@ -21,6 +23,8 @@ window.VRMLoader = {
   VrmMapList,
   VrmcMaterialsMtoon,
   createFormattedVRMHumanoid,
+  addIndexToNodeTags,
+  getVersion,
 };
 
 window.GLTFLoader = GLTFLoader;

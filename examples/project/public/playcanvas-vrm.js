@@ -1,17 +1,17 @@
 /**
  * name: playcanvas-vrm
- * version: v1.3.1
+ * version: v1.3.2
  */
-var G = (s, t, e) => {
-  if (!t.has(s))
+var G = (o, t, e) => {
+  if (!t.has(o))
     throw TypeError("Cannot " + e);
 };
-var E = (s, t, e) => (G(s, t, "read from private field"), e ? e.call(s) : t.get(s)), U = (s, t, e) => {
-  if (t.has(s))
+var E = (o, t, e) => (G(o, t, "read from private field"), e ? e.call(o) : t.get(o)), U = (o, t, e) => {
+  if (t.has(o))
     throw TypeError("Cannot add the same private member more than once");
-  t instanceof WeakSet ? t.add(s) : t.set(s, e);
-}, Bt = (s, t, e, i) => (G(s, t, "write to private field"), i ? i.call(s, e) : t.set(s, e), e);
-var Q = (s, t, e) => (G(s, t, "access private method"), e);
+  t instanceof WeakSet ? t.add(o) : t.set(o, e);
+}, Bt = (o, t, e, i) => (G(o, t, "write to private field"), i ? i.call(o, e) : t.set(o, e), e);
+var Q = (o, t, e) => (G(o, t, "access private method"), e);
 const z = [
   "hips",
   "spine",
@@ -219,13 +219,13 @@ const z = [
   BlinkLeft: "blinkLeft",
   BlinkRight: "blinkRight",
   Neutral: "neutral"
-}, K = /* @__PURE__ */ new Set(["1.0", "1.0-beta"]), pe = {
+}, K = /* @__PURE__ */ new Set(["1.0", "1.0-beta"]), ge = {
   _Color: "color",
   _EmissionColor: "emissionColor",
   _ShadeColor: "shadeColor",
   _RimColor: "rimColor",
   _OutlineColor: "outlineColor"
-}, fe = {
+}, _e = {
   isMeshStandardMaterial: {
     color: "color",
     emissionColor: "emissive"
@@ -241,19 +241,19 @@ const z = [
     rimColor: "parametricRimColorFactor",
     shadeColor: "shadeColorFactor"
   }
-}, ge = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, xe = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   POSSIBLE_SPEC_VERSIONS: K,
   VRMExpressionPresetName: Xt,
   VRMHumanBoneList: z,
   VRMHumanBoneParentMap: j,
   VRMRigMap: F,
-  expressionMateriaPropertyNameMapMap: fe,
+  expressionMateriaPropertyNameMapMap: _e,
   thumbBoneNameMap: jt,
-  v0ExpressionMaterialColorMap: pe,
+  v0ExpressionMaterialColorMap: ge,
   v0v1PresetNameMap: $t
 }, Symbol.toStringTag, { value: "Module" }));
-class _e {
+class Me {
   /*     public expressionTracks: {
       preset: Map<VRMExpressionPresetName, IVrmaTrack>;
       custom: Map<string, IVrmaTrack>; 
@@ -266,26 +266,26 @@ class _e {
     };
   }
 }
-function Nt(s, t) {
-  const e = s.length, i = [];
+function Nt(o, t) {
+  const e = o.length, i = [];
   let n = [], r = 0;
-  for (let o = 0; o < e; o++) {
-    const a = s[o];
+  for (let s = 0; s < e; s++) {
+    const a = o[s];
     r <= 0 && (r = t, n = [], i.push(n)), n.push(a), r--;
   }
   return i;
 }
-function xe(s, t, e) {
-  const i = e.data, n = 1 / (i[3] * t.x + i[7] * t.y + i[11] * t.z + i[15]), r = (i[0] * t.x + i[4] * t.y + i[8] * t.z + i[12]) * n, o = (i[1] * t.x + i[5] * t.y + i[9] * t.z + i[13]) * n, a = (i[2] * t.x + i[6] * t.y + i[10] * t.z + i[14]) * n;
-  return new s.Vec3(r, o, a);
+function ve(o, t, e) {
+  const i = e.data, n = 1 / (i[3] * t.x + i[7] * t.y + i[11] * t.z + i[15]), r = (i[0] * t.x + i[4] * t.y + i[8] * t.z + i[12]) * n, s = (i[1] * t.x + i[5] * t.y + i[9] * t.z + i[13]) * n, a = (i[2] * t.x + i[6] * t.y + i[10] * t.z + i[14]) * n;
+  return new o.Vec3(r, s, a);
 }
-function Yt(s, t) {
+function Yt(o, t) {
   const e = t.inputs.map(
-    (r) => new s.AnimData(r.components, r.data)
+    (r) => new o.AnimData(r.components, r.data)
   ), i = t.outputs.map(
-    (r) => new s.AnimData(r.components, r.data)
+    (r) => new o.AnimData(r.components, r.data)
   ), n = t.curves.map((r) => {
-    const o = r.paths.map((a) => {
+    const s = r.paths.map((a) => {
       const h = a;
       return {
         component: h.component,
@@ -293,12 +293,12 @@ function Yt(s, t) {
         propertyPath: [...h.propertyPath]
       };
     });
-    return new s.AnimCurve(o, r.input, r.output, r.interpolation);
+    return new o.AnimCurve(s, r.input, r.output, r.interpolation);
   });
-  return new s.AnimTrack(t.name, t.duration, e, i, n);
+  return new o.AnimTrack(t.name, t.duration, e, i, n);
 }
-const Me = /* @__PURE__ */ new Set(["1.0", "1.0-draft"]);
-class ve {
+const Te = /* @__PURE__ */ new Set(["1.0", "1.0-draft"]);
+class we {
   constructor(t) {
     this.pcRef = t;
   }
@@ -315,14 +315,14 @@ class ve {
       return;
     }
     const r = n.specVersion;
-    if (!Me.has(r)) {
+    if (!Te.has(r)) {
       console.warn(`CreateVRMAnimation: Unknown VRMC_vrm_animation spec version: ${r}`);
       return;
     }
     r === "1.0-draft" && console.warn(
       "CreateVRMAnimation: Using a draft spec version: 1.0-draft. Some behaviors may be different. Consider updating the animation file."
     );
-    const o = t.resource.data.nodes, a = this._createNodeMap(e, n), h = this._createBoneWorldMatrixMap(o, n), l = (u = (f = n.humanoid) == null ? void 0 : f.humanBones.hips) == null ? void 0 : u.node, c = l != null ? o[l] : null, m = c ? c.getPosition() : new this.pcRef.Vec3();
+    const s = t.resource.data.nodes, a = this._createNodeMap(e, n), h = this._createBoneWorldMatrixMap(s, n), l = (u = (f = n.humanoid) == null ? void 0 : f.humanBones.hips) == null ? void 0 : u.node, c = l != null ? s[l] : null, m = c ? c.getPosition() : new this.pcRef.Vec3();
     return t.resource.data.animations.map((p, _) => {
       const M = e.animations[_], v = this._parseAnimation(p, M, a, h);
       return v.restHipsPosition = m, v;
@@ -330,8 +330,8 @@ class ve {
   }
   _createNodeMap(t, e) {
     var m, d, g, x;
-    const i = /* @__PURE__ */ new Map(), n = /* @__PURE__ */ new Map(), r = /* @__PURE__ */ new Map(), o = t.nodes;
-    o && o.forEach((f, u) => {
+    const i = /* @__PURE__ */ new Map(), n = /* @__PURE__ */ new Map(), r = /* @__PURE__ */ new Map(), s = t.nodes;
+    s && s.forEach((f, u) => {
       f.name && i.set(f.name, u);
     });
     const a = (m = e.humanoid) == null ? void 0 : m.humanBones;
@@ -358,8 +358,8 @@ class ve {
     const i = /* @__PURE__ */ new Map();
     if (e.humanoid == null)
       return i;
-    for (const [r, o] of Object.entries(e.humanoid.humanBones)) {
-      const a = o == null ? void 0 : o.node;
+    for (const [r, s] of Object.entries(e.humanoid.humanBones)) {
+      const a = s == null ? void 0 : s.node;
       if (a != null) {
         const h = t[a];
         i.set(r, h.getWorldTransform());
@@ -370,9 +370,9 @@ class ve {
     return i;
   }
   _parseAnimation(t, e, i, n) {
-    const { inputs: r, outputs: o, curves: a } = Yt(this.pcRef, t), h = e.channels, l = new _e(this.pcRef);
+    const { inputs: r, outputs: s, curves: a } = Yt(this.pcRef, t), h = e.channels, l = new Me(this.pcRef);
     return l.duration = t.duration, h.forEach((c, m) => {
-      const { node: d, path: g } = c.target, x = r[m], f = o[m], u = a[m];
+      const { node: d, path: g } = c.target, x = r[m], f = s[m], u = a[m];
       if (d == null)
         return;
       const p = i.humanoidIndexToName.get(d);
@@ -398,7 +398,7 @@ class ve {
           else {
             const M = n.get("hipsParent"), v = Nt(f.data, 3).flatMap((w) => {
               let P = new this.pcRef.Vec3(w[0], w[1], w[2]);
-              return P = xe(this.pcRef, P, M), [P.x, P.y, P.z];
+              return P = ve(this.pcRef, P, M), [P.x, P.y, P.z];
             }), T = new Float32Array(v), y = new this.pcRef.AnimData(f.components, T), S = { curve: u, input: x, output: y };
             l.humanoidTracks.translation.set(p, S);
           }
@@ -419,7 +419,7 @@ class ve {
     }), l;
   }
 }
-class Te {
+class Se {
   constructor(t, e, i, n, r = "v0") {
     this.pcRef = t, this.vrmAnimation = i, this.name = e, this.humanoid = n, this.metaVersion = r;
   }
@@ -429,15 +429,15 @@ class Te {
   createVRMAnimTrack() {
     const t = [], e = [], i = [], n = [], r = this._createVRMAnimationHumanoidTracks();
     n.push(...r.translation.values()), n.push(...r.rotation.values());
-    for (let o = 0; o < n.length; o++) {
-      t.push(n[o].input), e.push(n[o].output);
+    for (let s = 0; s < n.length; s++) {
+      t.push(n[s].input), e.push(n[s].output);
       const a = new this.pcRef.AnimCurve(
-        n[o].curve.paths,
-        o,
-        o,
-        n[o].curve.interpolation
+        n[s].curve.paths,
+        s,
+        s,
+        n[s].curve.interpolation
       );
-      i.push(a), n[o].curve.paths.forEach((l) => {
+      i.push(a), n[s].curve.paths.forEach((l) => {
         const c = l, m = c.entityPath;
         m.unshift("SkeletonRoot");
         const d = m.map((g) => {
@@ -453,8 +453,8 @@ class Te {
   _createVRMAnimationHumanoidTracks() {
     var i, n, r;
     const t = /* @__PURE__ */ new Map(), e = /* @__PURE__ */ new Map();
-    for (const [o, a] of this.vrmAnimation.humanoidTracks.translation.entries())
-      if (((i = this.humanoid.getNormalizedBoneNode(o)) == null ? void 0 : i.name) != null) {
+    for (const [s, a] of this.vrmAnimation.humanoidTracks.translation.entries())
+      if (((i = this.humanoid.getNormalizedBoneNode(s)) == null ? void 0 : i.name) != null) {
         const l = this.vrmAnimation.restHipsPosition.y, d = (((n = this.humanoid.rawHumanBones.hips) == null ? void 0 : n.node.getPosition()) || new this.pcRef.Vec3()).y / l, g = a.output.data.map(
           (p, _) => (this.metaVersion === "v0" && _ % 3 !== 1 ? -p : p) * d
         ), x = new Float32Array(g), f = new this.pcRef.AnimData(a.output.components, x), u = {
@@ -462,10 +462,10 @@ class Te {
           input: a.input,
           output: f
         };
-        t.set(o, u);
+        t.set(s, u);
       }
-    for (const [o, a] of this.vrmAnimation.humanoidTracks.rotation.entries())
-      if (((r = this.humanoid.getNormalizedBoneNode(o)) == null ? void 0 : r.name) != null) {
+    for (const [s, a] of this.vrmAnimation.humanoidTracks.rotation.entries())
+      if (((r = this.humanoid.getNormalizedBoneNode(s)) == null ? void 0 : r.name) != null) {
         const l = a.output.data.map(
           (g, x) => this.metaVersion === "v0" && x % 2 === 0 ? -g : g
         ), c = new Float32Array(l), m = new this.pcRef.AnimData(a.output.components, c), d = {
@@ -473,21 +473,21 @@ class Te {
           input: a.input,
           output: m
         };
-        e.set(o, d);
+        e.set(s, d);
       }
     return { translation: t, rotation: e };
   }
 }
-class we {
-  constructor(t, e, i, n = "v0", r, o) {
-    this.pcRef = t, this.animationAsset = e, this.humanoid = i, this.metaVersion = n, this.extraSettings = r, this.origAnimTrack = o;
+class ye {
+  constructor(t, e, i, n = "v0", r, s) {
+    this.pcRef = t, this.animationAsset = e, this.humanoid = i, this.metaVersion = n, this.extraSettings = r, this.origAnimTrack = s;
   }
   get result() {
     return this.createViverseAnimTrack();
   }
   createViverseAnimTrack() {
     var f;
-    const t = ((f = this.humanoid.rawHumanBones.hips) == null ? void 0 : f.node.getPosition()) || new this.pcRef.Vec3(), e = t.y, i = Math.abs(e - 0), n = t.z, r = Math.abs(n - 0), o = {}, a = {};
+    const t = ((f = this.humanoid.rawHumanBones.hips) == null ? void 0 : f.node.getPosition()) || new this.pcRef.Vec3(), e = t.y, i = Math.abs(e - 0), n = t.z, r = Math.abs(n - 0), s = {}, a = {};
     let { motionHipsHeight: h, negativeZAnimNames: l } = this.extraSettings;
     l || (l = []);
     const c = Yt(this.pcRef, this.origAnimTrack), d = l.includes(this.origAnimTrack.name) ? "v1" : "v0";
@@ -503,7 +503,7 @@ class we {
     return c.curves.forEach((u) => {
       u.paths.forEach((p) => {
         const _ = p, M = _.propertyPath.find((T) => T === "localPosition"), v = _.entityPath[_.entityPath.length - 1] === F.hips;
-        M && v && !o[u.output] && (o[u.output] = !0);
+        M && v && !s[u.output] && (s[u.output] = !0);
       });
     }), c.curves.forEach((u) => {
       let p = !1;
@@ -521,7 +521,7 @@ class we {
         if (!_) {
           const M = u.data.map((v, T) => {
             let y = v;
-            return this.metaVersion === d && T % 3 !== 1 && (y *= -1), o[p] && T % 3 === 1 && (this.animationAsset.removeY || this.animationAsset.removeUpperY && v * x > i) ? i : o[p] && T % 3 === 2 && this.animationAsset.removeZ ? r : y * x;
+            return this.metaVersion === d && T % 3 !== 1 && (y *= -1), s[p] && T % 3 === 1 && (this.animationAsset.removeY || this.animationAsset.removeUpperY && v * x > i) ? i : s[p] && T % 3 === 2 && this.animationAsset.removeZ ? r : y * x;
           });
           u._data = M;
         }
@@ -532,16 +532,16 @@ class we {
     }), c;
   }
 }
-function Se(s, t, e, i, {
+function Pe(o, t, e, i, {
   motionHipsHeight: n,
   negativeZAnimNames: r
 } = {}) {
-  const o = { motionHipsHeight: n, negativeZAnimNames: r };
+  const s = { motionHipsHeight: n, negativeZAnimNames: r };
   return console.warn(
     "Warning: createVRMAnimation is deprecated. Please use createVRMAnimResources instead."
-  ), Gt(s, t, e, i, o);
+  ), Gt(o, t, e, i, s);
 }
-function Gt(s, t, e, i, n = {}) {
+function Gt(o, t, e, i, n = {}) {
   var c, m;
   if (!e) {
     console.error('CreateVRMAnimResources: Please provide "vrm asset".');
@@ -555,7 +555,7 @@ function Gt(s, t, e, i, n = {}) {
     console.error('CreateVRMAnimResources: Please provide "humanoid" or "asset and entity".');
     return;
   }
-  const r = (c = e.resource.data.gltf.extensions) == null ? void 0 : c.VRMC_vrm, o = (m = e.resource.data.gltf.extensions) == null ? void 0 : m.VRM, a = r ? "v1" : o ? "v0" : null, h = (d, g) => d == "animation" ? !1 : d == "container" ? !!(g && g.includes("VRMC_vrm_animation") && g.indexOf("VRMC_vrm_animation") !== -1) : !1, l = [];
+  const r = (c = e.resource.data.gltf.extensions) == null ? void 0 : c.VRMC_vrm, s = (m = e.resource.data.gltf.extensions) == null ? void 0 : m.VRM, a = r ? "v1" : s ? "v0" : null, h = (d, g) => d == "animation" ? !1 : d == "container" ? !!(g && g.includes("VRMC_vrm_animation") && g.indexOf("VRMC_vrm_animation") !== -1) : !1, l = [];
   return t.forEach((d) => {
     var u;
     const g = d.asset.resource, x = d.asset.type;
@@ -566,8 +566,8 @@ function Gt(s, t, e, i, n = {}) {
       );
     else {
       const p = (u = g.data) == null ? void 0 : u.gltf.extensionsUsed;
-      h(x, p) ? f = Pe(s, d, i, a) : f = Re(
-        s,
+      h(x, p) ? f = Le(o, d, i, a) : f = be(
+        o,
         d,
         i,
         a,
@@ -577,8 +577,8 @@ function Gt(s, t, e, i, n = {}) {
     f && l.push(f);
   }), l;
 }
-const ye = (s, t) => {
-  s.anim ? s.anim.assignAnimation(
+const Re = (o, t) => {
+  o.anim ? o.anim.assignAnimation(
     t.name,
     t.resource,
     t.setting && t.setting.layerName !== void 0 ? t.setting.layerName : void 0,
@@ -586,14 +586,14 @@ const ye = (s, t) => {
     t.setting && t.setting.loop !== void 0 ? t.setting.loop : !0
   ) : console.error("AssignAnimation: Please set the anim component on the entity.");
 };
-function Pe(s, t, e, i) {
+function Le(o, t, e, i) {
   var a, h, l, c;
-  const r = new ve(s).loadVRMA(t.asset);
-  let o = (c = (l = (h = (a = t.asset.resource.animations) == null ? void 0 : a[0]) == null ? void 0 : h.resources) == null ? void 0 : l[0]) == null ? void 0 : c.name;
-  if (o || (o = ""), r) {
-    const m = new Te(
-      s,
+  const r = new we(o).loadVRMA(t.asset);
+  let s = (c = (l = (h = (a = t.asset.resource.animations) == null ? void 0 : a[0]) == null ? void 0 : h.resources) == null ? void 0 : l[0]) == null ? void 0 : c.name;
+  if (s || (s = ""), r) {
+    const m = new Se(
       o,
+      s,
       r[0],
       e,
       i
@@ -602,12 +602,12 @@ function Pe(s, t, e, i) {
   }
   return null;
 }
-function Re(s, t, e, i, n) {
-  var o, a;
-  const r = t.asset.type === "container" ? (a = (o = t.asset.resource.animations) == null ? void 0 : o[0]) == null ? void 0 : a.resource : t.asset.resource;
+function be(o, t, e, i, n) {
+  var s, a;
+  const r = t.asset.type === "container" ? (a = (s = t.asset.resource.animations) == null ? void 0 : s[0]) == null ? void 0 : a.resource : t.asset.resource;
   if (r) {
-    const h = new we(
-      s,
+    const h = new ye(
+      o,
       t,
       e,
       i,
@@ -626,11 +626,11 @@ function Re(s, t, e, i, n) {
       `CreateViverseAnimResource: loadAnimation can't find valid resource from ${t.stateName} asset.`
     ), null;
 }
-const Le = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+const Ce = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  assignAnimation: ye,
+  assignAnimation: Re,
   createVRMAnimResources: Gt,
-  createVRMAnimation: Se
+  createVRMAnimation: Pe
 }, Symbol.toStringTag, { value: "Module" }));
 class Ft {
   constructor(t) {
@@ -658,27 +658,27 @@ class Ft {
     }
   }
 }
-function Qt(s) {
-  return Math.max(Math.min(s, 1), 0);
+function Qt(o) {
+  return Math.max(Math.min(o, 1), 0);
 }
-function be(s, t) {
-  return s = Math.ceil(s), t = Math.floor(t), Math.floor(Math.random() * (t - s) + s);
+function Ee(o, t) {
+  return o = Math.ceil(o), t = Math.floor(t), Math.floor(Math.random() * (t - o) + o);
 }
-function N(s, t) {
-  return Math.random() * (t - s) + s;
+function N(o, t) {
+  return Math.random() * (t - o) + o;
 }
-function O(s, t, e = 0) {
-  return s.x = t[e], s.y = t[e + 1], s.z = t[e + 2], s;
+function O(o, t, e = 0) {
+  return o.x = t[e], o.y = t[e + 1], o.z = t[e + 2], o;
 }
-function Dt(s, t) {
-  return s.copy(t.transformPoint(s));
+function Dt(o, t) {
+  return o.copy(t.transformPoint(o));
 }
-class Ce {
+class Ae {
   constructor(t, e) {
     this._pcRef = t, this.matrix = e, this._inverseCache = new this._pcRef.Mat4(), this._shouldUpdateInverse = !0;
     const i = {
       // @ts-ignore
-      set: (n, r, o) => (this._shouldUpdateInverse = !0, n[r] = o, !0)
+      set: (n, r, s) => (this._shouldUpdateInverse = !0, n[r] = s, !0)
     };
     this._originalElements = e.data, this.matrix.set(new Proxy(Array.from(e.data), i));
   }
@@ -694,13 +694,13 @@ class Ce {
     this.matrix.set(Array.from(this._originalElements));
   }
 }
-function Zt(s, t) {
-  const e = new s.Mat4();
+function Zt(o, t) {
+  const e = new o.Mat4();
   return t.invert ? t.invert() : t.getInverse(e.copy(t)), t;
 }
-function Ee(s, t, e) {
+function ke(o, t, e) {
   let i = t.dot(e) + 1;
-  return i < Number.EPSILON ? (i = 0, Math.abs(t.x) > Math.abs(t.z) ? (s.x = -t.y, s.y = t.x, s.z = 0, s.w = i) : (s.x = 0, s.y = -t.z, s.z = t.y, s.w = i)) : (s.x = t.y * e.z - t.z * e.y, s.y = t.z * e.x - t.x * e.z, s.z = t.x * e.y - t.y * e.x, s.w = i), s.normalize();
+  return i < Number.EPSILON ? (i = 0, Math.abs(t.x) > Math.abs(t.z) ? (o.x = -t.y, o.y = t.x, o.z = 0, o.w = i) : (o.x = 0, o.y = -t.z, o.z = t.y, o.w = i)) : (o.x = t.y * e.z - t.z * e.y, o.y = t.z * e.x - t.x * e.z, o.z = t.x * e.y - t.y * e.x, o.w = i), o.normalize();
 }
 class Ut {
   constructor() {
@@ -715,7 +715,7 @@ class Ut {
   getTalkingExpression() {
     const t = this.getExpression("aa"), e = this.getExpression("ee"), i = this.getExpression("ih"), n = this.getExpression("oh"), r = this.getExpression("ou");
     return [t, e, i, n, r].filter(
-      (o) => o
+      (s) => s
     );
   }
   setValue(t, e) {
@@ -744,7 +744,7 @@ class Ut {
   getNextTalking() {
     if (this.talkExpressions.length === 0)
       return null;
-    const t = be(0, this.talkExpressions.length - 1);
+    const t = Ee(0, this.talkExpressions.length - 1);
     return this.talkExpressions[t].name === this.previousTalkName && this.talkExpressions.length > 1 ? this.getNextTalking() : (this.previousTalkName = this.talkExpressions[t].expressionName, this.talkExpressions[t]);
   }
   startTalking(t, e) {
@@ -864,11 +864,11 @@ class Ot {
     }
     this.time += t;
     const n = this.time < e[1] ? 0 : e.findIndex(
-      (r, o) => e[o - 1] < this.time && e[o + 1] > this.time
+      (r, s) => e[s - 1] < this.time && e[s + 1] > this.time
     );
     if (n !== -1) {
       this.currentTimeIndex !== n && (this.currentValue = i[n]), this.currentTimeIndex = n;
-      const r = i[this.currentTimeIndex + 1], o = e[this.currentTimeIndex] - e[this.currentTimeIndex + 1], h = (i[this.currentTimeIndex] - i[this.currentTimeIndex + 1]) / o, l = this.currentValue + h * t;
+      const r = i[this.currentTimeIndex + 1], s = e[this.currentTimeIndex] - e[this.currentTimeIndex + 1], h = (i[this.currentTimeIndex] - i[this.currentTimeIndex + 1]) / s, l = this.currentValue + h * t;
       h > 0 && l >= r || h < 0 && r >= l ? this.setValue(r) : this.setValue(l);
     }
   }
@@ -897,7 +897,7 @@ class Wt {
     });
   }
 }
-class Ae {
+class Ie {
   constructor(t, e) {
     this.asset = t, this.meshInstances = e;
   }
@@ -918,7 +918,7 @@ class Ae {
     const n = i.expressions;
     if (!n)
       return null;
-    const r = new Set(Object.values(Xt)), o = /* @__PURE__ */ new Map();
+    const r = new Set(Object.values(Xt)), s = /* @__PURE__ */ new Map();
     n.preset != null && Object.entries(n.preset).forEach(([l, c]) => {
       if (c != null) {
         if (!r.has(l)) {
@@ -927,7 +927,7 @@ class Ae {
           );
           return;
         }
-        o.set(l, c);
+        s.set(l, c);
       }
     }), n.custom != null && Object.entries(n.custom).forEach(([l, c]) => {
       if (r.has(l)) {
@@ -936,10 +936,10 @@ class Ae {
         );
         return;
       }
-      o.set(l, c);
+      s.set(l, c);
     });
     const a = new Ut();
-    return Array.from(o.entries()).map(([l, c]) => {
+    return Array.from(s.entries()).map(([l, c]) => {
       const m = new Ot(l);
       m.isBinary = c.isBinary ?? !1, m.overrideBlink = c.overrideBlink ?? "none", m.overrideLookAt = c.overrideLookAt ?? "none", m.overrideMouth = c.overrideMouth ?? "none", c.morphTargetBinds && c.morphTargetBinds.forEach((d) => {
         if (d.node === void 0 || d.index === void 0)
@@ -965,11 +965,11 @@ class Ae {
     const n = i.blendShapeMaster;
     if (!n)
       return null;
-    const r = new Ut(), o = n.blendShapeGroups;
-    if (!o)
+    const r = new Ut(), s = n.blendShapeGroups;
+    if (!s)
       return r;
     const a = /* @__PURE__ */ new Set();
-    return o.map((c) => {
+    return s.map((c) => {
       const m = c.presetName, g = (m != null && $t[m] || null) ?? c.name;
       if (g == null) {
         console.warn(
@@ -1008,37 +1008,37 @@ class Ae {
     }), r;
   }
 }
-const ke = (s) => {
+const Ve = (o) => {
   const t = [];
-  if (s) {
-    const e = s.findComponents("render");
+  if (o) {
+    const e = o.findComponents("render");
     for (let i = 0; i < e.length; i++) {
       const n = e[i];
       if (n.meshInstances)
         for (let r = 0; r < n.meshInstances.length; r++) {
-          const o = n.meshInstances[r];
-          t.push(o);
+          const s = n.meshInstances[r];
+          t.push(s);
         }
     }
   }
   return t;
 };
-function Ie(s, t) {
+function Be(o, t) {
   const e = [];
-  let i = s;
+  let i = o;
   for (; i !== null; )
     e.unshift(i), i = i.parent;
   e.forEach((n) => {
     t(n);
   });
 }
-const Ve = (s) => {
-  class t extends s.ScriptType {
+const Ne = (o) => {
+  class t extends o.ScriptType {
     constructor() {
       super(...arguments), this.previousTalkName = "";
     }
     initialize() {
-      const i = ke(this.entity), n = new Ae(this.asset, i);
+      const i = Ve(this.entity), n = new Ie(this.asset, i);
       this.expressionManager = n.import(), this.blinkTimer = new Ft("blink"), this.talkTimer = new Ft("talk"), this.startBlink(), this.entity.on("vrm-expression:start-emotion", this.startEmotion, this), this.entity.on("audio:is-talking-change", this.onIsTalkingChange, this), this.on("destroy", () => {
         this.entity.off("vrm-expression:start-emotion", this.startEmotion, this), this.entity.off("audio:is-talking-change", this.onIsTalkingChange, this);
       });
@@ -1061,7 +1061,7 @@ const Ve = (s) => {
     startTalking(i = 0.25) {
       if (!this.expressionManager)
         return;
-      const n = Math.random() * 0.5, r = Math.random() * 0.5 + 0.5, o = N(0.5, 1), a = N(0.4, 0.6) * o, h = N(0.4, 0.6) * o, l = [0, n, 0.5, r, 1].filter((d) => d * i), c = [0, a, o, h, 0], m = N(0.5, 1);
+      const n = Math.random() * 0.5, r = Math.random() * 0.5 + 0.5, s = N(0.5, 1), a = N(0.4, 0.6) * s, h = N(0.4, 0.6) * s, l = [0, n, 0.5, r, 1].filter((d) => d * i), c = [0, a, s, h, 0], m = N(0.5, 1);
       this.expressionManager.startTalking(l, c), this.talkTimer.add(m, this.startTalking, this);
     }
     stopTalking(i) {
@@ -1083,13 +1083,13 @@ const Ve = (s) => {
       this.expressionManager && (this.expressionManager.update(i), this.blinkTimer.update(i), this.talkTimer.update(i));
     }
   }
-  s.registerScript(t, "vrmExpression"), t.attributes.add("asset", {
+  o.registerScript(t, "vrmExpression"), t.attributes.add("asset", {
     type: "asset",
     description: "Set the container asset loaded from vrm avatar."
   });
-}, Be = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, Fe = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  importScript: Ve
+  importScript: Ne
 }, Symbol.toStringTag, { value: "Module" }));
 class Ht {
   constructor() {
@@ -1128,9 +1128,9 @@ class Ht {
   update(t, e) {
     const i = /* @__PURE__ */ new Set(), n = /* @__PURE__ */ new Set(), r = /* @__PURE__ */ new Set();
     e ? (this.strength >= this.limitHeight ? (this.direction = -0.2, this.limitHeight = Math.random() * (0.2 - this.limitLow) + this.limitLow) : this.strength <= this.limitLow && (this.direction = 0.2, this.limitLow = Math.random() * 0.2), this.strength += this.direction * t) : this.strength <= 0.5 && (this.strength += 0.1 * t);
-    for (const o of this._joints)
+    for (const s of this._joints)
       this._processSpringBone(
-        o,
+        s,
         i,
         n,
         r,
@@ -1147,9 +1147,9 @@ class Ht {
         "VRMSpringBoneManager: Circular dependency detected while updating springbones"
       );
     e.add(t);
-    const o = this._getDependencies(t);
-    for (const a of o)
-      Ie(a, (h) => {
+    const s = this._getDependencies(t);
+    for (const a of s)
+      Be(a, (h) => {
         const l = this._objectSpringBonesMap.get(h);
         if (l)
           for (const c of l)
@@ -1170,13 +1170,13 @@ class Ht {
     var n;
     const e = /* @__PURE__ */ new Set(), i = t.bone.parent;
     return i && e.add(i), (n = t.colliderGroups) == null || n.forEach((r) => {
-      r.colliders.forEach((o) => {
-        e.add(o);
+      r.colliders.forEach((s) => {
+        e.add(s);
       });
     }), e;
   }
 }
-class Ne {
+class De {
   constructor(t, e) {
     this.offset = (e == null ? void 0 : e.offset) ?? new t.Vec3(), this.radius = (e == null ? void 0 : e.radius) ?? 0;
   }
@@ -1185,16 +1185,16 @@ class Ne {
   }
   calculateCollision(t, e, i, n) {
     n.copy(this.offset).copy(t.transformPoint(n)), n.mulScalar(-1).add(e);
-    const r = i + this.radius, o = n.length() - r;
-    return n.normalize(), o;
+    const r = i + this.radius, s = n.length() - r;
+    return n.normalize(), s;
   }
 }
-const zt = (s) => class extends s.Entity {
+const zt = (o) => class extends o.Entity {
   constructor(e) {
     super(), this.shape = e;
   }
 };
-class Fe {
+class Ue {
   constructor(t, e) {
     this.offset = (e == null ? void 0 : e.offset) ?? new t.Vec3(), this.tail = (e == null ? void 0 : e.tail) ?? new t.Vec3(), this.radius = (e == null ? void 0 : e.radius) ?? 0, this._v3A = new t.Vec3(), this._v3B = new t.Vec3();
   }
@@ -1205,20 +1205,20 @@ class Fe {
     this._v3A.copy(this.offset).copy(t.transformPoint(this._v3A)), this._v3B.copy(this.tail).copy(t.transformPoint(this._v3B)), this._v3B.sub(this._v3A);
     const r = this._v3B.lengthSq();
     n.copy(e).sub(this._v3A);
-    const o = this._v3B.dot(n);
-    o <= 0 || (r <= o ? n.sub(this._v3B) : (this._v3B.mulScalar(o / r), n.sub(this._v3B)));
+    const s = this._v3B.dot(n);
+    s <= 0 || (r <= s ? n.sub(this._v3B) : (this._v3B.mulScalar(s / r), n.sub(this._v3B)));
     const a = i + this.radius, h = n.length() - a;
     return n.normalize(), h;
   }
 }
-class De {
+class Oe {
   constructor(t, e, i, n = {}, r = []) {
-    var o;
+    var s;
     this._center = null, this._worldSpaceBoneLength = 0, this._pcRef = t, this._v3A = new this._pcRef.Vec3(), this._v3B = new this._pcRef.Vec3(), this._nextTail = new this._pcRef.Vec3(), this._quatA = new this._pcRef.Quat(), this._matA = new this._pcRef.Mat4(), this._matB = new this._pcRef.Mat4(), this._identityMat4 = new this._pcRef.Mat4(), this._worldSpacePosition = new this._pcRef.Vec3(), this._centerSpacePosition = new this._pcRef.Vec3(), this._matrixWorldToCenterTranslation = new this._pcRef.Vec3(), this._worldSpaceBoneLength = 0, this.bone = e, this.child = i, this.settings = {
       hitRadius: n.hitRadius ?? 0,
       stiffness: n.stiffness ?? 1,
       gravityPower: n.gravityPower ?? 0,
-      gravityDir: ((o = n.gravityDir) == null ? void 0 : o.clone()) ?? new this._pcRef.Vec3(0, -1, 0),
+      gravityDir: ((s = n.gravityDir) == null ? void 0 : s.clone()) ?? new this._pcRef.Vec3(0, -1, 0),
       dragForce: n.dragForce ?? 0.4
     }, this.colliderGroups = r, this._initialLocalMatrix = new this._pcRef.Mat4(), this._initialLocalRotation = new this._pcRef.Quat(), this._initialLocalChildPosition = new this._pcRef.Vec3(), this._currentTail = new this._pcRef.Vec3(), this._prevTail = new this._pcRef.Vec3(), this._boneAxis = new this._pcRef.Vec3(), this._center = null;
   }
@@ -1227,7 +1227,7 @@ class De {
   }
   set center(t) {
     var e;
-    (e = this._center) != null && e.userData.inverseCacheProxy && (this._center.userData.inverseCacheProxy.revert(), delete this._center.userData.inverseCacheProxy), this._center = t, this._center && (this._center.userData || (this._center.userData = {}), this._center.userData.inverseCacheProxy || (this._center.userData.inverseCacheProxy = new Ce(
+    (e = this._center) != null && e.userData.inverseCacheProxy && (this._center.userData.inverseCacheProxy.revert(), delete this._center.userData.inverseCacheProxy), this._center = t, this._center && (this._center.userData || (this._center.userData = {}), this._center.userData.inverseCacheProxy || (this._center.userData.inverseCacheProxy = new Ae(
       this._pcRef,
       this._center.getWorldTransform()
     )));
@@ -1259,10 +1259,10 @@ class De {
     );
     let i = this._getMatrixWorldToCenter(this._matA);
     this._matrixWorldToCenterTranslation.set(0, 0, 0), i.getTranslation(this._matrixWorldToCenterTranslation), this._centerSpacePosition.copy(this._worldSpacePosition).add(this._matrixWorldToCenterTranslation);
-    const n = this._quatA.setFromMat4(i), r = this._matB.copy(i).mul(this._parentMatrixWorld), o = this._v3B.copy(this._boneAxis).copy(this._initialLocalMatrix.transformPoint(this._v3B)).copy(r.transformPoint(this._v3B)).sub(this._centerSpacePosition).normalize(), a = this._v3A.copy(this.settings.gravityDir).copy(n.transformVector(this._v3A)).normalize(), h = this._getMatrixCenterToWorld(this._matA);
+    const n = this._quatA.setFromMat4(i), r = this._matB.copy(i).mul(this._parentMatrixWorld), s = this._v3B.copy(this._boneAxis).copy(this._initialLocalMatrix.transformPoint(this._v3B)).copy(r.transformPoint(this._v3B)).sub(this._centerSpacePosition).normalize(), a = this._v3A.copy(this.settings.gravityDir).copy(n.transformVector(this._v3A)).normalize(), h = this._getMatrixCenterToWorld(this._matA);
     this._nextTail.copy(this._currentTail).add(
       this._v3A.copy(this._currentTail).sub(this._prevTail).mulScalar(1 - this.settings.dragForce)
-    ).add(this._v3A.copy(o).mulScalar(this.settings.stiffness * t)).add(this._v3A.copy(a).mulScalar(this.settings.gravityPower * t)).copy(h.transformPoint(this._nextTail)), this._nextTail.sub(this._worldSpacePosition).normalize().mulScalar(this._worldSpaceBoneLength).add(this._worldSpacePosition);
+    ).add(this._v3A.copy(s).mulScalar(this.settings.stiffness * t)).add(this._v3A.copy(a).mulScalar(this.settings.gravityPower * t)).copy(h.transformPoint(this._nextTail)), this._nextTail.sub(this._worldSpacePosition).normalize().mulScalar(this._worldSpaceBoneLength).add(this._worldSpacePosition);
     const l = this._v3A.copy(this._nextTail).sub(this._currentTail).mulScalar(0.2);
     this._nextTail.sub(this._v3A.set(0, l.y, 0)), this._collision(this._nextTail), i = this._getMatrixWorldToCenter(this._matA), this._prevTail.copy(this._currentTail), this._currentTail.copy(
       this._v3A.copy(this._nextTail).copy(i.transformPoint(this._v3A))
@@ -1270,7 +1270,7 @@ class De {
     const c = Zt(
       this._pcRef,
       this._matA.copy(this._parentMatrixWorld).mul(this._initialLocalMatrix)
-    ), m = Ee(
+    ), m = ke(
       this._quatA,
       this._boneAxis,
       this._v3A.copy(this._nextTail).copy(c.transformPoint(this._v3A)).normalize()
@@ -1321,7 +1321,7 @@ const k = class k {
     var x, f;
     if (!(((x = t.extensionsUsed) == null ? void 0 : x.indexOf(k.EXTENSION_NAME)) !== -1) || !((t == null ? void 0 : t.extensionsUsed.indexOf("VRMC_vrm")) !== -1))
       return null;
-    const r = new Ht(), o = t == null ? void 0 : t.nodes, a = (f = t.extensions) == null ? void 0 : f[k.EXTENSION_NAME];
+    const r = new Ht(), s = t == null ? void 0 : t.nodes, a = (f = t.extensions) == null ? void 0 : f[k.EXTENSION_NAME];
     if (!a)
       return null;
     const h = a.specVersion;
@@ -1379,7 +1379,7 @@ const k = class k {
       let T;
       _.forEach((S) => {
         if (T) {
-          const w = T.node, P = o[w], I = this.entity.findByName(P.name), C = S.node, V = o[C], b = this.entity.findByName(V.name), R = {
+          const w = T.node, P = s[w], I = this.entity.findByName(P.name), C = S.node, V = s[C], b = this.entity.findByName(V.name), R = {
             hitRadius: T.hitRadius,
             dragForce: T.dragForce,
             gravityPower: T.gravityPower,
@@ -1400,8 +1400,8 @@ const k = class k {
     const r = i == null ? void 0 : i.secondaryAnimation;
     if (!r)
       return null;
-    const o = r == null ? void 0 : r.boneGroups;
-    if (!o)
+    const s = r == null ? void 0 : r.boneGroups;
+    if (!s)
       return null;
     const a = new Ht(), h = (m = r.colliderGroups) == null ? void 0 : m.map((d) => {
       var f;
@@ -1425,7 +1425,7 @@ const k = class k {
         });
       }) };
     });
-    return o == null || o.forEach((d, g) => {
+    return s == null || s.forEach((d, g) => {
       const x = d.bones;
       x && x.forEach((f) => {
         var T, y;
@@ -1464,19 +1464,19 @@ const k = class k {
     }), a.setInitState(), a;
   }
   _importSphereCollider(t, { offset: e, radius: i }) {
-    const n = new Ne(this._pcRef, { offset: e, radius: i }), r = zt(this._pcRef), o = new r(n);
-    return t.addChild(o), o;
+    const n = new De(this._pcRef, { offset: e, radius: i }), r = zt(this._pcRef), s = new r(n);
+    return t.addChild(s), s;
   }
   _importCapsuleCollider(t, { offset: e, radius: i, tail: n }) {
-    const r = new Fe(this._pcRef, {
+    const r = new Ue(this._pcRef, {
       offset: e,
       radius: i,
       tail: n
-    }), o = zt(this._pcRef), a = new o(r);
+    }), s = zt(this._pcRef), a = new s(r);
     return t.addChild(a), a;
   }
   _importJoint(t, e, i, n) {
-    return new De(
+    return new Oe(
       this._pcRef,
       t,
       e,
@@ -1487,13 +1487,13 @@ const k = class k {
 };
 k.EXTENSION_NAME = "VRMC_springBone";
 let Z = k;
-const Ue = (s) => {
-  class t extends s.ScriptType {
+const We = (o) => {
+  class t extends o.ScriptType {
     constructor() {
       super(...arguments), this.activeSpringBone = !0, this.isWalking = !1;
     }
     initialize() {
-      const i = new Z(s, this.asset, this.entity);
+      const i = new Z(o, this.asset, this.entity);
       this.springBoneManager = i.import(), this.isWalking = !1, this.entity.on("toggle-spring-bone", this.toggleSpringBone, this), this.entity.on("toggle-is-walking", this.toggleIsWalking, this), this.on("destroy", () => {
         this.entity.off("toggle-spring-bone", this.toggleSpringBone, this), this.entity.on("toggle-is-walking", this.toggleIsWalking, this);
       });
@@ -1508,22 +1508,22 @@ const Ue = (s) => {
       !this.springBoneManager || !this.activeSpringBone || this.springBoneManager.update(i, this.isWalking);
     }
   }
-  s.registerScript(t, "vrmSpringBone"), t.attributes.add("activeSpringBone", {
+  o.registerScript(t, "vrmSpringBone"), t.attributes.add("activeSpringBone", {
     type: "boolean",
     default: !0
   }), t.attributes.add("asset", {
     type: "asset",
     description: "Set the container asset loaded from vrm avatar."
   });
-}, Oe = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, He = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  importScript: Ue
-}, Symbol.toStringTag, { value: "Module" })), J = "VRMC_materials_mtoon", We = "VRM";
-var Jt = /* @__PURE__ */ ((s) => (s[s.Off = 0] = "Off", s[s.Front = 1] = "Front", s[s.Back = 2] = "Back", s))(Jt || {});
-const A = (s) => Math.pow(s, 2.2), He = (s, t, e) => {
+  importScript: We
+}, Symbol.toStringTag, { value: "Module" })), J = "VRMC_materials_mtoon", ze = "VRM";
+var Jt = /* @__PURE__ */ ((o) => (o[o.Off = 0] = "Off", o[o.Front = 1] = "Front", o[o.Back = 2] = "Back", o))(Jt || {});
+const A = (o) => Math.pow(o, 2.2), je = (o, t, e) => {
   var it, nt, ot, st, rt, at, lt, ht, ct, dt, ut, mt, pt, ft, gt, _t, xt, Mt, vt, Tt, wt, St, yt, Pt, Rt, Lt, bt, Ct, Et, At, kt, It;
-  const i = ((it = t.keywordMap) == null ? void 0 : it._ALPHABLEND_ON) ?? !1, r = ((nt = t.floatProperties) == null ? void 0 : nt._ZWrite) === 1 && i, o = ((ot = t.keywordMap) == null ? void 0 : ot._ALPHATEST_ON) ?? !1, a = i ? "BLEND" : o ? "MASK" : "OPAQUE", h = o ? ((st = t.floatProperties) == null ? void 0 : st._Cutoff) ?? 0.5 : void 0, c = (((rt = t.floatProperties) == null ? void 0 : rt._CullMode) ?? 2) === 0, m = (((at = t.vectorProperties) == null ? void 0 : at._Color) ?? [1, 1, 1, 1]).map(
-    (Vt, me) => me === 3 ? Vt : A(Vt)
+  const i = ((it = t.keywordMap) == null ? void 0 : it._ALPHABLEND_ON) ?? !1, r = ((nt = t.floatProperties) == null ? void 0 : nt._ZWrite) === 1 && i, s = ((ot = t.keywordMap) == null ? void 0 : ot._ALPHATEST_ON) ?? !1, a = i ? "BLEND" : s ? "MASK" : "OPAQUE", h = s ? ((st = t.floatProperties) == null ? void 0 : st._Cutoff) ?? 0.5 : void 0, c = (((rt = t.floatProperties) == null ? void 0 : rt._CullMode) ?? 2) === 0, m = (((at = t.vectorProperties) == null ? void 0 : at._Color) ?? [1, 1, 1, 1]).map(
+    (Vt, fe) => fe === 3 ? Vt : A(Vt)
     // alpha channel is stored in linear
   ), d = (lt = t.textureProperties) == null ? void 0 : lt._MainTex, g = d != null ? {
     index: d
@@ -1548,31 +1548,31 @@ const A = (s) => Math.pow(s, 2.2), He = (s, t, e) => {
     // },
   } : void 0;
   let S = ((ft = t.floatProperties) == null ? void 0 : ft._ShadeShift) ?? 0, w = ((gt = t.floatProperties) == null ? void 0 : gt._ShadeToony) ?? 0.9;
-  w = s.math.lerp(w, 1, 0.5 + 0.5 * S), S = -S - (1 - w);
+  w = o.math.lerp(w, 1, 0.5 + 0.5 * S), S = -S - (1 - w);
   const P = ((_t = t.floatProperties) == null ? void 0 : _t._IndirectLightIntensity) ?? 0.1, I = P ? 1 - P : void 0, C = (xt = t.textureProperties) == null ? void 0 : xt._SphereAdd, V = C != null ? [1, 1, 1] : void 0, b = C != null ? {
     index: C
-  } : void 0, R = ((Mt = t.floatProperties) == null ? void 0 : Mt._RimLightingMix) ?? 0, B = (vt = t.textureProperties) == null ? void 0 : vt._RimTexture, ie = B != null ? {
+  } : void 0, R = ((Mt = t.floatProperties) == null ? void 0 : Mt._RimLightingMix) ?? 0, B = (vt = t.textureProperties) == null ? void 0 : vt._RimTexture, oe = B != null ? {
     index: B
     // extensions: {
     //   ...textureTransformExt,
     // },
-  } : void 0, ne = (((Tt = t.vectorProperties) == null ? void 0 : Tt._RimColor) ?? [0, 0, 0, 1]).map(A), oe = ((wt = t.floatProperties) == null ? void 0 : wt._RimFresnelPower) ?? 1, se = ((St = t.floatProperties) == null ? void 0 : St._RimLift) ?? 0, re = ["none", "worldCoordinates", "screenCoordinates"][((yt = t.floatProperties) == null ? void 0 : yt._OutlineWidthMode) ?? 0];
+  } : void 0, se = (((Tt = t.vectorProperties) == null ? void 0 : Tt._RimColor) ?? [0, 0, 0, 1]).map(A), re = ((wt = t.floatProperties) == null ? void 0 : wt._RimFresnelPower) ?? 1, ae = ((St = t.floatProperties) == null ? void 0 : St._RimLift) ?? 0, le = ["none", "worldCoordinates", "screenCoordinates"][((yt = t.floatProperties) == null ? void 0 : yt._OutlineWidthMode) ?? 0];
   let Y = ((Pt = t.floatProperties) == null ? void 0 : Pt._OutlineWidth) ?? 0;
   Y = 0.01 * Y;
-  const tt = (Rt = t.textureProperties) == null ? void 0 : Rt._OutlineWidthTexture, ae = tt != null ? {
+  const tt = (Rt = t.textureProperties) == null ? void 0 : Rt._OutlineWidthTexture, he = tt != null ? {
     index: tt
     // extensions: {
     //   ...textureTransformExt,
     // },
-  } : void 0, le = (((Lt = t.vectorProperties) == null ? void 0 : Lt._OutlineColor) ?? [0, 0, 0]).map(A), he = (((bt = t.floatProperties) == null ? void 0 : bt._OutlineColorMode) ?? 0) === 1 ? ((Ct = t.floatProperties) == null ? void 0 : Ct._OutlineLightingMix) ?? 1 : 0, et = (Et = t.textureProperties) == null ? void 0 : Et._UvAnimMaskTexture, ce = et != null ? {
+  } : void 0, ce = (((Lt = t.vectorProperties) == null ? void 0 : Lt._OutlineColor) ?? [0, 0, 0]).map(A), de = (((bt = t.floatProperties) == null ? void 0 : bt._OutlineColorMode) ?? 0) === 1 ? ((Ct = t.floatProperties) == null ? void 0 : Ct._OutlineLightingMix) ?? 1 : 0, et = (Et = t.textureProperties) == null ? void 0 : Et._UvAnimMaskTexture, ue = et != null ? {
     index: et
     // extensions: {
     //   ...textureTransformExt,
     // },
-  } : void 0, de = ((At = t.floatProperties) == null ? void 0 : At._UvAnimScrollX) ?? 0;
+  } : void 0, me = ((At = t.floatProperties) == null ? void 0 : At._UvAnimScrollX) ?? 0;
   let D = ((kt = t.floatProperties) == null ? void 0 : kt._UvAnimScrollY) ?? 0;
   D != null && (D = -D);
-  const ue = ((It = t.floatProperties) == null ? void 0 : It._UvAnimRotation) ?? 0;
+  const pe = ((It = t.floatProperties) == null ? void 0 : It._UvAnimRotation) ?? 0;
   return {
     ...e,
     pbrMetallicRoughness: {
@@ -1599,28 +1599,28 @@ const A = (s) => Math.pow(s, 2.2), He = (s, t, e) => {
         matcapFactor: V,
         matcapTexture: b,
         rimLightingMixFactor: R,
-        rimMultiplyTexture: ie,
-        parametricRimColorFactor: ne,
-        parametricRimFresnelPowerFactor: oe,
-        parametricRimLiftFactor: se,
-        outlineWidthMode: re,
+        rimMultiplyTexture: oe,
+        parametricRimColorFactor: se,
+        parametricRimFresnelPowerFactor: re,
+        parametricRimLiftFactor: ae,
+        outlineWidthMode: le,
         outlineWidthFactor: Y,
-        outlineWidthMultiplyTexture: ae,
-        outlineColorFactor: le,
-        outlineLightingMixFactor: he,
-        uvAnimationMaskTexture: ce,
-        uvAnimationScrollXSpeedFactor: de,
+        outlineWidthMultiplyTexture: he,
+        outlineColorFactor: ce,
+        outlineLightingMixFactor: de,
+        uvAnimationMaskTexture: ue,
+        uvAnimationScrollXSpeedFactor: me,
         uvAnimationScrollYSpeedFactor: D,
-        uvAnimationRotationSpeedFactor: ue
+        uvAnimationRotationSpeedFactor: pe
       }
     }
   };
-}, ze = (
+}, $e = (
   /* glsl */
   `
 varying vec3 vViewPosition;
 `
-), je = (
+), Xe = (
   /* glsl */
   `
     // Transform the vertex position to world space
@@ -1632,7 +1632,7 @@ varying vec3 vViewPosition;
     // Pass the view position to the fragment shader
     vViewPosition = -worldPosition.xyz;
 `
-), $e = (
+), Ye = (
   /* glsl */
   `
 
@@ -1801,7 +1801,7 @@ void RE_IndirectDiffuse_MToon( const in vec3 irradiance, const in GeometricConte
 #define RE_Direct RE_Direct_MToon
 #define RE_IndirectDiffuse RE_IndirectDiffuse_MToon
 `
-), Xe = (
+), Ge = (
   /* glsl */
   `
     vec3 normal = normalize(vNormalW);
@@ -1869,34 +1869,34 @@ void RE_IndirectDiffuse_MToon( const in vec3 irradiance, const in GeometricConte
     // gl_FragColor = diffuseColor;
 `
 ), W = {
-  baseVS: ze,
-  endVS: je,
-  basePS: $e,
-  endPS: Xe
-}, Ye = (s) => class extends s.StandardMaterial {
+  baseVS: $e,
+  endVS: Xe,
+  basePS: Ye,
+  endPS: Ge
+}, Qe = (o) => class extends o.StandardMaterial {
   constructor() {
-    super(), this.litFactor = new s.Color(1, 1, 1, 1), this.alphaTest = 0, this.baseColorMap = null, this.mapUvTransform = new s.Mat3(), this.normalMapUvTransform = new s.Mat3(), this.normalScale = new s.Vec2(1, 1), this.emissiveMapUvTransform = new s.Mat3(), this.shadeColorFactor = new s.Color(0, 0, 0, 1), this.shadeMultiplyTexture = null, this.shadeMultiplyTextureUvTransform = new s.Mat3(), this.shadingShiftFactor = 0, this.shadingShiftTexture = null, this.shadingShiftTextureUvTransform = new s.Mat3(), this.shadingShiftTextureScale = 1, this.shadingToonyFactor = 0.9, this.giEqualizationFactor = 0, this.matcapFactor = new s.Color(1, 1, 1, 1), this.matcapTexture = null, this.matcapTextureUvTransform = new s.Mat3(), this.parametricRimColorFactor = new s.Color(0, 0, 0, 1), this.rimMultiplyTexture = null, this.rimMultiplyTextureUvTransform = new s.Mat3(), this.rimLightingMixFactor = 0, this.parametricRimFresnelPowerFactor = 5, this.parametricRimLiftFactor = 0, this.outlineWidthMultiplyTexture = null, this.outlineWidthMultiplyTextureUvTransform = new s.Mat3(), this.outlineWidthFactor = 0.02, this.outlineColorFactor = new s.Color(1, 0.5, 0, 1), this.outlineLightingMixFactor = 0, this.uvAnimationMaskTexture = null, this.uvAnimationMaskTextureUvTransform = new s.Mat3(), this.uvAnimationScrollXOffset = 0, this.uvAnimationScrollYOffset = 0, this.uvAnimationRotationPhase = 0, this.useLighting = !1, this.useSkybox = !1;
+    super(), this.litFactor = new o.Color(1, 1, 1, 1), this.alphaTest = 0, this.baseColorMap = null, this.mapUvTransform = new o.Mat3(), this.normalMapUvTransform = new o.Mat3(), this.normalScale = new o.Vec2(1, 1), this.emissiveMapUvTransform = new o.Mat3(), this.shadeColorFactor = new o.Color(0, 0, 0, 1), this.shadeMultiplyTexture = null, this.shadeMultiplyTextureUvTransform = new o.Mat3(), this.shadingShiftFactor = 0, this.shadingShiftTexture = null, this.shadingShiftTextureUvTransform = new o.Mat3(), this.shadingShiftTextureScale = 1, this.shadingToonyFactor = 0.9, this.giEqualizationFactor = 0, this.matcapFactor = new o.Color(1, 1, 1, 1), this.matcapTexture = null, this.matcapTextureUvTransform = new o.Mat3(), this.parametricRimColorFactor = new o.Color(0, 0, 0, 1), this.rimMultiplyTexture = null, this.rimMultiplyTextureUvTransform = new o.Mat3(), this.rimLightingMixFactor = 0, this.parametricRimFresnelPowerFactor = 5, this.parametricRimLiftFactor = 0, this.outlineWidthMultiplyTexture = null, this.outlineWidthMultiplyTextureUvTransform = new o.Mat3(), this.outlineWidthFactor = 0.02, this.outlineColorFactor = new o.Color(1, 0.5, 0, 1), this.outlineLightingMixFactor = 0, this.uvAnimationMaskTexture = null, this.uvAnimationMaskTextureUvTransform = new o.Mat3(), this.uvAnimationScrollXOffset = 0, this.uvAnimationScrollYOffset = 0, this.uvAnimationRotationPhase = 0, this.useLighting = !1, this.useSkybox = !1;
   }
   parseGLTFAttrs(e, i, n) {
     var p;
     if (e.hasOwnProperty("alphaMode"))
       switch (e.alphaMode) {
         case "MASK":
-          this.blendType = s.BLEND_NONE, e.hasOwnProperty("alphaCutoff") ? this.alphaTest = e.alphaCutoff : this.alphaTest = 0.5;
+          this.blendType = o.BLEND_NONE, e.hasOwnProperty("alphaCutoff") ? this.alphaTest = e.alphaCutoff : this.alphaTest = 0.5;
           break;
         case "BLEND":
-          this.blendType = s.BLEND_NORMAL, this.depthWrite = !1;
+          this.blendType = o.BLEND_NORMAL, this.depthWrite = !1;
           break;
         default:
         case "OPAQUE":
-          this.blendType = s.BLEND_NONE;
+          this.blendType = o.BLEND_NONE;
           break;
       }
     else
-      this.blendType = s.BLEND_NONE;
+      this.blendType = o.BLEND_NONE;
     if (e != null && e.emissiveFactor) {
       const _ = e.emissiveFactor;
-      this.emissive = new s.Color(
+      this.emissive = new o.Color(
         Math.pow(_[0], 1 / 2.2),
         Math.pow(_[1], 1 / 2.2),
         Math.pow(_[2], 1 / 2.2),
@@ -1905,7 +1905,7 @@ void RE_IndirectDiffuse_MToon( const in vec3 irradiance, const in GeometricConte
     }
     if ((p = e == null ? void 0 : e.pbrMetallicRoughness) != null && p.baseColorFactor) {
       const _ = e.pbrMetallicRoughness.baseColorFactor;
-      this.diffuse = new s.Color(
+      this.diffuse = new o.Color(
         Math.pow(_[0], 1 / 2.2),
         Math.pow(_[1], 1 / 2.2),
         Math.pow(_[2], 1 / 2.2),
@@ -1915,7 +1915,7 @@ void RE_IndirectDiffuse_MToon( const in vec3 irradiance, const in GeometricConte
     this.litFactor = this.diffuse, this.baseColorMap = this.diffuseMap || this.opacityMap;
     const {
       version: r,
-      shadeColorFactor: o,
+      shadeColorFactor: s,
       shadeMultiplyTexture: a,
       shadingShiftFactor: h,
       shadingToonyFactor: l,
@@ -1927,31 +1927,31 @@ void RE_IndirectDiffuse_MToon( const in vec3 irradiance, const in GeometricConte
       outlineColorFactor: f,
       outlineLightingMixFactor: u
     } = n;
-    r == "0.0" && (this.emissiveIntensity = 0), o && (this.shadeColorFactor = new s.Color(
-      Math.pow(o[0], 1 / 2.2),
-      Math.pow(o[1], 1 / 2.2),
-      Math.pow(o[2], 1 / 2.2),
+    r == "0.0" && (this.emissiveIntensity = 0), s && (this.shadeColorFactor = new o.Color(
+      Math.pow(s[0], 1 / 2.2),
+      Math.pow(s[1], 1 / 2.2),
+      Math.pow(s[2], 1 / 2.2),
       1
-    )), this.shadeMultiplyTexture = a, this.shadingShiftFactor = h, this.shadingToonyFactor = l, c && (this.parametricRimColorFactor = new s.Color(
+    )), this.shadeMultiplyTexture = a, this.shadingShiftFactor = h, this.shadingToonyFactor = l, c && (this.parametricRimColorFactor = new o.Color(
       Math.pow(c[0], 1 / 2.2),
       Math.pow(c[1], 1 / 2.2),
       Math.pow(c[2], 1 / 2.2),
       1
-    )), this.rimLightingMixFactor = m, this.parametricRimFresnelPowerFactor = d, this.parametricRimLiftFactor = g, this.outlineWidthFactor = x, f && (this.outlineColorFactor = new s.Color(
+    )), this.rimLightingMixFactor = m, this.parametricRimFresnelPowerFactor = d, this.parametricRimLiftFactor = g, this.outlineWidthFactor = x, f && (this.outlineColorFactor = new o.Color(
       Math.pow(f[0], 1 / 2.2),
       Math.pow(f[1], 1 / 2.2),
       Math.pow(f[2], 1 / 2.2),
       1
-    )), this.outlineLightingMixFactor = u, this.cull = s.CULLFACE_NONE, this.setShaderChunks(), this.setShaderParameters();
+    )), this.outlineLightingMixFactor = u, this.cull = o.CULLFACE_NONE, this.setShaderChunks(), this.setShaderParameters();
   }
   setShaderChunks() {
-    this.chunks.APIVersion = s.CHUNKAPI_1_70;
-    const e = s.shaderChunks;
+    this.chunks.APIVersion = o.CHUNKAPI_1_70;
+    const e = o.shaderChunks;
     this.chunks.baseVS = e.baseVS, this.chunks.endVS = e.endVS, this.chunks.basePS = e.basePS, this.chunks.endPS = e.endPS, this.shadeMultiplyTexture && (this.chunks.basePS += `
         #define USE_SHADEMULTIPLYTEXTURE
         `), this.emissiveMap && (this.chunks.basePS += `
         #define USE_EMISSIVEMAP
-        `), this.cull == s.CULLFACE_NONE && (this.chunks.basePS += `
+        `), this.cull == o.CULLFACE_NONE && (this.chunks.basePS += `
         #define DOUBLE_SIDED
         `), this.chunks.baseVS += W.baseVS, this.chunks.endVS += W.endVS, this.chunks.basePS += W.basePS, this.chunks.endPS += W.endPS;
   }
@@ -1972,12 +1972,12 @@ void RE_IndirectDiffuse_MToon( const in vec3 irradiance, const in GeometricConte
   setLightColor(e) {
     this.setParameter("lightColor", [e.r, e.g, e.b]);
   }
-}, Ge = (
+}, Ze = (
   /* glsl */
   `
 uniform float outlineWidthFactor;
 `
-), Qe = (
+), Je = (
   /* glsl */
   `
     vUv0 = vertex_texCoord0;
@@ -1994,14 +1994,14 @@ uniform float outlineWidthFactor;
 
     gl_Position.z += 1E-6 * gl_Position.w; // anti-artifact magic
 `
-), Ze = (
+), Ke = (
   /* glsl */
   `
 uniform sampler2D baseColorMap;
 uniform vec3 outlineColorFactor;
 uniform float outlineLightingMixFactor;
 `
-), Je = (
+), qe = (
   /* glsl */
   `
     vec4 color = texture2D(baseColorMap, vUv0);
@@ -2009,48 +2009,48 @@ uniform float outlineLightingMixFactor;
     gl_FragColor = color;
 `
 ), H = {
-  baseVS: Ge,
-  endVS: Qe,
-  basePS: Ze,
-  endPS: Je
-}, Ke = (s) => class extends s.StandardMaterial {
+  baseVS: Ze,
+  endVS: Je,
+  basePS: Ke,
+  endPS: qe
+}, ti = (o) => class extends o.StandardMaterial {
   parseGLTFAttrs(e) {
     var i, n;
     if (e.hasOwnProperty("alphaMode"))
       switch (e.alphaMode) {
         case "MASK":
-          this.blendType = s.BLEND_NONE, e.hasOwnProperty("alphaCutoff") ? this.alphaTest = e.alphaCutoff : this.alphaTest = 0.5;
+          this.blendType = o.BLEND_NONE, e.hasOwnProperty("alphaCutoff") ? this.alphaTest = e.alphaCutoff : this.alphaTest = 0.5;
           break;
         case "BLEND":
-          this.blendType = s.BLEND_NORMAL, this.depthWrite = !1;
+          this.blendType = o.BLEND_NORMAL, this.depthWrite = !1;
           break;
         default:
         case "OPAQUE":
-          this.blendType = s.BLEND_NONE;
+          this.blendType = o.BLEND_NONE;
           break;
       }
     else
-      this.blendType = s.BLEND_NONE;
+      this.blendType = o.BLEND_NONE;
     if ((i = e == null ? void 0 : e.extensions) != null && i[J]) {
       const r = (n = e == null ? void 0 : e.extensions) == null ? void 0 : n[J], {
-        outlineColorFactor: o,
+        outlineColorFactor: s,
         outlineWidthFactor: a,
         outlineLightingMixFactor: h
         // outlineWidthMultiplyTexture,
       } = r;
-      o && this.setOutlineColorFactor(
-        new s.Color(
-          Math.pow(o[0], 1 / 2.2),
-          Math.pow(o[1], 1 / 2.2),
-          Math.pow(o[2], 1 / 2.2)
+      s && this.setOutlineColorFactor(
+        new o.Color(
+          Math.pow(s[0], 1 / 2.2),
+          Math.pow(s[1], 1 / 2.2),
+          Math.pow(s[2], 1 / 2.2)
         )
       ), a && this.setOutlineWidthFactor(a), h && this.setOutlineLightingMixFactor(h);
     }
-    this.cull = s.CULLFACE_FRONT, this.setShaderChunks();
+    this.cull = o.CULLFACE_FRONT, this.setShaderChunks();
   }
   setShaderChunks() {
-    this.chunks.APIVersion = s.CHUNKAPI_1_70;
-    const e = s.shaderChunks;
+    this.chunks.APIVersion = o.CHUNKAPI_1_70;
+    const e = o.shaderChunks;
     this.chunks.baseVS = e.baseVS, this.chunks.endVS = e.endVS, this.chunks.basePS = e.basePS, this.chunks.endPS = e.endPS, this.chunks.baseVS += H.baseVS, this.chunks.endVS += H.endVS, this.chunks.basePS += H.basePS, this.chunks.endPS += H.endPS;
   }
   setOutlineWidthFactor(e) {
@@ -2069,15 +2069,15 @@ uniform float outlineLightingMixFactor;
   setBaseColorMap(e) {
     e && this.setParameter("baseColorMap", e);
   }
-}, qe = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+}, ei = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  EXTENSION_VRM: We,
+  EXTENSION_VRM: ze,
   EXTENSION_VRMC_MATERIALS_MTOON: J,
   MToonMaterialCullMode: Jt,
-  createVRMCMtoonMaterial: Ye,
-  createVRMCOutlineMaterial: Ke,
+  createVRMCMtoonMaterial: Qe,
+  createVRMCOutlineMaterial: ti,
   gammaEOTF: A,
-  parseV0MToonProperties: He
+  parseV0MToonProperties: je
 }, Symbol.toStringTag, { value: "Module" }));
 class Kt {
   constructor(t) {
@@ -2100,13 +2100,13 @@ class q extends Kt {
   static _setupTransforms(t, e) {
     const i = new t.Entity();
     i.name = "VRMHumanoidRig";
-    const n = {}, r = {}, o = {};
+    const n = {}, r = {}, s = {};
     z.forEach((h) => {
       const l = e.getBoneNode(h);
       if (l) {
         n[h] = l.getPosition().clone(), l.getRotation().clone(), r[h] = l.getLocalRotation().clone();
         const c = new t.Quat();
-        l.parent && c.copy(l.parent.getRotation()), o[h] = c;
+        l.parent && c.copy(l.parent.getRotation()), s[h] = c;
       }
     });
     const a = {};
@@ -2126,30 +2126,30 @@ class q extends Kt {
     }), {
       rigBones: a,
       root: i,
-      parentWorldRotations: o,
+      parentWorldRotations: s,
       boneRotations: r
     };
   }
   constructor(t, e) {
-    const { rigBones: i, root: n, parentWorldRotations: r, boneRotations: o } = q._setupTransforms(
+    const { rigBones: i, root: n, parentWorldRotations: r, boneRotations: s } = q._setupTransforms(
       t,
       e
     );
-    super(i), this.pcRef = t, this.original = e, this.root = n, this._parentWorldRotations = r, this._boneRotations = o, this._quatA = new t.Quat(), this._quatB = new t.Quat(), this._vec3A = new t.Vec3(), this._mat4A = new t.Mat4();
+    super(i), this.pcRef = t, this.original = e, this.root = n, this._parentWorldRotations = r, this._boneRotations = s, this._quatA = new t.Quat(), this._quatB = new t.Quat(), this._vec3A = new t.Vec3(), this._mat4A = new t.Mat4();
     const a = t.Application.getApplication();
     a && a.root.addChild(n);
   }
   applyMatrix4(t, e) {
-    const i = t.x, n = t.y, r = t.z, o = e.data, a = 1 / (o[3] * i + o[7] * n + o[11] * r + o[15]);
-    return t.x = (o[0] * i + o[4] * n + o[8] * r + o[12]) * a, t.y = (o[1] * i + o[5] * n + o[9] * r + o[13]) * a, t.z = (o[2] * i + o[6] * n + o[10] * r + o[14]) * a, t;
+    const i = t.x, n = t.y, r = t.z, s = e.data, a = 1 / (s[3] * i + s[7] * n + s[11] * r + s[15]);
+    return t.x = (s[0] * i + s[4] * n + s[8] * r + s[12]) * a, t.y = (s[1] * i + s[5] * n + s[9] * r + s[13]) * a, t.z = (s[2] * i + s[6] * n + s[10] * r + s[14]) * a, t;
   }
   update() {
     z.forEach((t) => {
       var n;
       const e = (n = this.original.humanBones[t]) == null ? void 0 : n.entity, i = this.getBoneNode(t);
       if (e != null && i) {
-        const r = this._parentWorldRotations[t], o = this._quatB.copy(r).invert(), a = this._boneRotations[t];
-        if (this._quatA.copy(i.getLocalRotation()), this._quatA.mul(r), this._quatA.copy(o.mul(this._quatA)), this._quatA.mul(a), e.setLocalRotation(this._quatA), t === "hips") {
+        const r = this._parentWorldRotations[t], s = this._quatB.copy(r).invert(), a = this._boneRotations[t];
+        if (this._quatA.copy(i.getLocalRotation()), this._quatA.mul(r), this._quatA.copy(s.mul(this._quatA)), this._quatA.mul(a), e.setLocalRotation(this._quatA), t === "hips") {
           const h = this._vec3A.copy(i.getPosition()), l = this._mat4A.copy(e.parent.getWorldTransform()), c = this.applyMatrix4(h, l.invert());
           e.setLocalPosition(c);
         }
@@ -2157,7 +2157,7 @@ class q extends Kt {
     });
   }
 }
-class ti {
+class ii {
   constructor(t, e, i) {
     this.autoUpdateHumanBones = (i == null ? void 0 : i.autoUpdateHumanBones) ?? !0, this._rawHumanBones = new Kt(e), this._normalizedHumanBones = new q(t, this._rawHumanBones);
   }
@@ -2218,34 +2218,34 @@ class ti {
     this.autoUpdateHumanBones && this._normalizedHumanBones.update();
   }
 }
-function ei(s, t, e) {
-  const i = s.humanBones, n = {};
-  return s.humanBones != null && Object.entries(i).map(([, r]) => {
+function ni(o, t, e) {
+  const i = o.humanBones, n = {};
+  return o.humanBones != null && Object.entries(i).map(([, r]) => {
     var l;
-    let o = r.bone;
+    let s = r.bone;
     const a = r.node;
-    if (o == null || a == null)
+    if (s == null || a == null)
       return;
     const h = t.resource.data.nodes[a];
     if (h == null) {
       console.warn(
-        `A glTF node bound to the humanoid bone ${o} (index = ${a}) does not exist`
+        `A glTF node bound to the humanoid bone ${s} (index = ${a}) does not exist`
       );
       return;
     }
-    n[o] = {
+    n[s] = {
       node: h,
       entity: ((l = e.findByTag(`node_${a}`)) == null ? void 0 : l[0]) || null
     };
   }), n;
 }
-function ii(s, t, e) {
+function oi(o, t, e) {
   var r;
-  const i = {}, n = s.humanBones.leftThumbIntermediate != null || s.humanBones.rightThumbIntermediate != null;
-  if (s.humanBones)
-    for (const o in s.humanBones) {
-      let a = o;
-      const h = s.humanBones[o].node, l = t.resource.data.nodes[h];
+  const i = {}, n = o.humanBones.leftThumbIntermediate != null || o.humanBones.rightThumbIntermediate != null;
+  if (o.humanBones)
+    for (const s in o.humanBones) {
+      let a = s;
+      const h = o.humanBones[s].node, l = t.resource.data.nodes[h];
       if (n) {
         const c = jt[a];
         c != null && (a = c);
@@ -2261,58 +2261,58 @@ function ii(s, t, e) {
     }
   return i;
 }
-function ni(s, t, e, i) {
+function si(o, t, e, i) {
   var a, h, l, c, m, d, g, x, f, u;
   const n = (h = (a = t.resource.data.gltf) == null ? void 0 : a.extensions) == null ? void 0 : h.VRM, r = (c = (l = t.resource.data.gltf) == null ? void 0 : l.extensions) == null ? void 0 : c.VRMC_vrm;
   if (!n && !r)
     return console.warn("CreateFormattedVRMHumanoid: Please check. It is not a vrm avatar."), null;
-  let o = null;
+  let s = null;
   if (n) {
     const p = (g = (d = (m = t.resource.data.gltf) == null ? void 0 : m.extensions) == null ? void 0 : d.VRM) == null ? void 0 : g.humanoid;
-    o = ei(p, t, e);
+    s = ni(p, t, e);
   } else if (r) {
     const p = r.specVersion;
     if (!K.has(p))
       return console.warn(`Unknown VRMC_vrm specVersion "${p}"`), null;
     const _ = (u = (f = (x = t.resource.data.gltf) == null ? void 0 : x.extensions) == null ? void 0 : f.VRMC_vrm) == null ? void 0 : u.humanoid;
-    o = ii(_, t, e);
+    s = oi(_, t, e);
   }
-  if (o) {
+  if (s) {
     const p = !!(i != null && i.autoUpdateHumanBones);
-    return new ti(s, o, { autoUpdateHumanBones: p });
+    return new ii(o, s, { autoUpdateHumanBones: p });
   }
   return null;
 }
-const oi = function(s, t, e, i, n, r) {
-  const o = r;
-  if (!o) {
+const ri = function(o, t, e, i, n, r) {
+  const s = r;
+  if (!s) {
     console.error("loadGlbContainerFromAsset: Can not find app.");
     return;
   }
   const a = function(h) {
     const l = new Blob([h.resource]), c = URL.createObjectURL(l);
     return qt(
-      s,
+      o,
       c,
       e,
       i,
       function(m, d) {
         n(m, d), URL.revokeObjectURL(c);
       },
-      o
+      s
     );
   };
-  t.loaded ? a(t) : (t.ready(a), o.assets.load(t));
-}, qt = function(s, t, e, i, n, r) {
-  const o = r;
-  if (!o) {
+  t.loaded ? a(t) : (t.ready(a), s.assets.load(t));
+}, qt = function(o, t, e, i, n, r) {
+  const s = r;
+  if (!s) {
     console.error("loadGlbContainerFromAsset: Can not find app.");
     return;
   }
   const a = i, h = {
     url: t,
     filename: a
-  }, l = new s.Asset(a, "container", h, void 0, e);
+  }, l = new o.Asset(a, "container", h, void 0, e);
   return l.once("load", function(c) {
     if (n) {
       const m = c.resource.animations;
@@ -2323,10 +2323,26 @@ const oi = function(s, t, e, i, n, r) {
           m[d].name = i + " " + d.toString();
       n(null, c);
     }
-  }), o.assets.add(l), o.assets.load(l), l;
+  }), s.assets.add(l), s.assets.load(l), l;
+}, te = (o) => {
+  if (!o.resource) {
+    console.error("addIndexToNodeTags Error: asset.resource is not available");
+    return;
+  }
+  if (!(o.resource.data && o.resource.data.gltf)) {
+    console.error("addIndexToNodeTags Error: asset.resource.data.gltf is not available");
+    return;
+  }
+  o.resource.data.nodes.forEach((i, n) => {
+    i.tags.add(`node_${n}`);
+  });
+}, ee = (o) => {
+  var i, n;
+  const t = (i = o.resource.data.gltf.extensions) == null ? void 0 : i.VRMC_vrm, e = (n = o.resource.data.gltf.extensions) == null ? void 0 : n.VRM;
+  return t ? "v1" : e ? "v0" : null;
 };
-var L, $, te, X, ee;
-class si {
+var L, $, ie, X, ne;
+class ai {
   constructor(t, e) {
     U(this, $);
     U(this, X);
@@ -2334,27 +2350,24 @@ class si {
     Bt(this, L, /* @__PURE__ */ new Map()), this.loading = !1, this._pcRef = t, this.app = e;
   }
   async parse(t, e = "Model", i = void 0, n = {}, r = !0) {
-    const o = [];
+    const s = [];
     return new Promise(
       (a, h) => {
         const l = (c, m) => {
-          var _, M;
-          c && (this.loading = !1, h(`GLTFLoader Error: ${c}`)), E(this, L).forEach((v) => {
-            const T = v(m);
-            o.push(T);
-          });
-          const d = m.resource.data;
-          r && Q(this, X, ee).call(this, d, o);
-          const g = m.resource.instantiateRenderEntity(n), x = new this._pcRef.Entity(e, this.app);
-          x.addChild(g), o.forEach((v) => {
-            v.instantiated && v.instantiated(x);
+          c && (this.loading = !1, h(`GLTFLoader Error: ${c}`)), E(this, L).forEach((f) => {
+            const u = f(m);
+            s.push(u);
+          }), r && Q(this, X, ne).call(this, m);
+          const d = m.resource.instantiateRenderEntity(n), g = new this._pcRef.Entity(e, this.app);
+          g.addChild(d), s.forEach((f) => {
+            f.instantiated && f.instantiated(g);
           }), this.loading = !1;
-          const f = (_ = m.resource.data.gltf.extensions) == null ? void 0 : _.VRMC_vrm, u = (M = m.resource.data.gltf.extensions) == null ? void 0 : M.VRM;
-          a({ entity: x, asset: m, version: f ? "v1" : u ? "v0" : null });
+          const x = ee(m);
+          a({ entity: g, asset: m, version: x });
         };
         t || h("GLTFLoader Error: Please pass the asset or url to parse."), this.loading = !0, t instanceof this._pcRef.Asset ? t.type === "container" ? t.loaded ? l(null, t) : (t.once("load", () => {
           l(null, t);
-        }), this.app.assets.get(t.id) || this.app.assets.add(t), this.app.assets.load(t)) : t.type === "binary" ? oi(
+        }), this.app.assets.get(t.id) || this.app.assets.add(t), this.app.assets.load(t)) : t.type === "binary" ? ri(
           this._pcRef,
           t,
           i,
@@ -2386,58 +2399,46 @@ class si {
   }) {
     if (e.length !== 0 && (t.addComponent("anim", {
       activate: !0
-    }), e.forEach((r, o) => {
+    }), e.forEach((r, s) => {
       const a = r.resource.name.replace(".", "_");
       t.anim && t.anim.assignAnimation(
-        i ? a : `ANIMATION_${o}`,
+        i ? a : `ANIMATION_${s}`,
         r.resource
       );
     }), n !== null)) {
       const r = i ? e[n].resource.name : `ANIMATION_${n}`;
-      t.anim && t.anim.baseLayer.states.find((o) => o === r) && t.anim.baseLayer.transition(r);
+      t.anim && t.anim.baseLayer.states.find((s) => s === r) && t.anim.baseLayer.transition(r);
     }
   }
 }
-L = new WeakMap(), $ = new WeakSet(), te = function(t, e) {
+L = new WeakMap(), $ = new WeakSet(), ie = function(t, e) {
   t.forEach((i, n) => {
     const r = e[n].extensions;
     r && (i.extensions = r);
   });
-}, X = new WeakSet(), ee = function(t, e) {
-  const i = t.gltf.nodes, n = t.nodes;
-  Q(this, $, te).call(this, n, i), t.scenes.forEach((r) => {
-    const o = /* @__PURE__ */ new Set([]);
-    r.forEach((a) => {
-      let h = !1, l = [];
-      t.nodes.forEach((c, m) => {
-        a.path === c.path && l.push(m);
-      }), l.forEach((c) => {
-        if (!o.has(c) && !h) {
-          a.tags.add(`node_${c}`);
-          const m = t.nodes[c].extensions;
-          e.forEach((d) => {
-            d.parsedNodeAddTags && d.parsedNodeAddTags(a, m);
-          }), o.add(c), h = !0;
-        }
-      });
-    });
-  });
+}, X = new WeakSet(), ne = function(t) {
+  const e = t.resource.data.gltf.nodes, i = t.resource.data.nodes;
+  Q(this, $, ie).call(this, i, e), te(t);
 };
 window.VRMLoader = {
-  VrmAnimation: Le,
-  VrmExpression: Be,
-  VrmSpringBone: Oe,
-  VrmMapList: ge,
-  VrmcMaterialsMtoon: qe,
-  createFormattedVRMHumanoid: ni
+  VrmAnimation: Ce,
+  VrmExpression: Fe,
+  VrmSpringBone: He,
+  VrmMapList: xe,
+  VrmcMaterialsMtoon: ei,
+  createFormattedVRMHumanoid: si,
+  addIndexToNodeTags: te,
+  getVersion: ee
 };
-window.GLTFLoader = si;
+window.GLTFLoader = ai;
 export {
-  si as GLTFLoader,
-  Le as VrmAnimation,
-  Be as VrmExpression,
-  ge as VrmMapList,
-  Oe as VrmSpringBone,
-  qe as VrmcMaterialsMtoon,
-  ni as createFormattedVRMHumanoid
+  ai as GLTFLoader,
+  Ce as VrmAnimation,
+  Fe as VrmExpression,
+  xe as VrmMapList,
+  He as VrmSpringBone,
+  ei as VrmcMaterialsMtoon,
+  te as addIndexToNodeTags,
+  si as createFormattedVRMHumanoid,
+  ee as getVersion
 };

@@ -3,7 +3,7 @@ import { Timer } from '../timer-extension';
 import { getRandom } from '../math-utils';
 import { VRMExpressionManager } from '../extensions/vrm-expression/VRMExpressionManager';
 import { VRMExpressionLoaderPlugin } from '../extensions/vrm-expression/VRMExpressionLoaderPlugin';
-import { collectMeshInstances } from '../entity-util';
+import { collectMeshInstances } from '../entity-utils';
 import { IAnimatedMorphConfig } from '../extensions/vrm-expression/vrm-expression';
 
 export const importScript = (pcRef: typeof pc) => {

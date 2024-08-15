@@ -1,5 +1,6 @@
 import * as pc from 'playcanvas';
-import { loadGlbContainerFromAsset, loadGlbContainerFromUrl } from './glb-util';
+import { loadGlbContainerFromAsset, loadGlbContainerFromUrl } from './utils/glb-utils';
+import { addIndexToNodeTags, getVersion } from './utils/asset-utils';
 
 export class GLTFLoader {
   #pluginsCallbacks;
@@ -38,10 +39,8 @@ export class GLTFLoader {
             plugins.push(plugin);
           });
 
-          const assetData = asset.resource.data;
-
           if (needAddTags) {
-            this.#addEssentialTags(assetData, plugins);
+            this.#addEssentialTags(asset);
           }
 
           const renderEntity = asset.resource.instantiateRenderEntity(setting);
@@ -52,10 +51,7 @@ export class GLTFLoader {
           });
 
           this.loading = false;
-
-          const isV1Used = asset.resource.data.gltf.extensions?.VRMC_vrm;
-          const isV0Used = asset.resource.data.gltf.extensions?.VRM;
-          const version = isV1Used ? 'v1' : isV0Used ? 'v0' : null;
+          const version = getVersion(asset);
 
           resolve({ entity: rootEntity, asset, version });
         };
@@ -104,7 +100,7 @@ export class GLTFLoader {
   }
 
   // Register Plugin to loader
-  register(name: string, callback: (asset:any) => void) {
+  register(name: string, callback: (asset: any) => void) {
     if (!this.#pluginsCallbacks.has(name)) {
       this.#pluginsCallbacks.set(name, callback);
     }
@@ -130,45 +126,11 @@ export class GLTFLoader {
     });
   }
 
-  #addEssentialTags(assetData: any, plugins: any[]) {
-    // Tags Init: Node extension (from gltfNodes extension)
-    // Node's index will same as gltfNode's index, so we can map them together
-    const gltfNodes = assetData.gltf.nodes;
-    const nodes = assetData.nodes;
-
+  #addEssentialTags(asset: pc.Asset) {
+    const gltfNodes = asset.resource.data.gltf.nodes;
+    const nodes = asset.resource.data.nodes;
     this.#setExtensionsToNodes(nodes, gltfNodes);
-
-    assetData.scenes.forEach((scene: pc.GraphNode) => {
-      const addedNodeSet = new Set<number>([]);
-
-      scene.forEach((node) => {
-        let isAdded = false;
-        let targetNodes: number[] = [];
-
-        // Check if there are multiple node with same name and on the same hierarchy (They will have same path)
-        assetData.nodes.forEach((originNode: { path: string }, index: number) => {
-          if (node.path === originNode.path) {
-            targetNodes.push(index);
-          }
-        });
-
-        targetNodes.forEach((targetIndex) => {
-          if (!addedNodeSet.has(targetIndex) && !isAdded) {
-            // Add node index
-            node.tags.add(`node_${targetIndex}`);
-
-            const extensions = assetData.nodes[targetIndex].extensions;
-
-            plugins.forEach((plugin) => {
-              if (plugin.parsedNodeAddTags) plugin.parsedNodeAddTags(node, extensions);
-            });
-
-            addedNodeSet.add(targetIndex);
-            isAdded = true;
-          }
-        });
-      });
-    });
+    addIndexToNodeTags(asset);
   }
 
   static registerAnimation(
