@@ -185,9 +185,9 @@ export class VRMAnimationLoader {
     defChannels.forEach((channel, index) => {
       const { node, path } = channel.target;
 
-      const input: pc.AnimData = inputs[index];
-      const output: pc.AnimData = outputs[index];
       const curve: pc.AnimCurve = curves[index];
+      const input: pc.AnimData = inputs[curve.input];
+      const output: pc.AnimData = outputs[curve.output];
 
       if (node == null) {
         return;
@@ -288,7 +288,7 @@ export class VRMAnimationLoader {
           }
 
           const expressionConfig: IAnimatedMorphConfig = {
-            times: animTrack.inputs[curve.input].data,
+            times: input.data,
             values: values,
           };
 

@@ -102,14 +102,6 @@ export class VRMAnimationTrack {
     // Fire expression and or looat at events
     const events = new this.pcRef.AnimEvents([{ name: `vrma: ${this.stateName}`, time: 0 }]);
 
-    // expression
-    // const expressionManager = new VRMExpressionManager();
-    // if (expressionManager != null) {
-    //   const expressionTracks = createVRMAnimationExpressionTracks(this.vrmAnimation, expressionManager);
-    //   tracks.push(...expressionTracks.preset.values());
-    //   tracks.push(...expressionTracks.custom.values());
-    // }
-
     // look at
     /*     if (vrm.lookAt != null) {
       // search VRMLookAtQuaternionProxy
