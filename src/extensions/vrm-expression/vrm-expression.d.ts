@@ -6,8 +6,8 @@
  * ex. times: [0, 0.5, 1], values: [[0, 0.5, 1, 0]
  */
 export interface IAnimatedMorphConfig {
-  times: Array<number>;
-  values: Array<number>;
+  times: Array<number> | Float32Array;
+  values: Array<number> | Float32Array;
 }
 
 export interface VRMExpressionBind {

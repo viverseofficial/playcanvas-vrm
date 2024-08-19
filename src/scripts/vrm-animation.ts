@@ -9,6 +9,7 @@ import {
   IAnimationResource,
   IAnimExtraSettings,
 } from '../extensions/vrm-animation/vrm-animation-interfaces';
+import { VRMAExpression } from '../extensions/vrm-animation/VRMAExpression';
 
 export function createVRMAnimation(
   pcRef: typeof pc,
@@ -127,6 +128,25 @@ export const assignAnimation = (entity: pc.Entity, resource: IAnimationResource)
   }
 };
 
+// Vrma facial motion
+export function bindFacialVRMA(
+  entity: pc.Entity,
+  resource: IAnimationResource,
+  animEntity?: pc.Entity,
+) {
+  if (resource.expression) {
+    if (animEntity && animEntity.anim) {
+      animEntity.anim.on(`vrma: ${resource.name}`, () => {
+        entity.fire(`vrma: preset expression`, resource.expression);
+      });
+    } else if (entity.anim) {
+      entity.anim.on(`vrma: ${resource.name}`, () => {
+        entity.fire(`vrma: preset expression`, resource.expression);
+      });
+    }
+  }
+}
+
 // Methods to create single animation resource (vrma & viverse animation)
 function createVRMAResource(
   pcRef: typeof pc,
@@ -143,12 +163,15 @@ function createVRMAResource(
   if (vrmAnimations) {
     const animTrack: pc.AnimTrack = new VRMAnimationTrack(
       pcRef,
+      animationAsset.stateName,
       name,
       vrmAnimations[0],
       humanoid,
       version,
     ).result;
-    return { name: animationAsset.stateName, resource: animTrack };
+
+    const expression = new VRMAExpression(vrmAnimations[0]);
+    return { name: animationAsset.stateName, resource: animTrack, expression: expression };
   }
   return null;
 }

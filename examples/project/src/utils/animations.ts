@@ -2,6 +2,7 @@ import * as pc from 'playcanvas';
 import { preloadAssets } from '../assets';
 
 export const createDefaultAnimations = (
+  rootEntity: pc.Entity,
   animatedEntity: pc.Entity,
   asset: pc.Asset,
   humanoid: any,
@@ -31,6 +32,7 @@ export const createDefaultAnimations = (
   if (loadedResources) {
     loadedResources.forEach((resource: any) => {
       VRMLoader.VrmAnimation.assignAnimation(animatedEntity, resource);
+      VRMLoader.VrmAnimation.bindFacialVRMA(rootEntity, resource, animatedEntity);
     });
   }
 
@@ -58,11 +60,13 @@ export const createDefaultAnimations = (
   if (mocapLoadedResources) {
     mocapLoadedResources.forEach((resource: any) => {
       VRMLoader.VrmAnimation.assignAnimation(animatedEntity, resource);
+      VRMLoader.VrmAnimation.bindFacialVRMA(rootEntity, resource, animatedEntity);
     });
   }
 };
 
 export const createWindowTestAnimation = (
+  rootEntity: pc.Entity,
   animatedEntity: pc.Entity,
   asset: pc.Asset,
   humanoid: any,
@@ -145,6 +149,7 @@ export const createWindowTestAnimation = (
     if (resources) {
       resources.forEach((resource: any) => {
         VRMLoader.VrmAnimation.assignAnimation(animatedEntity, resource);
+        VRMLoader.VrmAnimation.bindFacialVRMA(rootEntity, resource, animatedEntity);
       });
     }
     if (animatedEntity.anim) {

@@ -48,7 +48,7 @@ const createAvatar = (url: string) => {
         activate: true,
       });
 
-      createDefaultAnimations(animatedEntity, asset, humanoid, VRMLoader);
+      createDefaultAnimations(rootEntity, animatedEntity, asset, humanoid, VRMLoader);
 
       rootEntity.addComponent('script');
       if (rootEntity.script) {
@@ -96,7 +96,7 @@ const setupAvatar = async (app: pc.Application) => {
   const { avatarEntity: avatarB } = await createAvatar(avatarUrl2);
 
   window.avatar = animatedEntityA;
-  createWindowTestAnimation(animatedEntityA, assetA, humanoidA, VRMLoader);
+  createWindowTestAnimation(avatarA, animatedEntityA, assetA, humanoidA, VRMLoader);
 
   app.root.addChild(avatarA);
   app.root.addChild(avatarB);

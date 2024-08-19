@@ -2,16 +2,16 @@ import * as pc from 'playcanvas';
 import { GLTF as GLTFSchema } from './types/gltf';
 import { VRMCVRMAnimation } from './types/VRMCVRMAnimation';
 import { VRMHumanBoneName } from '../vrm-humanoid/vrm-humanoid';
-// import { VRMExpressionPresetName, VRMHumanBoneParentMap } from '../../extensions/vrm-map-list';
-import { VRMHumanBoneParentMap } from '../vrm-map-list';
+import { VRMHumanBoneParentMap, VRMExpressionPresetName } from '../vrm-map-list';
 import { VRMAnimation } from './VRMAnimation';
 import { IMorphCurvePath, IVrmaTrack } from './vrm-animation-interfaces';
 import { arrayChunk } from './utils/arrayChunk';
 import { applyMatrix4 } from './utils/applyMatrix4';
 import { cloneAnimTrack } from './utils/cloneAnimTrack';
+import { IAnimatedMorphConfig } from '../vrm-expression/vrm-expression';
 
 const POSSIBLE_SPEC_VERSIONS = new Set(['1.0', '1.0-draft']);
-// const vrmExpressionPresetNameSet: Set<string> = new Set(Object.values(VRMExpressionPresetName));
+const vrmExpressionPresetNameSet: Set<string> = new Set(Object.values(VRMExpressionPresetName));
 
 interface VRMANodeMap {
   origNameToHumanoidIndex: Map<string, number>;
@@ -276,39 +276,44 @@ export class VRMAnimationLoader {
         }
         return;
       }
-      /*
+
       // expressions
       const expressionName = nodeMap.expressionsIndexToName.get(node);
+
       if (expressionName != null) {
         if (path === 'translation') {
-          const times = origTrack.times;
-          const values = new Float32Array(origTrack.values.length / 3);
+          const values = new Float32Array(output.data.length / 3);
           for (let i = 0; i < values.length; i++) {
-            values[i] = origTrack.values[3 * i];
+            values[i] = output.data[3 * i];
           }
-  
-          const newTrack = new THREE.NumberKeyframeTrack(`${expressionName}.weight`, times as any, values as any);
-  
+
+          const expressionConfig: IAnimatedMorphConfig = {
+            times: animTrack.inputs[curve.input].data,
+            values: values,
+          };
+
           if (vrmExpressionPresetNameSet.has(expressionName)) {
-            result.expressionTracks.preset.set(expressionName as VRMExpressionPresetName, newTrack);
+            result.expressionTracks.preset.set(
+              expressionName as VRMExpressionPresetName,
+              expressionConfig,
+            );
           } else {
-            result.expressionTracks.custom.set(expressionName, newTrack);
+            result.expressionTracks.custom.set(expressionName, expressionConfig);
           }
         } else {
           throw new Error(`Invalid path "${path}"`);
         }
         return;
       }
-  
+
       // lookAt
-      if (node === nodeMap.lookAtIndex) {
-        if (path === 'rotation') {
-          result.lookAtTrack = origTrack;
-        } else {
-          throw new Error(`Invalid path "${path}"`);
-        }
-      }
-        */
+      // if (node === nodeMap.lookAtIndex) {
+      //   if (path === 'rotation') {
+      //     result.lookAtTrack = origTrack;
+      //   } else {
+      //     throw new Error(`Invalid path "${path}"`);
+      //   }
+      // }
     });
 
     return result;

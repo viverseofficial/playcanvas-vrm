@@ -1,7 +1,8 @@
 import * as pc from 'playcanvas';
-// import { VRMExpressionPresetName } from '../../extensions//vrm-map-list';
+import { VRMExpressionPresetName } from '../vrm-map-list';
 import { VRMHumanBoneName } from '../vrm-humanoid/vrm-humanoid';
 import { IVrmaTrack } from './vrm-animation-interfaces';
+import { IAnimatedMorphConfig } from '../vrm-expression/vrm-expression';
 
 export class VRMAnimation {
   public duration: number;
@@ -11,11 +12,12 @@ export class VRMAnimation {
     translation: Map<'hips', IVrmaTrack>;
     rotation: Map<VRMHumanBoneName, IVrmaTrack>;
   };
-  /*     public expressionTracks: {
-      preset: Map<VRMExpressionPresetName, IVrmaTrack>;
-      custom: Map<string, IVrmaTrack>; 
-    };
-    public lookAtTrack: IVrmaTrack | null;  */
+  public expressionTracks: {
+    preset: Map<VRMExpressionPresetName, IAnimatedMorphConfig>;
+    custom: Map<string, IAnimatedMorphConfig>;
+  };
+
+  // public lookAtTrack: IVrmaTrack | null;
 
   public constructor(pcRef: typeof pc) {
     this.duration = 0.0;
@@ -26,11 +28,11 @@ export class VRMAnimation {
       rotation: new Map(),
     };
 
-    /*       this.expressionTracks = {
-        preset: new Map(),
-        custom: new Map(),
-      };
-  
-      this.lookAtTrack = null; */
+    this.expressionTracks = {
+      preset: new Map(),
+      custom: new Map(),
+    };
+
+    // this.lookAtTrack = null;
   }
 }

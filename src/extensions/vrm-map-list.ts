@@ -238,6 +238,8 @@ export const VRMExpressionPresetName = {
   BlinkRight: 'blinkRight',
   Neutral: 'neutral',
 };
+export type VRMExpressionPresetName =
+  (typeof VRMExpressionPresetName)[keyof typeof VRMExpressionPresetName];
 
 export const POSSIBLE_SPEC_VERSIONS = new Set(['1.0', '1.0-beta']);
 

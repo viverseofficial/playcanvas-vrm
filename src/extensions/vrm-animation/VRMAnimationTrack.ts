@@ -4,6 +4,8 @@ import { VRMHumanBoneName } from '../vrm-humanoid/vrm-humanoid';
 import { VRMRigMap } from '../vrm-map-list';
 import { VRMAnimation } from './VRMAnimation';
 import { IVrmaTrack, IMorphCurvePath } from './vrm-animation-interfaces';
+// import { VRMExpressionManager } from '../vrm-expression/VRMExpressionManager';
+// import { IAnimatedMorphConfig } from '../vrm-expression/vrm-expression';
 // import { VRMLookAtQuaternionProxy } from './VRMLookAtQuaternionProxy';
 
 /**
@@ -15,6 +17,7 @@ import { IVrmaTrack, IMorphCurvePath } from './vrm-animation-interfaces';
 
 export class VRMAnimationTrack {
   private pcRef: typeof pc;
+  private stateName: string;
   public name: string;
   private vrmAnimation: VRMAnimation;
   private humanoid: VRMHumanoid;
@@ -22,6 +25,7 @@ export class VRMAnimationTrack {
 
   constructor(
     pcRef: typeof pc,
+    stateName: string,
     name: string,
     vrmAnimation: VRMAnimation,
     humanoid: VRMHumanoid,
@@ -29,6 +33,7 @@ export class VRMAnimationTrack {
   ) {
     this.pcRef = pcRef;
     this.vrmAnimation = vrmAnimation;
+    this.stateName = stateName;
     this.name = name;
     this.humanoid = humanoid;
     this.metaVersion = metaVersion;
@@ -94,42 +99,55 @@ export class VRMAnimationTrack {
       });
     }
 
-    /*     if (vrm.expressionManager != null) {
-            const expressionTracks = createVRMAnimationExpressionTracks(vrmAnimation, vrm.expressionManager);
-            tracks.push(...expressionTracks.preset.values());
-            tracks.push(...expressionTracks.custom.values());
-          }
-        
-          if (vrm.lookAt != null) {
-            // search VRMLookAtQuaternionProxy
-            let proxy = vrm.scene.children.find((obj) => obj instanceof VRMLookAtQuaternionProxy);
-        
-            if (proxy == null) {
-              // if not found, create a new one
-              console.warn(
-                'createVRMAnimationClip: VRMLookAtQuaternionProxy is not found. Creating a new one automatically. To suppress this warning, create a VRMLookAtQuaternionProxy manually',
-              );
-        
-              proxy = new VRMLookAtQuaternionProxy(vrm.lookAt);
-              proxy.name = 'VRMLookAtQuaternionProxy';
-              vrm.scene.add(proxy);
-            } else if (proxy.name == null) {
-              // if found but name is not set, set the name automatically
-              console.warn(
-                'createVRMAnimationClip: VRMLookAtQuaternionProxy is found but its name is not set. Setting the name automatically. To suppress this warning, set the name manually',
-              );
-        
-              proxy.name = 'VRMLookAtQuaternionProxy';
-            }
-        
-            // create a track
-            const track = createVRMAnimationLookAtTrack(vrmAnimation, `${proxy.name}.quaternion`);
-            if (track != null) {
-              tracks.push(track);
-            }
-          } */
+    // Fire expression and or looat at events
+    const events = new this.pcRef.AnimEvents([{ name: `vrma: ${this.stateName}`, time: 0 }]);
 
-    return new this.pcRef.AnimTrack(this.name, this.vrmAnimation.duration, inputs, outputs, curves);
+    // expression
+    // const expressionManager = new VRMExpressionManager();
+    // if (expressionManager != null) {
+    //   const expressionTracks = createVRMAnimationExpressionTracks(this.vrmAnimation, expressionManager);
+    //   tracks.push(...expressionTracks.preset.values());
+    //   tracks.push(...expressionTracks.custom.values());
+    // }
+
+    // look at
+    /*     if (vrm.lookAt != null) {
+      // search VRMLookAtQuaternionProxy
+      let proxy = vrm.scene.children.find((obj) => obj instanceof VRMLookAtQuaternionProxy);
+
+      if (proxy == null) {
+        // if not found, create a new one
+        console.warn(
+          'createVRMAnimationClip: VRMLookAtQuaternionProxy is not found. Creating a new one automatically. To suppress this warning, create a VRMLookAtQuaternionProxy manually',
+        );
+
+        proxy = new VRMLookAtQuaternionProxy(vrm.lookAt);
+        proxy.name = 'VRMLookAtQuaternionProxy';
+        vrm.scene.add(proxy);
+      } else if (proxy.name == null) {
+        // if found but name is not set, set the name automatically
+        console.warn(
+          'createVRMAnimationClip: VRMLookAtQuaternionProxy is found but its name is not set. Setting the name automatically. To suppress this warning, set the name manually',
+        );
+
+        proxy.name = 'VRMLookAtQuaternionProxy';
+      }
+
+      // create a track
+      const track = createVRMAnimationLookAtTrack(vrmAnimation, `${proxy.name}.quaternion`);
+      if (track != null) {
+        tracks.push(track);
+      }
+    } */
+
+    return new this.pcRef.AnimTrack(
+      this.name,
+      this.vrmAnimation.duration,
+      inputs,
+      outputs,
+      curves,
+      events,
+    );
   }
 
   private _createVRMAnimationHumanoidTracks(): {

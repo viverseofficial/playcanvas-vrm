@@ -27,6 +27,13 @@ export const importScript = (pcRef: typeof pc) => {
       this.entity.on('vrm-expression:start-emotion', this.startEmotion, this);
       this.entity.on('audio:is-talking-change', this.onIsTalkingChange, this);
 
+      // vrma
+      this.entity.on(`vrma: preset expression`, (vrmaExpression) => {
+        for (const [name, config] of vrmaExpression.preset.entries()) {
+          this.startEmotion(name, config);
+        }
+      });
+
       this.on('destroy', () => {
         this.entity.off('vrm-expression:start-emotion', this.startEmotion, this);
         this.entity.off('audio:is-talking-change', this.onIsTalkingChange, this);

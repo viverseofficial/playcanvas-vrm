@@ -1,3 +1,5 @@
+import { VRMAExpression } from './VRMAExpression';
+
 interface IAnimationSetting {
   speed?: number;
   loop?: boolean;
@@ -17,6 +19,7 @@ export interface IAnimationResource {
   name: string;
   resource: pc.AnimTrack;
   setting?: IAnimationSetting;
+  expression?: VRMAExpression;
 }
 
 export interface IAnimExtraSettings {
@@ -28,6 +31,11 @@ export interface IVrmaTrack {
   curve: pc.AnimCurve;
   input: pc.AnimData; //each input represents a sequence a keyframe times
   output: pc.AnimData; //values that correspond to the keyframe times
+}
+
+export interface IVrmaExpressionTrack {
+  inputIndex: number;
+  outputData: Float32Array | number[];
 }
 
 export interface IMorphCurvePath {
