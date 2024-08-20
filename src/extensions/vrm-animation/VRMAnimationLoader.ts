@@ -307,15 +307,15 @@ export class VRMAnimationLoader {
       }
 
       // lookAt
-      // if (node === nodeMap.lookAtIndex) {
-      //   if (path === 'rotation') {
-      //     result.lookAtTrack = origTrack;
-      //   } else {
-      //     throw new Error(`Invalid path "${path}"`);
-      //   }
-      // }
+      if (node === nodeMap.lookAtIndex) {
+        if (path === 'rotation') {
+          const lookAtTrack: IVrmaTrack = { curve: curve, input: input, output: output };
+          result.lookAtTrack = lookAtTrack;
+        } else {
+          throw new Error(`Invalid path "${path}"`);
+        }
+      }
     });
-
     return result;
   }
 }

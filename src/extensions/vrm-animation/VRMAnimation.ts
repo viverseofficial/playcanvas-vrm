@@ -17,7 +17,7 @@ export class VRMAnimation {
     custom: Map<string, IAnimatedMorphConfig>;
   };
 
-  // public lookAtTrack: IVrmaTrack | null;
+  public lookAtTrack: IVrmaTrack | null;
 
   public constructor(pcRef: typeof pc) {
     this.duration = 0.0;
@@ -33,6 +33,6 @@ export class VRMAnimation {
       custom: new Map(),
     };
 
-    // this.lookAtTrack = null;
+    this.lookAtTrack = null;
   }
 }

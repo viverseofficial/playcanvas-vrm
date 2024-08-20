@@ -136,6 +136,7 @@ export const VRMRigMap: { [key: string]: VRMHumanBoneName } = {
   upperChest: 'upperChest',
   neck: 'neck',
   head: 'head',
+  leftEye: 'leftEye',
   leftShoulder: 'leftShoulder',
   leftUpperArm: 'leftUpperArm',
   leftLowerArm: 'leftLowerArm',
@@ -161,6 +162,7 @@ export const VRMRigMap: { [key: string]: VRMHumanBoneName } = {
   leftLittleIntermediate: 'leftLittleIntermediate',
   leftLittleDistal: 'leftLittleDistal',
 
+  rightEye: 'rightEye',
   rightUpperArm: 'rightUpperArm',
   rightShoulder: 'rightShoulder',
   rightLowerArm: 'rightLowerArm',

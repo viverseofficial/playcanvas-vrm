@@ -4,9 +4,6 @@ import { VRMHumanBoneName } from '../vrm-humanoid/vrm-humanoid';
 import { VRMRigMap } from '../vrm-map-list';
 import { VRMAnimation } from './VRMAnimation';
 import { IVrmaTrack, IMorphCurvePath } from './vrm-animation-interfaces';
-// import { VRMExpressionManager } from '../vrm-expression/VRMExpressionManager';
-// import { IAnimatedMorphConfig } from '../vrm-expression/vrm-expression';
-// import { VRMLookAtQuaternionProxy } from './VRMLookAtQuaternionProxy';
 
 /**
  * Create a playcanvas AnimTrack out of the given VRMAnimation and the VRM.
@@ -50,9 +47,13 @@ export class VRMAnimationTrack {
     const vrmaTracks: IVrmaTrack[] = [];
 
     // Humanoid Tracks
-    const humanoidTracks = this._createVRMAnimationHumanoidTracks();
+    const humanoidTracks = this._createHumanoidTracks();
     vrmaTracks.push(...humanoidTracks.translation.values());
     vrmaTracks.push(...humanoidTracks.rotation.values());
+
+    // Look At Tracks
+    const lookAtTracks = this._createLookAtTracks() ?? this._resetLookAtTrack(vrmaTracks[0].input);
+    vrmaTracks.push(...lookAtTracks.values());
 
     for (let i = 0; i < vrmaTracks.length; i++) {
       inputs.push(vrmaTracks[i].input);
@@ -92,45 +93,12 @@ export class VRMAnimationTrack {
           return vrmNodeName;
         });
 
-        if (arrangedEntityPath.length == 1 && arrangedEntityPath[0] == 'hips') {
-          arrangedEntityPath.unshift('SkeletonRoot');
-        }
         morphCurvePath.entityPath = arrangedEntityPath;
       });
     }
 
-    // Fire expression and or looat at events
+    // Fire expression
     const events = new this.pcRef.AnimEvents([{ name: `vrma: ${this.stateName}`, time: 0 }]);
-
-    // look at
-    /*     if (vrm.lookAt != null) {
-      // search VRMLookAtQuaternionProxy
-      let proxy = vrm.scene.children.find((obj) => obj instanceof VRMLookAtQuaternionProxy);
-
-      if (proxy == null) {
-        // if not found, create a new one
-        console.warn(
-          'createVRMAnimationClip: VRMLookAtQuaternionProxy is not found. Creating a new one automatically. To suppress this warning, create a VRMLookAtQuaternionProxy manually',
-        );
-
-        proxy = new VRMLookAtQuaternionProxy(vrm.lookAt);
-        proxy.name = 'VRMLookAtQuaternionProxy';
-        vrm.scene.add(proxy);
-      } else if (proxy.name == null) {
-        // if found but name is not set, set the name automatically
-        console.warn(
-          'createVRMAnimationClip: VRMLookAtQuaternionProxy is found but its name is not set. Setting the name automatically. To suppress this warning, set the name manually',
-        );
-
-        proxy.name = 'VRMLookAtQuaternionProxy';
-      }
-
-      // create a track
-      const track = createVRMAnimationLookAtTrack(vrmAnimation, `${proxy.name}.quaternion`);
-      if (track != null) {
-        tracks.push(track);
-      }
-    } */
 
     return new this.pcRef.AnimTrack(
       this.name,
@@ -142,7 +110,7 @@ export class VRMAnimationTrack {
     );
   }
 
-  private _createVRMAnimationHumanoidTracks(): {
+  private _createHumanoidTracks(): {
     translation: Map<'hips', IVrmaTrack>;
     rotation: Map<VRMHumanBoneName, IVrmaTrack>;
   } {
@@ -173,7 +141,6 @@ export class VRMAnimationTrack {
           input: origTrack.input,
           output: _output,
         };
-        // console.log(vrmaTrack);
 
         translation.set(name, vrmaTrack);
       }
@@ -198,7 +165,97 @@ export class VRMAnimationTrack {
         rotation.set(name, vrmaTrack);
       }
     }
-
     return { translation, rotation };
+  }
+
+  private _createLookAtTracks(): Map<VRMHumanBoneName, IVrmaTrack> | null {
+    const origTrack: IVrmaTrack | null = this.vrmAnimation.lookAtTrack;
+
+    if (!origTrack) return null;
+
+    const Tracks: Map<VRMHumanBoneName, IVrmaTrack> = new Map();
+    const eyes: VRMHumanBoneName[] = ['leftEye', 'rightEye'];
+
+    const lookAtScale = (src: number, index: number) => {
+      const indexOrder = index % 4;
+      const w = origTrack.output.data[index + 3 - indexOrder];
+      const _w = w === 0 ? 1 : w;
+
+      switch (indexOrder) {
+        case 0:
+          return (src / _w) * 0.06; // pitch
+        case 1:
+          return (src / _w) * 0.08; // yaw
+        default:
+          return 1;
+      }
+    };
+
+    const outputData = origTrack.output.data.map((v, i) => {
+      // if (i === 4) {
+      //   v = 1;
+      // }
+      // !!! Test Required !!! Look up or down vrma
+      const _v = (this.metaVersion === 'v0' && i % 4 == 0 ? -v : v) * lookAtScale(v, i);
+      return _v;
+    });
+
+    // Update output data
+    const _outputData = new Float32Array(outputData);
+    const _output = new this.pcRef.AnimData(origTrack.output.components, _outputData);
+
+    const vrmaCurve = origTrack.curve;
+
+    vrmaCurve.paths.forEach((graph) => {
+      const morphCurvePath = graph as unknown as IMorphCurvePath;
+
+      eyes.forEach((eye) => {
+        morphCurvePath.entityPath = [eye];
+        const paths = [{ ...morphCurvePath }];
+
+        const _curve = new this.pcRef.AnimCurve(
+          paths as any,
+          vrmaCurve.input,
+          vrmaCurve.output,
+          vrmaCurve.interpolation,
+        );
+
+        const vrmaTrack: IVrmaTrack = {
+          curve: _curve,
+          input: origTrack.input,
+          output: _output,
+        };
+        Tracks.set(eye, vrmaTrack);
+      });
+    });
+
+    return Tracks;
+  }
+  private _resetLookAtTrack(input: pc.AnimData): Map<VRMHumanBoneName, IVrmaTrack> {
+    const Tracks: Map<VRMHumanBoneName, IVrmaTrack> = new Map();
+    const eyes: VRMHumanBoneName[] = ['leftEye', 'rightEye'];
+    const _outputData = new Float32Array(input.data.length * 4);
+    for (let i = 0; i < _outputData.length; i++) {
+      if (i % 4 === 3) {
+        _outputData[i] = 1;
+      }
+    }
+    const _output = new this.pcRef.AnimData(4, _outputData);
+    eyes.forEach((eye) => {
+      const path = {
+        entityPath: [eye],
+        component: 'graph',
+        propertyPath: ['localRotation'],
+      } as unknown as IMorphCurvePath;
+      const _curve = new this.pcRef.AnimCurve([{ ...path }] as any, 0, 0, 1);
+      const vrmaTrack = {
+        curve: _curve,
+        input: input,
+        output: _output,
+      };
+      Tracks.set(eye, vrmaTrack);
+    });
+
+    return Tracks;
   }
 }
