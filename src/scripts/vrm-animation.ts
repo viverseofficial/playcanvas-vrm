@@ -140,9 +140,14 @@ export function bindVRMAExpression(
     fireEventEntity.anim.on(`anim-track:${resource.name}`, () => {
       if (resource.expression) {
         entity.fire(`vrma-expression:start`, resource.expression);
-      } else {
+      } else if (
+        fireEventEntity.anim?.baseLayer.activeState !==
+        (fireEventEntity.anim as any).lastBaseLayerPlayedAnimTrackName
+      ) {
         entity.fire(`vrm-expression:reset`);
       }
+      (fireEventEntity.anim as any).lastBaseLayerPlayedAnimTrackName =
+        fireEventEntity.anim?.baseLayer.activeState || undefined;
     });
   }
 }
