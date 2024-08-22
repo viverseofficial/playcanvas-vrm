@@ -104,6 +104,13 @@ export class VRMExpressionManager {
     this.clearAllAppliedWeight(true);
   }
 
+  stopEmotions(names: string[]) {
+    names.forEach((name) => {
+      const expression = this.getExpression(name);
+      expression.stop();
+    });
+  }
+
   getNextTalking(): VRMExpression | null {
     if (this.talkExpressions.length === 0) return null;
 

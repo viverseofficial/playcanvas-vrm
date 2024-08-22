@@ -18,6 +18,7 @@ import VrmaTestUrl from '/VRMA_test.vrma?url';
 import VrmaAUrl from '/VRMA_01.vrma?url';
 import VrmaBUrl from '/VRMA_02.vrma?url';
 import VrmaCUrl from '/VRMA_03.vrma?url';
+import VrmaDanceUrl from '/Dance.vrma?url';
 
 const AnimationIdle = new pc.Asset('Idle', 'animation', { url: idleAnimUrl });
 const AnimationRun = new pc.Asset('Run', 'animation', { url: runAnimUrl });
@@ -36,6 +37,7 @@ const AnimationVrmaTest = new pc.Asset('VrmaTest', 'container', { url: VrmaTestU
 const AnimationVrmaA = new pc.Asset('VrmaA', 'container', { url: VrmaAUrl });
 const AnimationVrmaB = new pc.Asset('VrmaA', 'container', { url: VrmaBUrl });
 const AnimationVrmaC = new pc.Asset('VrmaA', 'container', { url: VrmaCUrl });
+const AnimationVrmaDance = new pc.Asset('VrmaA', 'container', { url: VrmaDanceUrl });
 
 export const preloadAssets = {
   AnimationIdle,
@@ -52,4 +54,5 @@ export const preloadAssets = {
   AnimationVrmaA,
   AnimationVrmaB,
   AnimationVrmaC,
+  AnimationVrmaDance,
 };

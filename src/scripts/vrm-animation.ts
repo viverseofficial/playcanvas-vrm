@@ -129,21 +129,21 @@ export const assignAnimation = (entity: pc.Entity, resource: IAnimationResource)
 };
 
 // Vrma facial motion
-export function bindFacialVRMA(
+export function bindVRMAExpression(
   entity: pc.Entity,
   resource: IAnimationResource,
   animEntity?: pc.Entity,
 ) {
-  if (resource.expression) {
-    if (animEntity && animEntity.anim) {
-      animEntity.anim.on(`vrma: ${resource.name}`, () => {
-        entity.fire(`vrma: preset expression`, resource.expression);
-      });
-    } else if (entity.anim) {
-      entity.anim.on(`vrma: ${resource.name}`, () => {
-        entity.fire(`vrma: preset expression`, resource.expression);
-      });
-    }
+  const fireEventEntity = animEntity ?? entity;
+
+  if (fireEventEntity.anim) {
+    fireEventEntity.anim.on(`anim-track:${resource.name}`, () => {
+      if (resource.expression) {
+        entity.fire(`vrma-expression:start`, resource.expression);
+      } else {
+        entity.fire(`vrm-expression:reset`);
+      }
+    });
   }
 }
 

@@ -33,11 +33,6 @@ export interface IVrmaTrack {
   output: pc.AnimData; //values that correspond to the keyframe times
 }
 
-export interface IVrmaExpressionTrack {
-  inputIndex: number;
-  outputData: Float32Array | number[];
-}
-
 export interface IMorphCurvePath {
   entityPath: string[];
   component: string;

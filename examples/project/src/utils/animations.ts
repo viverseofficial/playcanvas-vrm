@@ -32,7 +32,7 @@ export const createDefaultAnimations = (
   if (loadedResources) {
     loadedResources.forEach((resource: any) => {
       VRMLoader.VrmAnimation.assignAnimation(animatedEntity, resource);
-      VRMLoader.VrmAnimation.bindFacialVRMA(rootEntity, resource, animatedEntity);
+      VRMLoader.VrmAnimation.bindVRMAExpression(rootEntity, resource, animatedEntity);
     });
   }
 
@@ -60,7 +60,7 @@ export const createDefaultAnimations = (
   if (mocapLoadedResources) {
     mocapLoadedResources.forEach((resource: any) => {
       VRMLoader.VrmAnimation.assignAnimation(animatedEntity, resource);
-      VRMLoader.VrmAnimation.bindFacialVRMA(rootEntity, resource, animatedEntity);
+      VRMLoader.VrmAnimation.bindVRMAExpression(rootEntity, resource, animatedEntity);
     });
   }
 };
@@ -72,7 +72,7 @@ export const createWindowTestAnimation = (
   humanoid: any,
   VRMLoader: any,
 ) => {
-  window.createAnim = (type: 'A' | 'B' | 'C' | 'D' | 'E' | 'V' | 'R' | 'M' | 'T' | 'W') => {
+  window.createAnim = (type: 'A' | 'B' | 'C' | 'D' | 'E' | 'V' | 'R' | 'M' | 'T' | 'W' | 'X') => {
     let animAssets = [];
     switch (type) {
       case 'A':
@@ -135,6 +135,12 @@ export const createWindowTestAnimation = (
           asset: preloadAssets.AnimationWaveUpper,
         });
         break;
+      case 'X':
+        animAssets.push({
+          stateName: 'X',
+          asset: preloadAssets.AnimationVrmaDance,
+        });
+        break;
     }
     const resources = VRMLoader.VrmAnimation.createVRMAnimResources(
       pc,
@@ -149,7 +155,7 @@ export const createWindowTestAnimation = (
     if (resources) {
       resources.forEach((resource: any) => {
         VRMLoader.VrmAnimation.assignAnimation(animatedEntity, resource);
-        VRMLoader.VrmAnimation.bindFacialVRMA(rootEntity, resource, animatedEntity);
+        VRMLoader.VrmAnimation.bindVRMAExpression(rootEntity, resource, animatedEntity);
       });
     }
     if (animatedEntity.anim) {

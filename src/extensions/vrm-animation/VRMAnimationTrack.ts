@@ -98,7 +98,7 @@ export class VRMAnimationTrack {
     }
 
     // Fire expression
-    const events = new this.pcRef.AnimEvents([{ name: `vrma: ${this.stateName}`, time: 0 }]);
+    const events = new this.pcRef.AnimEvents([{ name: `anim-track:${this.stateName}`, time: 0 }]);
 
     return new this.pcRef.AnimTrack(
       this.name,
@@ -192,9 +192,6 @@ export class VRMAnimationTrack {
     };
 
     const outputData = origTrack.output.data.map((v, i) => {
-      // if (i === 4) {
-      //   v = 1;
-      // }
       // !!! Test Required !!! Look up or down vrma
       const _v = (this.metaVersion === 'v0' && i % 4 == 0 ? -v : v) * lookAtScale(v, i);
       return _v;

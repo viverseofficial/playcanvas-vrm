@@ -164,6 +164,11 @@ export class VRMViverseAnimationTrack {
         output._data = newData;
       }
     });
+    const events = new this.pcRef.AnimEvents([
+      { name: `anim-track:${this.animationAsset.stateName}`, time: 0 },
+    ]);
+    animTrack.events = events;
+
     return animTrack;
   }
 }

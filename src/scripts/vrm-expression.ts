@@ -5,6 +5,7 @@ import { VRMExpressionManager } from '../extensions/vrm-expression/VRMExpression
 import { VRMExpressionLoaderPlugin } from '../extensions/vrm-expression/VRMExpressionLoaderPlugin';
 import { collectMeshInstances } from '../entity-utils';
 import { IAnimatedMorphConfig } from '../extensions/vrm-expression/vrm-expression';
+import { VRMExpressionPresetName } from '../extensions/vrm-map-list';
 
 export const importScript = (pcRef: typeof pc) => {
   class VrmExpression extends pcRef.ScriptType {
@@ -13,6 +14,8 @@ export const importScript = (pcRef: typeof pc) => {
     blinkTimer!: Timer;
     talkTimer!: Timer;
     previousTalkName: string = '';
+    previousEmotions: string[] = [];
+    vrmaEmotionWasPlaying = false;
 
     initialize() {
       const meshInstances = collectMeshInstances(this.entity);
@@ -28,15 +31,13 @@ export const importScript = (pcRef: typeof pc) => {
       this.entity.on('audio:is-talking-change', this.onIsTalkingChange, this);
 
       // vrma
-      this.entity.on(`vrma: preset expression`, (vrmaExpression) => {
-        for (const [name, config] of vrmaExpression.preset.entries()) {
-          this.startEmotion(name, config);
-        }
-      });
+      this.entity.on(`vrma-expression:start`, this.startVRMAExpression, this);
 
       this.on('destroy', () => {
         this.entity.off('vrm-expression:start-emotion', this.startEmotion, this);
         this.entity.off('audio:is-talking-change', this.onIsTalkingChange, this);
+        this.entity.off(`vrma-expression:start`, this.startVRMAExpression, this);
+        this.entity.off(`vrm-expression:reset`, this.resetExpression, this);
       });
     }
 
@@ -50,23 +51,27 @@ export const importScript = (pcRef: typeof pc) => {
       }
     }
 
-    stopBlink(restartSeconds: number) {
+    stopBlink(restartSeconds: number, loop: boolean) {
       if (!this.expressionManager) return;
 
       this.stopExpressionLoop('blink');
       this.expressionManager.stopBlink();
 
-      if (restartSeconds) {
-        this.blinkTimer.add(restartSeconds, this.startBlink, this);
+      if (!loop) {
+        if (restartSeconds) {
+          this.blinkTimer.add(restartSeconds, this.startBlink, this);
+        }
       }
     }
 
     startEmotion(name: string, config?: IAnimatedMorphConfig) {
       if (!this.expressionManager) return;
 
-      this.expressionManager.startEmotion(name, config);
       const time = config ? config.times[config.times.length - 1] : 3;
-      this.stopBlink(time);
+      const loop = config ? !!config.loop : false;
+
+      this.stopBlink(time, loop);
+      this.expressionManager.startEmotion(name, config);
     }
 
     startTalking(speed = 0.25) {
@@ -130,6 +135,33 @@ export const importScript = (pcRef: typeof pc) => {
       this.expressionManager.update(dt);
       this.blinkTimer.update(dt);
       this.talkTimer.update(dt);
+    }
+
+    private startVRMAExpression(vrmaExpression: {
+      preset: Map<VRMExpressionPresetName, IAnimatedMorphConfig>;
+      custom: Map<string, IAnimatedMorphConfig>;
+    }) {
+      for (const [name, config] of vrmaExpression.preset.entries()) {
+        this.startEmotion(name, config);
+      }
+      if (this.previousEmotions.length === 0) {
+        this.previousEmotions = Array.from(vrmaExpression.preset.keys());
+      }
+      this.vrmaEmotionWasPlaying = true;
+      if (!this.entity.hasEvent(`vrm-expression:reset`)) {
+        this.entity.on(`vrm-expression:reset`, this.resetExpression, this);
+      }
+    }
+
+    private resetExpression() {
+      if (this.vrmaEmotionWasPlaying) {
+        if (this.expressionManager) {
+          this.expressionManager.stopEmotions(this.previousEmotions);
+        }
+        this.startBlink();
+        this.previousEmotions = [];
+        this.vrmaEmotionWasPlaying = false;
+      }
     }
   }
 

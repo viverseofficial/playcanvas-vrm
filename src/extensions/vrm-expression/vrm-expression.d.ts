@@ -8,6 +8,7 @@
 export interface IAnimatedMorphConfig {
   times: Array<number> | Float32Array;
   values: Array<number> | Float32Array;
+  loop?: boolean;
 }
 
 export interface VRMExpressionBind {

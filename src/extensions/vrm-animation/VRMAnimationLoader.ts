@@ -290,6 +290,7 @@ export class VRMAnimationLoader {
           const expressionConfig: IAnimatedMorphConfig = {
             times: input.data,
             values: values,
+            loop: true,
           };
 
           if (vrmExpressionPresetNameSet.has(expressionName)) {
