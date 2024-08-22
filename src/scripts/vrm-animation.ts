@@ -128,26 +128,26 @@ export const assignAnimation = (entity: pc.Entity, resource: IAnimationResource)
   }
 };
 
-// Vrma facial motion
+// Vrma Expression
 export function bindVRMAExpression(
   entity: pc.Entity,
   resource: IAnimationResource,
   animEntity?: pc.Entity,
 ) {
-  const fireEventEntity = animEntity ?? entity;
+  const listenerEntity = animEntity ?? entity;
 
-  if (fireEventEntity.anim) {
-    fireEventEntity.anim.on(`anim-track:${resource.name}`, () => {
+  if (listenerEntity.anim) {
+    listenerEntity.anim.on(`anim-track:${resource.name}`, () => {
       if (resource.expression) {
         entity.fire(`vrma-expression:start`, resource.expression);
       } else if (
-        fireEventEntity.anim?.baseLayer.activeState !==
-        (fireEventEntity.anim as any).lastBaseLayerPlayedAnimTrackName
+        listenerEntity.anim?.baseLayer.activeState !==
+        (listenerEntity.anim as any).lastBaseLayerPlayedAnimTrackName
       ) {
         entity.fire(`vrm-expression:reset`);
       }
-      (fireEventEntity.anim as any).lastBaseLayerPlayedAnimTrackName =
-        fireEventEntity.anim?.baseLayer.activeState || undefined;
+      (listenerEntity.anim as any).lastBaseLayerPlayedAnimTrackName =
+        listenerEntity.anim?.baseLayer.activeState || undefined;
     });
   }
 }
