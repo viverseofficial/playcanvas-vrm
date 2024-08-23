@@ -133,6 +133,7 @@ export function bindVRMAExpression(
   entity: pc.Entity,
   resource: IAnimationResource,
   animEntity?: pc.Entity,
+  // { animEntity, transitionInterval = 0.0 }: { animEntity?: pc.Entity; transitionInterval: number },
 ) {
   const listenerEntity = animEntity ?? entity;
 
@@ -144,7 +145,14 @@ export function bindVRMAExpression(
         listenerEntity.anim?.baseLayer.activeState !==
         (listenerEntity.anim as any).lastBaseLayerPlayedAnimTrackName
       ) {
-        entity.fire(`vrm-expression:reset`);
+        let transitionInterval: number =
+          (listenerEntity.anim as any).layers?.[0]._controller._totalTransitionTime ?? 0.0;
+        listenerEntity.anim?.layers.forEach((layer) => {
+          if (layer.name === 'upperBodyLayer')
+            transitionInterval = (layer as any)._controller._totalTransitionTime;
+        });
+
+        entity.fire(`vrm-expression:reset`, transitionInterval);
       }
       (listenerEntity.anim as any).lastBaseLayerPlayedAnimTrackName =
         listenerEntity.anim?.baseLayer.activeState || undefined;

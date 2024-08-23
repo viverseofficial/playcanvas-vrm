@@ -16,6 +16,7 @@ export const importScript = (pcRef: typeof pc) => {
     previousTalkName: string = '';
     previousEmotions: string[] = [];
     vrmaEmotionWasPlaying = false;
+    resetEmotionTimer!: Timer;
 
     initialize() {
       const meshInstances = collectMeshInstances(this.entity);
@@ -25,6 +26,7 @@ export const importScript = (pcRef: typeof pc) => {
       // expression
       this.blinkTimer = new Timer('blink');
       this.talkTimer = new Timer('talk');
+      this.resetEmotionTimer = new Timer('resetEmotion');
       this.startBlink();
 
       this.entity.on('vrm-expression:start-emotion', this.startEmotion, this);
@@ -135,6 +137,7 @@ export const importScript = (pcRef: typeof pc) => {
       this.expressionManager.update(dt);
       this.blinkTimer.update(dt);
       this.talkTimer.update(dt);
+      this.resetEmotionTimer.update(dt);
     }
 
     private startVRMAExpression(vrmaExpression: {
@@ -153,14 +156,21 @@ export const importScript = (pcRef: typeof pc) => {
       }
     }
 
-    private resetExpression() {
+    private resetExpression(transitionInterval: number) {
       if (this.vrmaEmotionWasPlaying) {
-        if (this.expressionManager) {
-          this.expressionManager.stopEmotions(this.previousEmotions);
+        const reset = () => {
+          if (this.expressionManager) {
+            this.expressionManager.stopEmotions(this.previousEmotions);
+          }
+          this.startBlink();
+          this.previousEmotions = [];
+          this.vrmaEmotionWasPlaying = false;
+        };
+        if (transitionInterval) {
+          this.resetEmotionTimer.add(transitionInterval, reset, this);
+        } else {
+          reset();
         }
-        this.startBlink();
-        this.previousEmotions = [];
-        this.vrmaEmotionWasPlaying = false;
       }
     }
   }
