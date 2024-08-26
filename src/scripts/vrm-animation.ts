@@ -139,23 +139,29 @@ export function bindVRMAExpression(
 
   if (listenerEntity.anim) {
     listenerEntity.anim.on(`anim-track:${resource.name}`, () => {
+      // intialize active state and transition interval with baseLayer
+      let upperBodyActiveState = listenerEntity.anim?.baseLayer.activeState;
+      let transitionInterval =
+        (listenerEntity.anim as any).baseLayer._controller._totalTransitionTime ?? 0.0;
+
+      // update active state and transition interval if there is upperBodyLayer
+      listenerEntity.anim?.layers.forEach((layer) => {
+        if (layer.name === 'upperBodyLayer') {
+          upperBodyActiveState = (layer as any)._controller._activeStateName;
+          transitionInterval = (layer as any)._controller._totalTransitionTime;
+        }
+      });
+
       if (resource.expression) {
         entity.fire(`vrma-expression:start`, resource.expression);
       } else if (
-        listenerEntity.anim?.baseLayer.activeState !==
-        (listenerEntity.anim as any).lastBaseLayerPlayedAnimTrackName
+        upperBodyActiveState === resource.name &&
+        upperBodyActiveState !== (listenerEntity.anim as any).lastFrameUpperBodyActiveState
       ) {
-        let transitionInterval: number =
-          (listenerEntity.anim as any).layers?.[0]._controller._totalTransitionTime ?? 0.0;
-        listenerEntity.anim?.layers.forEach((layer) => {
-          if (layer.name === 'upperBodyLayer')
-            transitionInterval = (layer as any)._controller._totalTransitionTime;
-        });
-
         entity.fire(`vrm-expression:reset`, transitionInterval);
       }
-      (listenerEntity.anim as any).lastBaseLayerPlayedAnimTrackName =
-        listenerEntity.anim?.baseLayer.activeState || undefined;
+
+      (listenerEntity.anim as any).lastFrameUpperBodyActiveState = upperBodyActiveState;
     });
   }
 }

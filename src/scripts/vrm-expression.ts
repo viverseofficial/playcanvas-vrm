@@ -144,6 +144,9 @@ export const importScript = (pcRef: typeof pc) => {
       preset: Map<VRMExpressionPresetName, IAnimatedMorphConfig>;
       custom: Map<string, IAnimatedMorphConfig>;
     }) {
+      if (this.expressionManager) {
+        this.expressionManager.stopEmotions(this.previousEmotions);
+      }
       for (const [name, config] of vrmaExpression.preset.entries()) {
         this.startEmotion(name, config);
       }
