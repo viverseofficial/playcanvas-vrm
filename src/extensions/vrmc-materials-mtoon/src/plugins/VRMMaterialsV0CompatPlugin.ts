@@ -1,0 +1,389 @@
+import * as pc from 'playcanvas';
+import { VRM as V0VRM, Material as V0Material } from '../../../../types/types-vrm-0.0';
+import * as V1MToonSchema from '../../../../types/types-vrmc-materials-mtoon-1.0';
+import { GLTF as GLTFSchema } from '../../../vrm-animation/types/gltf';
+import { gammaEOTF } from '../utils';
+
+class VRMMaterialsV0CompatPlugin {
+  private _pcRef: typeof pc;
+  public asset: pc.Asset;
+
+  /**
+   * A map from v0 render queue to v1 render queue offset, for Transparent materials.
+   */
+  private readonly _renderQueueMapTransparent: Map<number, number>;
+
+  /**
+   * A map from v0 render queue to v1 render queue offset, for TransparentZWrite materials.
+   */
+  private readonly _renderQueueMapTransparentZWrite: Map<number, number>;
+
+  constructor(pcRef: typeof pc, asset: pc.Asset) {
+    this._pcRef = pcRef;
+    this.asset = asset;
+
+    this._renderQueueMapTransparent = new Map();
+    this._renderQueueMapTransparentZWrite = new Map();
+  }
+
+  public parseMaterials() {
+    const gltf: GLTFSchema.IGLTF = this.asset.resource?.data?.gltf;
+
+    // early abort if it doesn't use V0VRM
+    const v0VRMExtension = gltf?.extensions?.['VRM'] as V0VRM | undefined;
+    const v0MaterialProperties = v0VRMExtension?.materialProperties;
+    if (!v0MaterialProperties) {
+      return;
+    }
+
+    this._populateRenderQueueMap(v0MaterialProperties);
+
+    // convert V0 material properties into V1 compatible format
+    // base on https://github.com/vrm-c/vrm-specification/blob/master/specification/VRMC_materials_mtoon-1.0/MToon_comparision.md
+    v0MaterialProperties.forEach((materialProperties, materialIndex) => {
+      if (!gltf.materials) {
+        console.error('parseMaterials: gltf.materials is undefined');
+        return;
+      }
+
+      const materialDef = gltf.materials[materialIndex];
+      if (!materialDef) {
+        console.warn(
+          `VRMMaterialsV0CompatPlugin: Attempt to use materials[${materialIndex}] of glTF but the material doesn't exist`,
+        );
+        return;
+      }
+
+      if (materialProperties.shader === 'VRM/MToon') {
+        const material = this._parseV0MToonProperties(materialProperties, materialDef);
+        gltf.materials[materialIndex] = material;
+      } else if (materialProperties.shader?.startsWith('VRM/Unlit')) {
+        // TODO: _parseV0UnlitProperties
+      } else if (materialProperties.shader === 'VRM_USE_GLTFSHADER') {
+        // should be already valid
+      } else {
+        console.warn(`parseMaterials: Unknown shader: ${materialProperties.shader}`);
+      }
+    });
+  }
+
+  private _parseV0MToonProperties(
+    materialProperties: V0Material,
+    schemaMaterial: GLTFSchema.IMaterial,
+  ): GLTFSchema.IMaterial {
+    const isTransparent = materialProperties.keywordMap?.['_ALPHABLEND_ON'] ?? false;
+    const enabledZWrite = materialProperties.floatProperties?.['_ZWrite'] === 1;
+    const transparentWithZWrite = enabledZWrite && isTransparent;
+
+    const renderQueueOffsetNumber = this._v0ParseRenderQueue(materialProperties);
+
+    const isCutoff = materialProperties.keywordMap?.['_ALPHATEST_ON'] ?? false;
+    const alphaMode = isTransparent ? 'BLEND' : isCutoff ? 'MASK' : 'OPAQUE';
+    const alphaCutoff = isCutoff
+      ? materialProperties.floatProperties?.['_Cutoff'] ?? 0.5
+      : undefined;
+
+    const cullMode = materialProperties.floatProperties?.['_CullMode'] ?? 2; // enum, { Off, Front, Back }
+    const doubleSided = cullMode === 0;
+
+    const textureTransformExt = this._portTextureTransform(materialProperties);
+
+    const baseColorFactor = (
+      materialProperties.vectorProperties?.['_Color'] ?? [1.0, 1.0, 1.0, 1.0]
+    ).map(
+      (v: number, i: number) => (i === 3 ? v : gammaEOTF(v)), // alpha channel is stored in linear
+    );
+
+    const baseColorTextureIndex = materialProperties.textureProperties?.['_MainTex'];
+    const baseColorTexture =
+      baseColorTextureIndex != null
+        ? {
+            index: baseColorTextureIndex,
+            extensions: {
+              ...textureTransformExt,
+            },
+          }
+        : undefined;
+
+    const normalTextureScale = materialProperties.floatProperties?.['_BumpScale'] ?? 1.0;
+    const normalTextureIndex = materialProperties.textureProperties?.['_BumpMap'];
+    const normalTexture =
+      normalTextureIndex != null
+        ? {
+            index: normalTextureIndex,
+            scale: normalTextureScale,
+            extensions: {
+              ...textureTransformExt,
+            },
+          }
+        : undefined;
+
+    const emissiveFactor = materialProperties.vectorProperties?.['_EmissionColor']?.map(gammaEOTF);
+    const emissiveTextureIndex = materialProperties.textureProperties?.['_EmissionMap'];
+    const emissiveTexture =
+      emissiveTextureIndex != null
+        ? {
+            index: emissiveTextureIndex,
+            extensions: {
+              ...textureTransformExt,
+            },
+          }
+        : undefined;
+
+    const shadeColorFactor = materialProperties.vectorProperties?.['_ShadeColor']?.map(gammaEOTF);
+    const shadeMultiplyTextureIndex = materialProperties.textureProperties?.['_ShadeTexture'];
+    const shadeMultiplyTexture =
+      shadeMultiplyTextureIndex != null
+        ? {
+            index: shadeMultiplyTextureIndex,
+            extensions: {
+              ...textureTransformExt,
+            },
+          }
+        : undefined;
+
+    // convert v0 shade shift / shade toony
+    let shadingShiftFactor = materialProperties.floatProperties?.['_ShadeShift'] ?? 0.0;
+    let shadingToonyFactor = materialProperties.floatProperties?.['_ShadeToony'] ?? 0.9;
+    shadingToonyFactor = this._pcRef.math.lerp(
+      shadingToonyFactor,
+      1.0,
+      0.5 + 0.5 * shadingShiftFactor,
+    );
+    shadingShiftFactor = -shadingShiftFactor - (1.0 - shadingToonyFactor);
+
+    const giIntensityFactor =
+      materialProperties.floatProperties?.['_IndirectLightIntensity'] ?? 0.1;
+    const giEqualizationFactor = giIntensityFactor ? 1.0 - giIntensityFactor : undefined;
+
+    const matcapTextureIndex = materialProperties.textureProperties?.['_SphereAdd'];
+    const matcapFactor = matcapTextureIndex != null ? [1.0, 1.0, 1.0] : undefined;
+    const matcapTexture =
+      matcapTextureIndex != null
+        ? {
+            index: matcapTextureIndex,
+          }
+        : undefined;
+
+    const rimLightingMixFactor = materialProperties.floatProperties?.['_RimLightingMix'] ?? 0.0;
+    const rimMultiplyTextureIndex = materialProperties.textureProperties?.['_RimTexture'];
+    const rimMultiplyTexture =
+      rimMultiplyTextureIndex != null
+        ? {
+            index: rimMultiplyTextureIndex,
+            extensions: {
+              ...textureTransformExt,
+            },
+          }
+        : undefined;
+
+    const parametricRimColorFactor = (
+      materialProperties.vectorProperties?.['_RimColor'] ?? [0.0, 0.0, 0.0, 1.0]
+    ).map(gammaEOTF);
+    const parametricRimFresnelPowerFactor =
+      materialProperties.floatProperties?.['_RimFresnelPower'] ?? 1.0;
+    const parametricRimLiftFactor = materialProperties.floatProperties?.['_RimLift'] ?? 0.0;
+
+    const outlineWidthMode = ['none', 'worldCoordinates', 'screenCoordinates'][
+      materialProperties.floatProperties?.['_OutlineWidthMode'] ?? 0
+    ] as V1MToonSchema.MaterialsMToonOutlineWidthMode;
+
+    let outlineWidthFactor = materialProperties.floatProperties?.['_OutlineWidth'] ?? 0.0;
+    outlineWidthFactor = 0.01 * outlineWidthFactor;
+
+    const outlineWidthMultiplyTextureIndex =
+      materialProperties.textureProperties?.['_OutlineWidthTexture'];
+    const outlineWidthMultiplyTexture =
+      outlineWidthMultiplyTextureIndex != null
+        ? {
+            index: outlineWidthMultiplyTextureIndex,
+            extensions: {
+              ...textureTransformExt,
+            },
+          }
+        : undefined;
+
+    const outlineColorFactor = (
+      materialProperties.vectorProperties?.['_OutlineColor'] ?? [0.0, 0.0, 0.0]
+    ).map(gammaEOTF);
+    const outlineColorMode = materialProperties.floatProperties?.['_OutlineColorMode'] ?? 0; // enum, { Fixed, Mixed }
+    const outlineLightingMixFactor =
+      outlineColorMode === 1
+        ? materialProperties.floatProperties?.['_OutlineLightingMix'] ?? 1.0
+        : 0.0;
+
+    const uvAnimationMaskTextureIndex =
+      materialProperties.textureProperties?.['_UvAnimMaskTexture'];
+    const uvAnimationMaskTexture =
+      uvAnimationMaskTextureIndex != null
+        ? {
+            index: uvAnimationMaskTextureIndex,
+            extensions: {
+              ...textureTransformExt,
+            },
+          }
+        : undefined;
+
+    const uvAnimationScrollXSpeedFactor =
+      materialProperties.floatProperties?.['_UvAnimScrollX'] ?? 0.0;
+
+    // uvAnimationScrollYSpeedFactor will be opposite between V0 and V1
+    let uvAnimationScrollYSpeedFactor =
+      materialProperties.floatProperties?.['_UvAnimScrollY'] ?? 0.0;
+    if (uvAnimationScrollYSpeedFactor != null) {
+      uvAnimationScrollYSpeedFactor = -uvAnimationScrollYSpeedFactor;
+    }
+
+    const uvAnimationRotationSpeedFactor =
+      materialProperties.floatProperties?.['_UvAnimRotation'] ?? 0.0;
+
+    const mtoonExtension: V1MToonSchema.VRMCMaterialsMToon = {
+      specVersion: '1.0',
+      transparentWithZWrite,
+      renderQueueOffsetNumber,
+      shadeColorFactor,
+      shadeMultiplyTexture,
+      shadingShiftFactor,
+      shadingToonyFactor,
+      giEqualizationFactor,
+      matcapFactor,
+      matcapTexture,
+      rimLightingMixFactor,
+      rimMultiplyTexture,
+      parametricRimColorFactor,
+      parametricRimFresnelPowerFactor,
+      parametricRimLiftFactor,
+      outlineWidthMode,
+      outlineWidthFactor,
+      outlineWidthMultiplyTexture,
+      outlineColorFactor,
+      outlineLightingMixFactor,
+      uvAnimationMaskTexture,
+      uvAnimationScrollXSpeedFactor,
+      uvAnimationScrollYSpeedFactor,
+      uvAnimationRotationSpeedFactor,
+    };
+
+    return {
+      ...schemaMaterial,
+      pbrMetallicRoughness: {
+        baseColorFactor,
+        baseColorTexture,
+      },
+      normalTexture,
+      emissiveTexture,
+      emissiveFactor,
+      alphaMode,
+      alphaCutoff,
+      doubleSided,
+      extensions: {
+        VRMC_materials_mtoon: mtoonExtension,
+      },
+    };
+  }
+
+  private _portTextureTransform(materialProperties: V0Material): { [name: string]: any } {
+    const textureTransform = materialProperties.vectorProperties?.['_MainTex'];
+    if (textureTransform == null) {
+      return {};
+    }
+
+    const offset = [textureTransform?.[0] ?? 0.0, textureTransform?.[1] ?? 0.0];
+    const scale = [textureTransform?.[2] ?? 1.0, textureTransform?.[3] ?? 1.0];
+
+    offset[1] = 1.0 - scale[1] - offset[1];
+
+    return {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      KHR_texture_transform: { offset, scale },
+    };
+  }
+
+  /**
+   * Convert v0 render order into v1 render order.
+   * This uses a map from v0 render queue to v1 compliant render queue offset which is generated in {@link _populateRenderQueueMap}.
+   */
+  private _v0ParseRenderQueue(materialProperties: V0Material): number {
+    const isTransparent = materialProperties.keywordMap?.['_ALPHABLEND_ON'] ?? false;
+    const enabledZWrite = materialProperties.floatProperties?.['_ZWrite'] === 1;
+
+    let offset = 0;
+
+    if (isTransparent) {
+      const v0Queue = materialProperties.renderQueue;
+
+      if (v0Queue != null) {
+        if (enabledZWrite) {
+          offset = this._renderQueueMapTransparentZWrite.get(v0Queue)!;
+        } else {
+          offset = this._renderQueueMapTransparent.get(v0Queue)!;
+        }
+      }
+    }
+
+    return offset;
+  }
+
+  /**
+   * Create a map which maps v0 render queue to v1 compliant render queue offset.
+   * This lists up all render queues the model use and creates a map to new render queue offsets in the same order.
+   */
+  private _populateRenderQueueMap(materialPropertiesList: V0Material[]) {
+    /**
+     * A set of used render queues in Transparent materials.
+     */
+    const renderQueuesTransparent = new Set<number>();
+
+    /**
+     * A set of used render queues in TransparentZWrite materials.
+     */
+    const renderQueuesTransparentZWrite = new Set<number>();
+
+    // populate the render queue set
+    materialPropertiesList.forEach((materialProperties) => {
+      const isTransparent = materialProperties.keywordMap?.['_ALPHABLEND_ON'] ?? false;
+      const enabledZWrite = materialProperties.floatProperties?.['_ZWrite'] === 1;
+
+      if (isTransparent) {
+        const v0Queue = materialProperties.renderQueue;
+
+        if (v0Queue != null) {
+          if (enabledZWrite) {
+            renderQueuesTransparentZWrite.add(v0Queue);
+          } else {
+            renderQueuesTransparent.add(v0Queue);
+          }
+        }
+      }
+    });
+
+    if (renderQueuesTransparent.size > 10) {
+      console.warn(
+        `VRMMaterialsV0CompatPlugin: This VRM uses ${renderQueuesTransparent.size} render queues for Transparent materials while VRM 1.0 only supports up to 10 render queues. The model might not be rendered correctly.`,
+      );
+    }
+
+    if (renderQueuesTransparentZWrite.size > 10) {
+      console.warn(
+        `VRMMaterialsV0CompatPlugin: This VRM uses ${renderQueuesTransparentZWrite.size} render queues for TransparentZWrite materials while VRM 1.0 only supports up to 10 render queues. The model might not be rendered correctly.`,
+      );
+    }
+
+    // create a map from v0 render queue to v1 render queue offset
+    Array.from(renderQueuesTransparent)
+      .sort()
+      .forEach((queue, i) => {
+        const newQueueOffset = Math.min(Math.max(i - renderQueuesTransparent.size + 1, -9), 0);
+        this._renderQueueMapTransparent.set(queue, newQueueOffset);
+      });
+
+    Array.from(renderQueuesTransparentZWrite)
+      .sort()
+      .forEach((queue, i) => {
+        const newQueueOffset = Math.min(Math.max(i, 0), 9);
+        this._renderQueueMapTransparentZWrite.set(queue, newQueueOffset);
+      });
+  }
+}
+
+export default VRMMaterialsV0CompatPlugin;

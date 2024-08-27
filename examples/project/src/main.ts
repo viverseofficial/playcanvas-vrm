@@ -1,10 +1,15 @@
 import * as pc from 'playcanvas';
 import setupApplication, { createCamera, createLight, loadScript, createScene } from './setup';
 import { createDefaultAnimations, createWindowTestAnimation } from './utils/animations';
-// import { applyMaterialMtoon } from './utils/mtoon';
 
 import avatarUrl from '/Avatar_v1.vrm?url'; // v1
 import avatarUrl2 from '/rara.vrm?url'; // v0
+
+// seed
+// rimMultiplyTexture
+
+// pink
+// hair check
 
 declare global {
   interface Window {
@@ -29,7 +34,10 @@ const createAvatar = (url: string) => {
 
     asset.on('load', (asset) => {
       VRMLoader.addIndexToNodeTags(asset);
+      const mtoonLoader = new VRMLoader.VrmcMaterialsMtoon.VRMMtoonLoader(pc, asset);
+
       const renderRootEntity = asset.resource.instantiateRenderEntity();
+      mtoonLoader.instantiated(renderRootEntity);
 
       const rootEntity = new pc.Entity('VRM_AVATAR_ROOT');
       rootEntity.addChild(renderRootEntity);
@@ -64,9 +72,6 @@ const createAvatar = (url: string) => {
           },
         });
       }
-
-      // const mtoon = applyMaterialMtoon(asset, VRMLoader);
-      // mtoon.instantiated(renderRootEntity);
 
       app.on('update', (dt) => {
         timer += dt;
@@ -105,8 +110,16 @@ const setupAvatar = async (app: pc.Application) => {
 
 const app = setupApplication();
 app.once('start', async () => {
+  const focusEntity = new pc.Entity('Test');
+  focusEntity.setPosition(0, 1.8, 0);
+  app.root.addChild(focusEntity);
+  focusEntity.addComponent('render', {
+    type: 'box',
+  });
+  if (focusEntity.render) focusEntity.render.enabled = false;
+
   createLight(app);
-  createCamera(app);
+  createCamera(app, focusEntity);
   createScene(app);
 
   VRMLoader.VrmExpression.importScript(pc);

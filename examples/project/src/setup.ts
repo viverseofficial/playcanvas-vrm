@@ -39,6 +39,7 @@ export const createCamera = (app: pc.Application, focusEntity?: pc.Entity) => {
     camera.script.create('orbitCameraInputTouch');
   }
   camera.setPosition(0, 1, 2);
+  camera.camera?.clearColor.set(0.7, 0.7, 0.7, 1);
 
   app.root.addChild(camera);
 };
@@ -104,6 +105,9 @@ const setupApplication = () => {
     ...(devices.gamepads && { gamepads: devices.gamepads }),
     ...(devices.touch && { touch: devices.touch }),
   });
+
+  // use device pixel ratio
+  app.graphicsDevice.maxPixelRatio = window.devicePixelRatio;
 
   Object.values(preloadAssets).forEach((asset) => {
     asset.preload = true;
