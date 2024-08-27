@@ -5178,6 +5178,8 @@ class et extends Kt {
           e.setLocalPosition(c);
 =======
 class VRMHumanoidRig extends VRMRig {
+  // private _vec3A: pc.Vec3;
+  // private _mat4A: pc.Mat4;
   static _setupTransforms(pcRef, modelRig) {
     const root = new pcRef.Entity();
     root.name = "VRMHumanoidRig";
@@ -5244,8 +5246,6 @@ class VRMHumanoidRig extends VRMRig {
     this._boneRotations = boneRotations;
     this._quatA = new pcRef.Quat();
     this._quatB = new pcRef.Quat();
-    this._vec3A = new pcRef.Vec3();
-    this._mat4A = new pcRef.Mat4();
     const app = pcRef.Application.getApplication();
     if (app)
       app.root.addChild(root);
@@ -5274,11 +5274,16 @@ class VRMHumanoidRig extends VRMRig {
         this._quatA.mul(boneRotation);
         boneNode.setLocalRotation(this._quatA);
         if (boneName === "hips") {
+<<<<<<< HEAD
           const boneWorldPosition = this._vec3A.copy(rigBoneNode.getPosition());
           const parentWorldMatrix = this._mat4A.copy(boneNode.parent.getWorldTransform());
           const localPosition = this.applyMatrix4(boneWorldPosition, parentWorldMatrix.invert());
           boneNode.setLocalPosition(localPosition);
 >>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
+=======
+          const boneLocalPosition = rigBoneNode.getLocalPosition();
+          boneNode.setLocalPosition(boneLocalPosition);
+>>>>>>> 9cd4cbf (fix: v1 normalized bone animation transform use local position)
         }
       }
     });
