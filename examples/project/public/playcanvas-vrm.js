@@ -3718,6 +3718,23 @@ const basePS$1 = (
         return mat3( T * scale, B * scale, N );
     }
 
+    float getSpotAttenuation( const in float coneCosine, const in float penumbraCosine, const in float angleCosine ) {
+	    return smoothstep( coneCosine, penumbraCosine, angleCosine );
+    }
+
+    float getDistanceAttenuation( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {
+		// based upon Frostbite 3 Moving to Physically-based Rendering
+		// page 32, equation 26: E[window1]
+		// https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
+		float distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.01 );
+
+		if ( cutoffDistance > 0.0 ) {
+            distanceFalloff *= pow( saturate( 1.0 - pow( lightDistance / cutoffDistance, 4.0 ) ), 2.0 );
+		};
+
+		return distanceFalloff;
+    }
+
     struct ReflectedLight {
 	    vec3 directDiffuse;
 	    vec3 directSpecular;
@@ -3731,21 +3748,86 @@ const basePS$1 = (
 	    bool visible;
     };
 
-    struct DirectionalLight {
-        vec3 direction;
-        vec3 color;
-    };
+    #if USE_POINT_LIGHTS
+        struct PointLight {
+            vec3 position;
+            vec3 color;
+            float distance;
+            float decay;
+        };
 
-    // TODO: add support for multiple lights
-    // uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
+        uniform PointLight pointLights[NUM_POINT_LIGHTS];
 
-    void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
-        light.color = directionalLight.color;
-        light.direction = directionalLight.direction;
-        light.visible = true;
-    }
+	    void getPointLightInfo( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight light ) {
 
-    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight ) {
+		    vec3 lVector = pointLight.position - geometry.position;
+
+		    light.direction = normalize( lVector );
+
+		    float lightDistance = length( lVector );
+
+		    light.color = pointLight.color;
+		    light.color *= getDistanceAttenuation( lightDistance, pointLight.distance, pointLight.decay );
+		    light.visible = ( light.color != vec3( 0.0 ) );
+	    }
+    #endif
+
+    #if USE_SPOT_LIGHTS
+    	struct SpotLight {
+		    vec3 position;
+		    vec3 direction;
+		    vec3 color;
+		    float distance;
+		    float decay;
+		    float coneCos;
+		    float penumbraCos;
+	    };
+
+        uniform SpotLight spotLights[NUM_SPOT_LIGHTS];
+
+        void getSpotLightInfo( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight light ) {
+
+		    vec3 lVector = spotLight.position - geometry.position;
+
+		    light.direction = normalize( lVector );
+
+		    float angleCos = dot( light.direction, spotLight.direction );
+
+		    float spotAttenuation = getSpotAttenuation( spotLight.coneCos, spotLight.penumbraCos, angleCos );
+
+		    if ( spotAttenuation > 0.0 ) {
+
+			    float lightDistance = length( lVector );
+
+			    light.color = spotLight.color * spotAttenuation;
+			    light.color *= getDistanceAttenuation( lightDistance, spotLight.distance, spotLight.decay );
+			    light.visible = ( light.color != vec3( 0.0 ) );
+
+		    } else {
+
+			    light.color = vec3( 0.0 );
+			    light.visible = false;
+
+		    }
+	    }
+    #endif
+
+    #if USE_DIR_LIGHTS
+        struct DirectionalLight {
+            vec3 direction;
+            vec3 color;
+        };
+
+        uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+
+        void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
+            light.color = directionalLight.color;
+            light.direction = directionalLight.direction;
+            light.visible = true;
+        }
+    #endif
+
+    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight, const in float shrinkNum ) {
         float dotNL = clamp( dot( geometry.normal, directLight.direction ), -1.0, 1.0 );
         vec3 irradiance = directLight.color;
 
@@ -3756,8 +3838,10 @@ const basePS$1 = (
 
         float shading = getShading( dotNL, shadow, material.shadingShift );
 
+        // Note: Shrink the light intensity to prevent the color from becoming too bright
+        float shrink = 1.0 / shrinkNum; 
         // toon shaded diffuse
-        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color );
+        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color ) * shrink;
     }
 
     #define RE_Direct RE_Direct_MToon
@@ -3887,20 +3971,54 @@ const endPS$1 = (
     geometry.normal = normal;
     geometry.viewDir = normalize( vViewPosition );
 
-
-    DirectionalLight directionalLight;
     IncidentLight directLight;
+    // since these variables will be used in unrolled loop, we have to define in prior
+    float shadow = 1.0;
 
-    directionalLight.color = lightColor;
-    directionalLight.direction = lightDirection;
-    getDirectionalLightInfo( directionalLight, directLight );   
+    #ifdef USE_POINT_LIGHTS
+        PointLight pointLight;
+        shadow = 1.0; 
 
-    float shadow = 1.0;    
-    RE_Direct( directLight, geometry, material, shadow, reflectedLight );
+        #pragma unroll_loop_start
+        for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {
+            pointLight = pointLights[ i ];
+            getPointLightInfo( pointLight, geometry, directLight );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
+        }
+        #pragma unroll_loop_end
+    #endif
+    
 
-    // TODO: 2.8 ? force the color lighter
-    vec3 col = 3.0 * reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
+    #if USE_SPOT_LIGHTS
+        SpotLight spotLight;
+        shadow = 1.0; 
 
+        #pragma unroll_loop_start
+        for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {
+            spotLight = spotLights[ i ];
+            getSpotLightInfo( spotLight, geometry, directLight );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
+        }
+        #pragma unroll_loop_end
+    #endif
+
+    #if USE_DIR_LIGHTS
+        DirectionalLight directionalLight;
+        shadow = 1.0; 
+
+        #pragma unroll_loop_start
+        for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
+            directionalLight = directionalLights[0];
+            getDirectionalLightInfo( directionalLight, directLight );  
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight, float(NUM_DIR_LIGHTS) );
+        }
+        #pragma unroll_loop_end
+    #endif 
+
+
+    // force the color lighter
+    float lighter = 3.0;
+    vec3 col = lighter * reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
 
     // -- MToon: rim lighting -----------------------------------------
     vec3 viewDir = normalize( vViewDirection );
@@ -3996,7 +4114,7 @@ const shaderChunksMtoon = {
 const textureTransformExtensionName = "KHR_texture_transform";
 const createVRMCMtoonMaterial = (pcRef) => {
   return class VRMCMtoonMaterial extends pcRef.StandardMaterial {
-    constructor(asset) {
+    constructor(asset, renderStates) {
       super();
       this.litFactor = new pcRef.Color(1, 1, 1, 1);
       this.alphaTest = 0;
@@ -4038,6 +4156,8 @@ const createVRMCMtoonMaterial = (pcRef) => {
       this.useLighting = false;
       this.useSkybox = false;
       this._asset = asset;
+      this._renderStates = renderStates;
+      this._renderStates.addMaterial(this);
     }
     parse(gltfMaterial) {
       var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u;
@@ -4258,7 +4378,7 @@ const createVRMCMtoonMaterial = (pcRef) => {
         this.chunks.basePS += "#define MTOON_USE_UV\n";
       }
       if (useUvInVert && !useUvInFrag) {
-        console.log("YYY Adding MTOON_UVS_VERTEX_ONLY");
+        console.log("Adding MTOON_UVS_VERTEX_ONLY");
         this.chunks.basePS += "#define MTOON_UVS_VERTEX_ONLY\n";
       }
       const USE_RIMMULTIPLYTEXTURE = this.rimMultiplyTexture;
@@ -4289,6 +4409,9 @@ const createVRMCMtoonMaterial = (pcRef) => {
         this.chunks.basePS += "#define OUTLINE\n";
         this.chunks.baseVS += "#define OUTLINE\n";
       }
+      this.chunks.basePS += "#define NUM_DIR_LIGHTS 0\n";
+      this.chunks.basePS += "#define NUM_SPOT_LIGHTS 0\n";
+      this.chunks.basePS += "#define NUM_POINT_LIGHTS 0\n";
       this.chunks.baseVS += shaderChunksMtoon.baseVS;
       this.chunks.endVS += shaderChunksMtoon.endVS;
       this.chunks.basePS += shaderChunksMtoon.basePS;
@@ -4367,9 +4490,49 @@ const createVRMCMtoonMaterial = (pcRef) => {
         this.outlineColorFactor.b
       ]);
     }
-    setLightDirection(direction) {
-      this.setParameter("lightDirection", [direction.x, direction.y, direction.z]);
+    setLightUniforms(lightStates) {
+      const directionalLights = lightStates.get(pcRef.LIGHTTYPE_DIRECTIONAL);
+      const spotLights = lightStates.get(pcRef.LIGHTTYPE_SPOT);
+      const pointLights = lightStates.get(pcRef.LIGHTTYPE_POINT);
+      this.replaceLightNumbers(directionalLights.length, spotLights.length, pointLights.length);
+      directionalLights.forEach((light, i) => {
+        const direction = light.entity.forward;
+        const color = light.color;
+        this.setParameter(`directionalLights[${i}].color`, [color.r, color.g, color.b]);
+        this.setParameter(`directionalLights[${i}].direction`, [
+          direction.x,
+          direction.y,
+          direction.z
+        ]);
+      });
+      spotLights.forEach((light, i) => {
+        const position = light.entity.getPosition();
+        const direction = light.entity.forward;
+        const color = light.color;
+        const distance = light.range;
+        const decay = light.falloffMode === pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2;
+        const coneCos = Math.cos(light.innerConeAngle);
+        const penumbraCos = Math.cos(light.outerConeAngle);
+        this.setParameter(`spotLights[${i}].position`, [position.x, position.y, position.z]);
+        this.setParameter(`spotLights[${i}].direction`, [direction.x, direction.y, direction.z]);
+        this.setParameter(`spotLights[${i}].color`, [color.r, color.g, color.b]);
+        this.setParameter(`spotLights[${i}].distance`, distance);
+        this.setParameter(`spotLights[${i}].decay`, decay);
+        this.setParameter(`spotLights[${i}].coneCos`, coneCos);
+        this.setParameter(`spotLights[${i}].penumbraCos`, penumbraCos);
+      });
+      pointLights.forEach((light, i) => {
+        const position = light.entity.getPosition();
+        const color = light.color;
+        const distance = light.range;
+        const decay = light.falloffMode === pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2;
+        this.setParameter(`pointLights[${i}].position`, [position.x, position.y, position.z]);
+        this.setParameter(`pointLights[${i}].color`, [color.r, color.g, color.b]);
+        this.setParameter(`pointLights[${i}].distance`, distance);
+        this.setParameter(`pointLights[${i}].decay`, decay);
+      });
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
     this.litFactor = this.diffuse, this.baseColorMap = this.diffuseMap || this.opacityMap;
     const {
@@ -4435,6 +4598,34 @@ const createVRMCMtoonMaterial = (pcRef) => {
 =======
     setLightColor(color) {
       this.setParameter("lightColor", [color.r, color.g, color.b]);
+=======
+    replaceLightNumbers(dirNum, spotNum, pointNum) {
+      let chunk = this.chunks.basePS;
+      chunk = chunk.replace(/#define USE_DIR_LIGHTS\n/g, "").replace(/#define USE_SPOT_LIGHTS\n/g, "").replace(/#define USE_POINT_LIGHTS\n/g, "");
+      if (dirNum > 0) {
+        chunk = `#define USE_DIR_LIGHTS
+${chunk}`;
+        chunk = chunk.replace(/#define NUM_DIR_LIGHTS \d+/, `#define NUM_DIR_LIGHTS ${dirNum}`);
+      }
+      if (spotNum > 0) {
+        chunk = `#define USE_SPOT_LIGHTS
+${chunk}`;
+        chunk = chunk.replace(/#define NUM_SPOT_LIGHTS \d+/, `#define NUM_SPOT_LIGHTS ${spotNum}`);
+      }
+      if (pointNum > 0) {
+        chunk = `#define USE_POINT_LIGHTS
+${chunk}`;
+        chunk = chunk.replace(
+          /#define NUM_POINT_LIGHTS \d+/,
+          `#define NUM_POINT_LIGHTS ${pointNum}`
+        );
+      }
+      this.chunks.basePS = chunk;
+    }
+    destroy() {
+      super.destroy();
+      this._renderStates.removeMaterial(this);
+>>>>>>> 825be66 (feat: add render state to handle multiple lights & mtoon support point and spot)
     }
   };
 };
@@ -4755,6 +4946,8 @@ class VRMMaterialsV0CompatPlugin {
   }
   _parseV0MToonProperties(materialProperties, schemaMaterial) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H;
+    if (schemaMaterial.v0Compat)
+      return schemaMaterial;
     const isTransparent = ((_a = materialProperties.keywordMap) == null ? void 0 : _a["_ALPHABLEND_ON"]) ?? false;
     const enabledZWrite = ((_b = materialProperties.floatProperties) == null ? void 0 : _b["_ZWrite"]) === 1;
     const transparentWithZWrite = enabledZWrite && isTransparent;
@@ -4879,6 +5072,7 @@ class VRMMaterialsV0CompatPlugin {
       uvAnimationScrollYSpeedFactor,
       uvAnimationRotationSpeedFactor
     };
+    schemaMaterial.v0Compat = true;
     return {
       ...schemaMaterial,
       pbrMetallicRoughness: {
@@ -4975,8 +5169,9 @@ class VRMMaterialsV0CompatPlugin {
 }
 const extensionVRMCName = EXTENSION_VRMC_MATERIALS_MTOON;
 class VRMMtoonLoader {
-  constructor(pcRef, asset) {
+  constructor(pcRef, asset, renderStates) {
     this._pcRef = pcRef;
+    this._renderStates = renderStates;
     this.asset = asset;
     const v0CompatPlugin = new VRMMaterialsV0CompatPlugin(this._pcRef, this.asset);
     v0CompatPlugin.parseMaterials();
@@ -5040,22 +5235,6 @@ class VRMMtoonLoader {
   }
   _applyVRMCMtoonShader(entity, gltf) {
     const VRMCMtoonMaterial = createVRMCMtoonMaterial(this._pcRef);
-    const getLightDirection = () => {
-      var _a;
-      const lightEntity = (_a = this._pcRef.Application.getApplication()) == null ? void 0 : _a.root.findByName("light");
-      if (!lightEntity) {
-        throw new Error("Light entity not found");
-      }
-      return lightEntity.forward.clone();
-    };
-    const getLightColor = () => {
-      var _a;
-      const lightEntity = (_a = this._pcRef.Application.getApplication()) == null ? void 0 : _a.root.findByName("light");
-      if (!lightEntity) {
-        throw new Error("Light entity not found");
-      }
-      return lightEntity.light.color.clone();
-    };
     const renders = entity.findComponents("render");
     renders.forEach((renderComponent) => {
       const render = renderComponent;
@@ -5077,11 +5256,9 @@ class VRMMtoonLoader {
         if (!extension) {
           return;
         }
-        const shaderMaterial = new VRMCMtoonMaterial(this.asset);
+        const shaderMaterial = new VRMCMtoonMaterial(this.asset, this._renderStates);
         shaderMaterial.copy(material);
         shaderMaterial.parse(gltfMaterial);
-        shaderMaterial.setLightDirection(getLightDirection());
-        shaderMaterial.setLightColor(getLightColor());
         meshInstance.material = shaderMaterial;
         shaderMaterial.update();
       });
@@ -5876,12 +6053,64 @@ addEssentialTags_fn = function(asset) {
   __privateMethod(this, _setExtensionsToNodes, setExtensionsToNodes_fn).call(this, nodes, gltfNodes);
   addIndexToNodeTags(asset);
 };
+class RenderStates {
+  constructor(pcRef, app) {
+    this._app = null;
+    this._pcRef = pcRef;
+    this._app = app;
+    this.lightTypes = {
+      directional: pcRef.LIGHTTYPE_DIRECTIONAL,
+      omni: pcRef.LIGHTTYPE_OMNI,
+      point: pcRef.LIGHTTYPE_POINT,
+      spot: pcRef.LIGHTTYPE_SPOT
+    };
+    this._materials = /* @__PURE__ */ new Set();
+    this.lightStates = /* @__PURE__ */ new Map();
+  }
+  // TODO: Change to scrips
+  _updateMaterialUniforms() {
+    this._materials.forEach((material) => {
+      material.setLightUniforms(this.lightStates);
+    });
+  }
+  addMaterial(material) {
+    this._materials.add(material);
+  }
+  removeMaterial(material) {
+    this._materials.delete(material);
+  }
+  update() {
+    if (this._app) {
+      const directionalList = [];
+      const spotList = [];
+      const pointList = [];
+      this._app.root.findComponents("light").forEach((light) => {
+        const lightComponent = light;
+        if (lightComponent.enabled && lightComponent.entity.enabled) {
+          const type = this.lightTypes[lightComponent.type];
+          if (type === this._pcRef.LIGHTTYPE_DIRECTIONAL) {
+            directionalList.push(lightComponent);
+          } else if (type === this._pcRef.LIGHTTYPE_SPOT) {
+            spotList.push(lightComponent);
+          } else if (type === this._pcRef.LIGHTTYPE_OMNI || type === this._pcRef.LIGHTTYPE_POINT) {
+            pointList.push(lightComponent);
+          }
+        }
+      });
+      this.lightStates.set(this._pcRef.LIGHTTYPE_DIRECTIONAL, directionalList);
+      this.lightStates.set(this._pcRef.LIGHTTYPE_SPOT, spotList);
+      this.lightStates.set(this._pcRef.LIGHTTYPE_POINT, pointList);
+      this._updateMaterialUniforms();
+    }
+  }
+}
 window.VRMLoader = {
   VrmAnimation,
   VrmExpression,
   VrmSpringBone,
   VrmMapList,
   VrmcMaterialsMtoon,
+  RenderStates,
   createFormattedVRMHumanoid,
   addIndexToNodeTags,
   getVersion
@@ -5889,6 +6118,7 @@ window.VRMLoader = {
 window.GLTFLoader = GLTFLoader;
 export {
   GLTFLoader,
+  RenderStates,
   VrmAnimation,
   VrmExpression,
   VrmMapList,

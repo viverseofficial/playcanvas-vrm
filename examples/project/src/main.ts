@@ -34,7 +34,7 @@ const createAvatar = (url: string) => {
 
     asset.on('load', (asset) => {
       VRMLoader.addIndexToNodeTags(asset);
-      const mtoonLoader = new VRMLoader.VrmcMaterialsMtoon.VRMMtoonLoader(pc, asset);
+      const mtoonLoader = new VRMLoader.VrmcMaterialsMtoon.VRMMtoonLoader(pc, asset, renderStates);
 
       const renderRootEntity = asset.resource.instantiateRenderEntity();
       mtoonLoader.instantiated(renderRootEntity);
@@ -109,6 +109,16 @@ const setupAvatar = async (app: pc.Application) => {
 };
 
 const app = setupApplication();
+
+const renderStates = new VRMLoader.RenderStates(pc, app);
+
+console.log(app.scene);
+app.scene.ambientLight.set(0.5, 0.5, 0.5);
+
+app.on('update', () => {
+  renderStates.update();
+});
+
 app.once('start', async () => {
   const focusEntity = new pc.Entity('Test');
   focusEntity.setPosition(0, 1.8, 0);

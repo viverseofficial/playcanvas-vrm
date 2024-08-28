@@ -146,6 +146,23 @@ export default /* glsl */ `
         return mat3( T * scale, B * scale, N );
     }
 
+    float getSpotAttenuation( const in float coneCosine, const in float penumbraCosine, const in float angleCosine ) {
+	    return smoothstep( coneCosine, penumbraCosine, angleCosine );
+    }
+
+    float getDistanceAttenuation( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {
+		// based upon Frostbite 3 Moving to Physically-based Rendering
+		// page 32, equation 26: E[window1]
+		// https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
+		float distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.01 );
+
+		if ( cutoffDistance > 0.0 ) {
+            distanceFalloff *= pow( saturate( 1.0 - pow( lightDistance / cutoffDistance, 4.0 ) ), 2.0 );
+		};
+
+		return distanceFalloff;
+    }
+
     struct ReflectedLight {
 	    vec3 directDiffuse;
 	    vec3 directSpecular;
@@ -159,21 +176,86 @@ export default /* glsl */ `
 	    bool visible;
     };
 
-    struct DirectionalLight {
-        vec3 direction;
-        vec3 color;
-    };
+    #if USE_POINT_LIGHTS
+        struct PointLight {
+            vec3 position;
+            vec3 color;
+            float distance;
+            float decay;
+        };
 
-    // TODO: add support for multiple lights
-    // uniform DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
+        uniform PointLight pointLights[NUM_POINT_LIGHTS];
 
-    void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
-        light.color = directionalLight.color;
-        light.direction = directionalLight.direction;
-        light.visible = true;
-    }
+	    void getPointLightInfo( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight light ) {
 
-    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight ) {
+		    vec3 lVector = pointLight.position - geometry.position;
+
+		    light.direction = normalize( lVector );
+
+		    float lightDistance = length( lVector );
+
+		    light.color = pointLight.color;
+		    light.color *= getDistanceAttenuation( lightDistance, pointLight.distance, pointLight.decay );
+		    light.visible = ( light.color != vec3( 0.0 ) );
+	    }
+    #endif
+
+    #if USE_SPOT_LIGHTS
+    	struct SpotLight {
+		    vec3 position;
+		    vec3 direction;
+		    vec3 color;
+		    float distance;
+		    float decay;
+		    float coneCos;
+		    float penumbraCos;
+	    };
+
+        uniform SpotLight spotLights[NUM_SPOT_LIGHTS];
+
+        void getSpotLightInfo( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight light ) {
+
+		    vec3 lVector = spotLight.position - geometry.position;
+
+		    light.direction = normalize( lVector );
+
+		    float angleCos = dot( light.direction, spotLight.direction );
+
+		    float spotAttenuation = getSpotAttenuation( spotLight.coneCos, spotLight.penumbraCos, angleCos );
+
+		    if ( spotAttenuation > 0.0 ) {
+
+			    float lightDistance = length( lVector );
+
+			    light.color = spotLight.color * spotAttenuation;
+			    light.color *= getDistanceAttenuation( lightDistance, spotLight.distance, spotLight.decay );
+			    light.visible = ( light.color != vec3( 0.0 ) );
+
+		    } else {
+
+			    light.color = vec3( 0.0 );
+			    light.visible = false;
+
+		    }
+	    }
+    #endif
+
+    #if USE_DIR_LIGHTS
+        struct DirectionalLight {
+            vec3 direction;
+            vec3 color;
+        };
+
+        uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+
+        void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
+            light.color = directionalLight.color;
+            light.direction = directionalLight.direction;
+            light.visible = true;
+        }
+    #endif
+
+    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight, const in float shrinkNum ) {
         float dotNL = clamp( dot( geometry.normal, directLight.direction ), -1.0, 1.0 );
         vec3 irradiance = directLight.color;
 
@@ -184,8 +266,10 @@ export default /* glsl */ `
 
         float shading = getShading( dotNL, shadow, material.shadingShift );
 
+        // Note: Shrink the light intensity to prevent the color from becoming too bright
+        float shrink = 1.0 / shrinkNum; 
         // toon shaded diffuse
-        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color );
+        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color ) * shrink;
     }
 
     #define RE_Direct RE_Direct_MToon

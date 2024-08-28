@@ -10,7 +10,7 @@ export const createScene = (app: pc.Application) => {
 
   // Front ball at +Z
   const ball = new pc.Entity('Ball');
-  ball.setLocalScale(0.1, 0.1, 0.1);
+  ball.setLocalScale(0.2, 0.2, 0.2);
   ball.setPosition(0, 0, 1);
   app.root.addChild(ball);
   ball.addComponent('render', {
@@ -46,12 +46,102 @@ export const createCamera = (app: pc.Application, focusEntity?: pc.Entity) => {
 
 export const createLight = (app: pc.Application) => {
   // Create a directional light
-  const light = new pc.Entity('light');
-  light.addComponent('light', {
+
+  // Light A
+  const lightA = new pc.Entity('light');
+  lightA.addComponent('light', {
     type: 'directional',
   });
-  app.root.addChild(light);
-  light.setLocalEulerAngles(45, 120, 0);
+  lightA.setPosition(-1, 2, 0);
+  lightA.lookAt(pc.Vec3.ZERO);
+
+  // Light B
+  const lightB = new pc.Entity('light');
+  lightB.addComponent('light', {
+    type: 'spot',
+  });
+  lightB.setPosition(0, 2.5, 0);
+
+  const colorB = new pc.Color(0.5, 0.5, 0);
+  const materialB = new pc.BasicMaterial();
+  materialB.color = colorB;
+  materialB.update();
+
+  lightB.addComponent('render', {
+    type: 'cone',
+    material: materialB,
+  });
+  lightB.setLocalScale(0.2, 0.2, 0.2);
+
+  if (lightB.light) {
+    lightB.light.color = colorB;
+  }
+
+  // Light C
+  const lightC = new pc.Entity('light');
+  lightC.addComponent('light', {
+    type: 'spot',
+  });
+  lightC.setPosition(0, 2.5, 0);
+
+  const colorC = new pc.Color(0, 0, 0.5);
+  const materialC = new pc.BasicMaterial();
+  materialC.color = colorC;
+  materialC.update();
+
+  lightC.addComponent('render', {
+    type: 'cone',
+    material: materialC,
+  });
+  lightC.setLocalScale(0.2, 0.2, 0.2);
+
+  if (lightC.light) {
+    lightC.light.color = colorC;
+    lightC.setPosition(1, 2.5, 0);
+    lightC.lookAt(pc.Vec3.ZERO);
+  }
+
+  // Light D
+  const lightD = new pc.Entity('light');
+  lightD.addComponent('light', {
+    type: 'point',
+  });
+  lightD.setPosition(0, 0.5, 0);
+
+  const colorD = new pc.Color(0.5, 0, 0);
+  const materialD = new pc.BasicMaterial();
+  materialD.color = colorD;
+  materialD.update();
+
+  lightD.addComponent('render', {
+    type: 'sphere',
+    material: materialD,
+  });
+  lightD.setLocalScale(0.2, 0.2, 0.2);
+
+  if (lightD.light) {
+    lightD.light.color = colorD;
+    lightD.setPosition(1, 2.5, 0);
+  }
+
+  app.root.addChild(lightA);
+  app.root.addChild(lightB);
+  app.root.addChild(lightC);
+  app.root.addChild(lightD);
+
+  let timer = 0;
+
+  app.on('update', (dt) => {
+    timer += dt;
+
+    lightB.setPosition(Math.sin(timer) * 2.0, 2.5, 0);
+    lightC.setPosition(-(Math.cos(timer) + 1.0) * 2.0, 2, 0);
+    lightD.setPosition(1, Math.sin(timer) + 1.0, 0);
+
+    // Open when you want model move the light
+    lightA.setPosition(Math.sin(timer), 2, Math.cos(timer));
+    lightA.lookAt(pc.Vec3.ZERO);
+  });
 };
 
 export const loadScript = () =>

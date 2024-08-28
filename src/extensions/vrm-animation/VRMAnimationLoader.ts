@@ -1,5 +1,5 @@
 import * as pc from 'playcanvas';
-import { GLTF as GLTFSchema } from './types/gltf';
+import { GLTF as GLTFSchema } from '../../types/gltf';
 import { VRMCVRMAnimation } from './types/VRMCVRMAnimation';
 import { VRMHumanBoneName } from '../vrm-humanoid/vrm-humanoid';
 import { VRMHumanBoneParentMap, VRMExpressionPresetName } from '../vrm-map-list';

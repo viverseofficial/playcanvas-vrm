@@ -1,18 +1,21 @@
 import * as pc from 'playcanvas';
 import VRMMaterialsV0CompatPlugin from './plugins/VRMMaterialsV0CompatPlugin';
-import { GLTF as GLTFSchema } from '../../vrm-animation/types/gltf';
+import { GLTF as GLTFSchema } from '../../../types/gltf';
 import { createVRMCOutlineMaterial } from './vrmc-outline-material';
 import { createVRMCMtoonMaterial } from './vrmc-mtoon-material';
 import { EXTENSION_VRMC_MATERIALS_MTOON } from './constants';
+import { RenderStates } from '../../../helpers/RenderStates/RenderStates';
 
 const extensionVRMCName = EXTENSION_VRMC_MATERIALS_MTOON;
 
 export class VRMMtoonLoader {
   private _pcRef: typeof pc;
+  private _renderStates: RenderStates;
   public asset: pc.Asset;
 
-  constructor(pcRef: typeof pc, asset: pc.Asset) {
+  constructor(pcRef: typeof pc, asset: pc.Asset, renderStates: RenderStates) {
     this._pcRef = pcRef;
+    this._renderStates = renderStates;
     this.asset = asset;
 
     const v0CompatPlugin = new VRMMaterialsV0CompatPlugin(this._pcRef, this.asset);
@@ -87,27 +90,6 @@ export class VRMMtoonLoader {
   private _applyVRMCMtoonShader(entity: pc.Entity, gltf: GLTFSchema.IGLTF) {
     const VRMCMtoonMaterial = createVRMCMtoonMaterial(this._pcRef);
 
-    // TODO: check light
-    const getLightDirection = (): pc.Vec3 => {
-      const lightEntity = this._pcRef.Application.getApplication()?.root.findByName('light');
-
-      if (!lightEntity) {
-        throw new Error('Light entity not found');
-      }
-
-      return lightEntity.forward.clone();
-    };
-    // TODO: check light
-    const getLightColor = (): pc.Color => {
-      const lightEntity = this._pcRef.Application.getApplication()?.root.findByName('light');
-
-      if (!lightEntity) {
-        throw new Error('Light entity not found');
-      }
-
-      return (lightEntity as any).light.color.clone();
-    };
-
     const renders = entity.findComponents('render');
     renders.forEach((renderComponent) => {
       const render = renderComponent as pc.RenderComponent;
@@ -135,11 +117,9 @@ export class VRMMtoonLoader {
           return;
         }
 
-        const shaderMaterial = new VRMCMtoonMaterial(this.asset);
+        const shaderMaterial = new VRMCMtoonMaterial(this.asset, this._renderStates);
         shaderMaterial.copy(material);
         shaderMaterial.parse(gltfMaterial);
-        shaderMaterial.setLightDirection(getLightDirection());
-        shaderMaterial.setLightColor(getLightColor());
         meshInstance.material = shaderMaterial;
         shaderMaterial.update();
       });

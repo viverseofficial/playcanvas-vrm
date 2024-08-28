@@ -6,6 +6,7 @@ import {
   MToonMaterialOutlineWidthMode,
   MToonMaterialOutlineWidthModeType,
 } from './constants';
+import { RenderStates } from '../../../helpers/RenderStates/RenderStates';
 
 const textureTransformExtensionName = 'KHR_texture_transform';
 
@@ -51,12 +52,16 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
     outlineLightingMixFactor: number = 0.0;
 
     private _asset: pc.Asset;
+    private _renderStates: RenderStates;
 
-    constructor(asset: pc.Asset) {
+    constructor(asset: pc.Asset, renderStates: RenderStates) {
       super();
       this.useLighting = false;
       this.useSkybox = false;
       this._asset = asset;
+
+      this._renderStates = renderStates;
+      this._renderStates.addMaterial(this);
     }
 
     parse(gltfMaterial: any) {
@@ -137,8 +142,6 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
 
       // Extension parameters
       const extension = gltfMaterial?.extensions?.[EXTENSION_VRMC_MATERIALS_MTOON];
-
-      // console.log('YYY extension', extension);
 
       const {
         shadeColorFactor,
@@ -335,7 +338,7 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
       }
 
       if (useUvInVert && !useUvInFrag) {
-        console.log('YYY Adding MTOON_UVS_VERTEX_ONLY');
+        console.log('Adding MTOON_UVS_VERTEX_ONLY');
         this.chunks.basePS += '#define MTOON_UVS_VERTEX_ONLY\n';
       }
 
@@ -375,6 +378,10 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
         this.chunks.basePS += '#define OUTLINE\n';
         this.chunks.baseVS += '#define OUTLINE\n';
       }
+
+      this.chunks.basePS += '#define NUM_DIR_LIGHTS 0\n';
+      this.chunks.basePS += '#define NUM_SPOT_LIGHTS 0\n';
+      this.chunks.basePS += '#define NUM_POINT_LIGHTS 0\n';
 
       this.chunks.baseVS += shaderChunksMtoon.baseVS;
       this.chunks.endVS += shaderChunksMtoon.endVS;
@@ -474,12 +481,85 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
       ]);
     }
 
-    setLightDirection(direction: pc.Vec3) {
-      this.setParameter('lightDirection', [direction.x, direction.y, direction.z]);
+    setLightUniforms(lightStates: Map<number, any>) {
+      const directionalLights = lightStates.get(pcRef.LIGHTTYPE_DIRECTIONAL);
+      const spotLights = lightStates.get(pcRef.LIGHTTYPE_SPOT);
+      const pointLights = lightStates.get(pcRef.LIGHTTYPE_POINT);
+      this.replaceLightNumbers(directionalLights.length, spotLights.length, pointLights.length);
+
+      directionalLights.forEach((light: pc.LightComponent, i: number) => {
+        const direction = light.entity.forward;
+        const color = light.color;
+        this.setParameter(`directionalLights[${i}].color`, [color.r, color.g, color.b]);
+        this.setParameter(`directionalLights[${i}].direction`, [
+          direction.x,
+          direction.y,
+          direction.z,
+        ]);
+      });
+
+      spotLights.forEach((light: pc.LightComponent, i: number) => {
+        const position = light.entity.getPosition();
+        const direction = light.entity.forward;
+        const color = light.color;
+        const distance = light.range;
+        const decay = light.falloffMode === pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2;
+        const coneCos = Math.cos(light.innerConeAngle);
+        const penumbraCos = Math.cos(light.outerConeAngle);
+        this.setParameter(`spotLights[${i}].position`, [position.x, position.y, position.z]);
+        this.setParameter(`spotLights[${i}].direction`, [direction.x, direction.y, direction.z]);
+        this.setParameter(`spotLights[${i}].color`, [color.r, color.g, color.b]);
+        this.setParameter(`spotLights[${i}].distance`, distance);
+        this.setParameter(`spotLights[${i}].decay`, decay);
+        this.setParameter(`spotLights[${i}].coneCos`, coneCos);
+        this.setParameter(`spotLights[${i}].penumbraCos`, penumbraCos);
+      });
+
+      pointLights.forEach((light: pc.LightComponent, i: number) => {
+        const position = light.entity.getPosition();
+        const color = light.color;
+        const distance = light.range;
+        const decay = light.falloffMode === pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2;
+
+        this.setParameter(`pointLights[${i}].position`, [position.x, position.y, position.z]);
+        this.setParameter(`pointLights[${i}].color`, [color.r, color.g, color.b]);
+        this.setParameter(`pointLights[${i}].distance`, distance);
+        this.setParameter(`pointLights[${i}].decay`, decay);
+      });
     }
 
-    setLightColor(color: pc.Color) {
-      this.setParameter('lightColor', [color.r, color.g, color.b]);
+    replaceLightNumbers(dirNum: number, spotNum: number, pointNum: number) {
+      let chunk = this.chunks.basePS;
+
+      chunk = chunk
+        .replace(/#define USE_DIR_LIGHTS\n/g, '')
+        .replace(/#define USE_SPOT_LIGHTS\n/g, '')
+        .replace(/#define USE_POINT_LIGHTS\n/g, '');
+
+      if (dirNum > 0) {
+        chunk = `#define USE_DIR_LIGHTS\n${chunk}`;
+        chunk = chunk.replace(/#define NUM_DIR_LIGHTS \d+/, `#define NUM_DIR_LIGHTS ${dirNum}`);
+      }
+
+      if (spotNum > 0) {
+        chunk = `#define USE_SPOT_LIGHTS\n${chunk}`;
+        chunk = chunk.replace(/#define NUM_SPOT_LIGHTS \d+/, `#define NUM_SPOT_LIGHTS ${spotNum}`);
+      }
+
+      if (pointNum > 0) {
+        chunk = `#define USE_POINT_LIGHTS\n${chunk}`;
+        chunk = chunk.replace(
+          /#define NUM_POINT_LIGHTS \d+/,
+          `#define NUM_POINT_LIGHTS ${pointNum}`,
+        );
+      }
+
+      this.chunks.basePS = chunk;
+    }
+
+    destroy() {
+      super.destroy();
+      this._renderStates.removeMaterial(this);
     }
   };
 };

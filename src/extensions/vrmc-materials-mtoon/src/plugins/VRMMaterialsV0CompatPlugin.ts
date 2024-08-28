@@ -1,7 +1,7 @@
 import * as pc from 'playcanvas';
 import { VRM as V0VRM, Material as V0Material } from '../../../../types/types-vrm-0.0';
 import * as V1MToonSchema from '../../../../types/types-vrmc-materials-mtoon-1.0';
-import { GLTF as GLTFSchema } from '../../../vrm-animation/types/gltf';
+import { GLTF as GLTFSchema } from '../../../../types/gltf';
 import { gammaEOTF } from '../utils';
 
 class VRMMaterialsV0CompatPlugin {
@@ -69,8 +69,10 @@ class VRMMaterialsV0CompatPlugin {
 
   private _parseV0MToonProperties(
     materialProperties: V0Material,
-    schemaMaterial: GLTFSchema.IMaterial,
+    schemaMaterial: GLTFSchema.IMaterial & { v0Compat?: boolean },
   ): GLTFSchema.IMaterial {
+    if (schemaMaterial.v0Compat) return schemaMaterial;
+
     const isTransparent = materialProperties.keywordMap?.['_ALPHABLEND_ON'] ?? false;
     const enabledZWrite = materialProperties.floatProperties?.['_ZWrite'] === 1;
     const transparentWithZWrite = enabledZWrite && isTransparent;
@@ -263,6 +265,8 @@ class VRMMaterialsV0CompatPlugin {
       uvAnimationScrollYSpeedFactor,
       uvAnimationRotationSpeedFactor,
     };
+
+    schemaMaterial.v0Compat = true;
 
     return {
       ...schemaMaterial,

@@ -86,20 +86,54 @@ export default /* glsl */ `
     geometry.normal = normal;
     geometry.viewDir = normalize( vViewPosition );
 
-
-    DirectionalLight directionalLight;
     IncidentLight directLight;
+    // since these variables will be used in unrolled loop, we have to define in prior
+    float shadow = 1.0;
 
-    directionalLight.color = lightColor;
-    directionalLight.direction = lightDirection;
-    getDirectionalLightInfo( directionalLight, directLight );   
+    #ifdef USE_POINT_LIGHTS
+        PointLight pointLight;
+        shadow = 1.0; 
 
-    float shadow = 1.0;    
-    RE_Direct( directLight, geometry, material, shadow, reflectedLight );
+        #pragma unroll_loop_start
+        for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {
+            pointLight = pointLights[ i ];
+            getPointLightInfo( pointLight, geometry, directLight );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
+        }
+        #pragma unroll_loop_end
+    #endif
+    
 
-    // TODO: 2.8 ? force the color lighter
-    vec3 col = 3.0 * reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
+    #if USE_SPOT_LIGHTS
+        SpotLight spotLight;
+        shadow = 1.0; 
 
+        #pragma unroll_loop_start
+        for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {
+            spotLight = spotLights[ i ];
+            getSpotLightInfo( spotLight, geometry, directLight );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
+        }
+        #pragma unroll_loop_end
+    #endif
+
+    #if USE_DIR_LIGHTS
+        DirectionalLight directionalLight;
+        shadow = 1.0; 
+
+        #pragma unroll_loop_start
+        for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
+            directionalLight = directionalLights[0];
+            getDirectionalLightInfo( directionalLight, directLight );  
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight, float(NUM_DIR_LIGHTS) );
+        }
+        #pragma unroll_loop_end
+    #endif 
+
+
+    // force the color lighter
+    float lighter = 3.0;
+    vec3 col = lighter * reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
 
     // -- MToon: rim lighting -----------------------------------------
     vec3 viewDir = normalize( vViewDirection );
