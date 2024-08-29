@@ -1,5 +1,6 @@
 import * as pc from 'playcanvas';
 import { preloadAssets } from './assets';
+import skyCubeMapUrl from './assets/skybox.dds?url';
 
 export const createScene = (app: pc.Application) => {
   const plane = new pc.Entity('Plane');
@@ -62,7 +63,7 @@ export const createLight = (app: pc.Application) => {
   });
   lightB.setPosition(0, 2.5, 0);
 
-  const colorB = new pc.Color(0.5, 0.5, 0);
+  const colorB = new pc.Color(0, 0, 0.5);
   const materialB = new pc.BasicMaterial();
   materialB.color = colorB;
   materialB.update();
@@ -84,7 +85,7 @@ export const createLight = (app: pc.Application) => {
   });
   lightC.setPosition(0, 2.5, 0);
 
-  const colorC = new pc.Color(0, 0, 0.5);
+  const colorC = new pc.Color(0, 0.5, 0.5);
   const materialC = new pc.BasicMaterial();
   materialC.color = colorC;
   materialC.update();
@@ -125,9 +126,9 @@ export const createLight = (app: pc.Application) => {
   }
 
   app.root.addChild(lightA);
-  app.root.addChild(lightB);
-  app.root.addChild(lightC);
-  app.root.addChild(lightD);
+  // app.root.addChild(lightB);
+  // app.root.addChild(lightC);
+  // app.root.addChild(lightD);
 
   let timer = 0;
 
@@ -160,6 +161,30 @@ export const loadScript = () =>
       reject(error);
     };
   });
+
+export const setSkyBox = (app: pc.Application) => {
+  const cubemapAsset = new pc.Asset(
+    'skybox',
+    'cubemap',
+    {
+      url: skyCubeMapUrl,
+    },
+    {
+      magFilter: 1,
+      minFilter: 5,
+      anisotropy: 1,
+      name: 'Skybox',
+      prefiltered: 'skybox.dds',
+    },
+  );
+
+  cubemapAsset.ready((asset) => {
+    app.scene.setSkybox(asset.resources);
+    app.scene.skyboxMip = 1;
+  });
+
+  app.assets.load(cubemapAsset);
+};
 
 const setupApplication = () => {
   const canvas = document.getElementById('application-canvas');

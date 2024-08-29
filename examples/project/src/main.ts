@@ -1,15 +1,15 @@
 import * as pc from 'playcanvas';
-import setupApplication, { createCamera, createLight, loadScript, createScene } from './setup';
+import setupApplication, {
+  createCamera,
+  createLight,
+  loadScript,
+  createScene,
+  setSkyBox,
+} from './setup';
 import { createDefaultAnimations, createWindowTestAnimation } from './utils/animations';
 
 import avatarUrl from '/Avatar_v1.vrm?url'; // v1
 import avatarUrl2 from '/rara.vrm?url'; // v0
-
-// seed
-// rimMultiplyTexture
-
-// pink
-// hair check
 
 declare global {
   interface Window {
@@ -112,7 +112,6 @@ const app = setupApplication();
 
 const renderStates = new VRMLoader.RenderStates(pc, app);
 
-console.log(app.scene);
 app.scene.ambientLight.set(0.5, 0.5, 0.5);
 
 app.on('update', () => {
@@ -131,6 +130,7 @@ app.once('start', async () => {
   createLight(app);
   createCamera(app, focusEntity);
   createScene(app);
+  setSkyBox(app);
 
   VRMLoader.VrmExpression.importScript(pc);
   VRMLoader.VrmSpringBone.importScript(pc);

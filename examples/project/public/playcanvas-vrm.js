@@ -3573,16 +3573,11 @@ const basePS$1 = (
   `
     #define RECIPROCAL_PI 0.3183098861837907
 
-    // TODO: Check it
-    uniform vec3 lightDirection;
-    uniform vec3 lightColor;
-
     uniform vec3 litFactor;
-
     uniform float opacity;
-    
-
     uniform vec3 shadeColorFactor;
+    uniform vec3 ambientLightColor;
+
     #ifdef USE_SHADEMULTIPLYTEXTURE
         uniform sampler2D shadeMultiplyTexture;
         uniform mat3 shadeMultiplyTextureUvTransform;
@@ -3718,22 +3713,6 @@ const basePS$1 = (
         return mat3( T * scale, B * scale, N );
     }
 
-    float getSpotAttenuation( const in float coneCosine, const in float penumbraCosine, const in float angleCosine ) {
-	    return smoothstep( coneCosine, penumbraCosine, angleCosine );
-    }
-
-    float getDistanceAttenuation( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {
-		// based upon Frostbite 3 Moving to Physically-based Rendering
-		// page 32, equation 26: E[window1]
-		// https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
-		float distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.01 );
-
-		if ( cutoffDistance > 0.0 ) {
-            distanceFalloff *= pow( saturate( 1.0 - pow( lightDistance / cutoffDistance, 4.0 ) ), 2.0 );
-		};
-
-		return distanceFalloff;
-    }
 
     struct ReflectedLight {
 	    vec3 directDiffuse;
@@ -3748,84 +3727,6 @@ const basePS$1 = (
 	    bool visible;
     };
 
-    #if USE_POINT_LIGHTS
-        struct PointLight {
-            vec3 position;
-            vec3 color;
-            float distance;
-            float decay;
-        };
-
-        uniform PointLight pointLights[NUM_POINT_LIGHTS];
-
-	    void getPointLightInfo( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight light ) {
-
-		    vec3 lVector = pointLight.position - geometry.position;
-
-		    light.direction = normalize( lVector );
-
-		    float lightDistance = length( lVector );
-
-		    light.color = pointLight.color;
-		    light.color *= getDistanceAttenuation( lightDistance, pointLight.distance, pointLight.decay );
-		    light.visible = ( light.color != vec3( 0.0 ) );
-	    }
-    #endif
-
-    #if USE_SPOT_LIGHTS
-    	struct SpotLight {
-		    vec3 position;
-		    vec3 direction;
-		    vec3 color;
-		    float distance;
-		    float decay;
-		    float coneCos;
-		    float penumbraCos;
-	    };
-
-        uniform SpotLight spotLights[NUM_SPOT_LIGHTS];
-
-        void getSpotLightInfo( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight light ) {
-
-		    vec3 lVector = spotLight.position - geometry.position;
-
-		    light.direction = normalize( lVector );
-
-		    float angleCos = dot( light.direction, spotLight.direction );
-
-		    float spotAttenuation = getSpotAttenuation( spotLight.coneCos, spotLight.penumbraCos, angleCos );
-
-		    if ( spotAttenuation > 0.0 ) {
-
-			    float lightDistance = length( lVector );
-
-			    light.color = spotLight.color * spotAttenuation;
-			    light.color *= getDistanceAttenuation( lightDistance, spotLight.distance, spotLight.decay );
-			    light.visible = ( light.color != vec3( 0.0 ) );
-
-		    } else {
-
-			    light.color = vec3( 0.0 );
-			    light.visible = false;
-
-		    }
-	    }
-    #endif
-
-    #if USE_DIR_LIGHTS
-        struct DirectionalLight {
-            vec3 direction;
-            vec3 color;
-        };
-
-        uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
-
-        void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
-            light.color = directionalLight.color;
-            light.direction = directionalLight.direction;
-            light.visible = true;
-        }
-    #endif
 
     void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight, const in float shrinkNum ) {
         float dotNL = clamp( dot( geometry.normal, directLight.direction ), -1.0, 1.0 );
@@ -3844,8 +3745,16 @@ const basePS$1 = (
         reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color ) * shrink;
     }
 
-    #define RE_Direct RE_Direct_MToon
+    void RE_IndirectDiffuse_MToon( const in vec3 irradiance, const in GeometricContext geometry, const in MToonMaterial material, inout ReflectedLight reflectedLight ) {
+        // indirect diffuse will use diffuseColor, no shadeColor involved
+        reflectedLight.indirectDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );
 
+        // directSpecular will be used for rim lighting, not an actual specular
+        reflectedLight.directSpecular += irradiance;
+    }
+
+    #define RE_Direct RE_Direct_MToon
+    #define RE_IndirectDiffuse RE_IndirectDiffuse_MToon
 
     vec3 perturbNormal2Arb( vec2 uv, vec3 eye_pos, vec3 surf_norm, vec3 mapN, float faceDirection ) {
         vec3 q0 = vec3( dFdx( eye_pos.x ), dFdx( eye_pos.y ), dFdx( eye_pos.z ) );
@@ -3907,8 +3816,8 @@ const endPS$1 = (
     vec3 totalEmissiveRadiance = emissive;
 
     #ifdef USE_MAP
-        vec2 mapUv = ( mapUvTransform * vec3( uv, 1 ) ).xy;
-        vec4 sampledDiffuseColor = texture2D( baseColorMap, mapUv );
+        vec2 colorMapUv = ( mapUvTransform * vec3( uv, 1 ) ).xy;
+        vec4 sampledDiffuseColor = texture2D( baseColorMap, colorMapUv );
         diffuseColor *= sampledDiffuseColor;
     #endif
 
@@ -4015,9 +3924,35 @@ const endPS$1 = (
         #pragma unroll_loop_end
     #endif 
 
+    // -- MToon: Ambient --------------------------------------------------------
+    vec3 iblIrradiance = vec3( 0.0 );
+    vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );
+
+
+    // From three.js #include <lights_fragment_maps>
+    // -- MToon: Environment --------------------------------------------------------
+	#ifdef USE_ENV_LIGHTS
+		vec3 dir = normalize(cubeMapRotate(vNormal) * vec3(-1.0, 1.0, 1.0));
+        vec2 envuv = mapUv(toSphericalUv(dir), vec4(128.0, 256.0 + 128.0, 64.0, 32.0) / atlasSize);
+        vec4 raw = texture2D(texture_envAtlas, envuv);
+        vec3 linear = decodeLinear(raw);
+
+        float shrinkEnvLightRatio = 0.75;
+
+        #ifdef USE_DIR_LIGHTS
+            shrinkEnvLightRatio = 0.25;
+        #endif
+
+        irradiance += getIBLIrradiance(linear) * shrinkEnvLightRatio;
+	#endif
+
+
+    // From three.js #include <lights_fragment_end>
+    RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );
+    
 
     // force the color lighter
-    float lighter = 3.0;
+    float lighter = 2.5;
     vec3 col = lighter * reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
 
     // -- MToon: rim lighting -----------------------------------------
@@ -4058,7 +3993,115 @@ const endPS$1 = (
         diffuseColor.a = 1.0;
     #endif
 
-    gl_FragColor = vec4( col,  diffuseColor.a );
+    gl_FragColor = vec4( col, 1.0 );
+`
+);
+const light = (
+  /* glsl */
+  `
+    float getSpotAttenuation( const in float coneCosine, const in float penumbraCosine, const in float angleCosine ) {
+	    return smoothstep( coneCosine, penumbraCosine, angleCosine );
+    }
+
+    float getDistanceAttenuation( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {
+		// based upon Frostbite 3 Moving to Physically-based Rendering
+		// page 32, equation 26: E[window1]
+		// https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
+		float distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.01 );
+
+		if ( cutoffDistance > 0.0 ) {
+            distanceFalloff *= pow( saturate( 1.0 - pow( lightDistance / cutoffDistance, 4.0 ) ), 2.0 );
+		};
+
+		return distanceFalloff;
+    }
+
+	vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
+		vec3 irradiance = ambientLightColor;
+		return irradiance;
+	}
+	vec3 getIBLIrradiance( const in vec3 envMapColor ) {
+		return 3.141592653589793 * envMapColor.rgb;
+	}
+
+    #if USE_POINT_LIGHTS
+        struct PointLight {
+            vec3 position;
+            vec3 color;
+            float distance;
+            float decay;
+        };
+
+        uniform PointLight pointLights[NUM_POINT_LIGHTS];
+
+	    void getPointLightInfo( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight light ) {
+
+		    vec3 lVector = pointLight.position - geometry.position;
+
+		    light.direction = normalize( lVector );
+
+		    float lightDistance = length( lVector );
+
+		    light.color = pointLight.color;
+		    light.color *= getDistanceAttenuation( lightDistance, pointLight.distance, pointLight.decay );
+		    light.visible = ( light.color != vec3( 0.0 ) );
+	    }
+    #endif
+
+    #if USE_SPOT_LIGHTS
+    	struct SpotLight {
+		    vec3 position;
+		    vec3 direction;
+		    vec3 color;
+		    float distance;
+		    float decay;
+		    float coneCos;
+		    float penumbraCos;
+	    };
+
+        uniform SpotLight spotLights[NUM_SPOT_LIGHTS];
+
+        void getSpotLightInfo( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight light ) {
+
+		    vec3 lVector = spotLight.position - geometry.position;
+
+		    light.direction = normalize( lVector );
+
+		    float angleCos = dot( light.direction, spotLight.direction );
+
+		    float spotAttenuation = getSpotAttenuation( spotLight.coneCos, spotLight.penumbraCos, angleCos );
+
+		    if ( spotAttenuation > 0.0 ) {
+
+			    float lightDistance = length( lVector );
+
+			    light.color = spotLight.color * spotAttenuation;
+			    light.color *= getDistanceAttenuation( lightDistance, spotLight.distance, spotLight.decay );
+			    light.visible = ( light.color != vec3( 0.0 ) );
+
+		    } else {
+
+			    light.color = vec3( 0.0 );
+			    light.visible = false;
+
+		    }
+	    }
+    #endif
+
+    #if USE_DIR_LIGHTS
+        struct DirectionalLight {
+            vec3 direction;
+            vec3 color;
+        };
+
+        uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+
+        void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
+            light.color = directionalLight.color;
+            light.direction = directionalLight.direction;
+            light.visible = true;
+        }
+    #endif
 `
 <<<<<<< HEAD
 ), O = {
@@ -4109,7 +4152,8 @@ const shaderChunksMtoon = {
   baseVS: baseVS$1,
   endVS: endVS$1,
   basePS: basePS$1,
-  endPS: endPS$1
+  endPS: endPS$1,
+  light
 };
 const textureTransformExtensionName = "KHR_texture_transform";
 const createVRMCMtoonMaterial = (pcRef) => {
@@ -4154,8 +4198,8 @@ const createVRMCMtoonMaterial = (pcRef) => {
       this.outlineColorFactor = new pcRef.Color(1, 0.5, 0, 1);
       this.outlineLightingMixFactor = 0;
       this.useLighting = false;
-      this.useSkybox = false;
       this._asset = asset;
+      this._vec3A = new pcRef.Vec3();
       this._renderStates = renderStates;
       this._renderStates.addMaterial(this);
     }
@@ -4345,7 +4389,7 @@ const createVRMCMtoonMaterial = (pcRef) => {
       if (this.isOutline)
         this.cull = pcRef.CULLFACE_FRONT;
       this.setShaderChunks();
-      this.setShaderParameters();
+      this.setShaderUniforms();
     }
     setShaderChunks() {
       this.chunks.APIVersion = pcRef.CHUNKAPI_1_70;
@@ -4415,9 +4459,10 @@ const createVRMCMtoonMaterial = (pcRef) => {
       this.chunks.baseVS += shaderChunksMtoon.baseVS;
       this.chunks.endVS += shaderChunksMtoon.endVS;
       this.chunks.basePS += shaderChunksMtoon.basePS;
+      this.chunks.basePS += shaderChunksMtoon.light;
       this.chunks.endPS += shaderChunksMtoon.endPS;
     }
-    setShaderParameters() {
+    setShaderUniforms() {
       this.setParameter("litFactor", [this.litFactor.r, this.litFactor.g, this.litFactor.b]);
       this.setParameter("opacity", this.opacity);
       this.setParameters("giEqualizationFactor", this.giEqualizationFactor);
@@ -4479,6 +4524,10 @@ const createVRMCMtoonMaterial = (pcRef) => {
       if (this.matcapTexture) {
         this.setParameter("matcapTexture", this.matcapTexture);
       }
+      if (this.rimMultiplyTexture) {
+        this.setParameter("rimMultiplyTexture", this.rimMultiplyTexture);
+        this.setParameter("rimMultiplyTextureUvTransform", this.rimMultiplyTextureUvTransform.data);
+      }
       if (this.outlineWidthMultiplyTexture) {
         this.setParameter("outlineWidthMultiplyTexture", this.outlineWidthMultiplyTexture);
       }
@@ -4490,29 +4539,34 @@ const createVRMCMtoonMaterial = (pcRef) => {
         this.outlineColorFactor.b
       ]);
     }
-    setLightUniforms(lightStates) {
+    updateLightUniforms(lightStates, scene) {
+      this.updateIndirectLightUniforms(scene);
       const directionalLights = lightStates.get(pcRef.LIGHTTYPE_DIRECTIONAL);
       const spotLights = lightStates.get(pcRef.LIGHTTYPE_SPOT);
       const pointLights = lightStates.get(pcRef.LIGHTTYPE_POINT);
       this.replaceLightNumbers(directionalLights.length, spotLights.length, pointLights.length);
-      directionalLights.forEach((light, i) => {
-        const direction = light.entity.forward;
-        const color = light.color;
+      directionalLights.forEach((light2, i) => {
+        const directional = light2.data.light;
+        const direction = directional._direction;
+        this._vec3A.copy(direction);
+        this._vec3A.mulScalar(-1);
+        this._vec3A.normalize();
+        const color = light2.color;
         this.setParameter(`directionalLights[${i}].color`, [color.r, color.g, color.b]);
         this.setParameter(`directionalLights[${i}].direction`, [
-          direction.x,
-          direction.y,
-          direction.z
+          this._vec3A.x,
+          this._vec3A.y,
+          this._vec3A.z
         ]);
       });
-      spotLights.forEach((light, i) => {
-        const position = light.entity.getPosition();
-        const direction = light.entity.forward;
-        const color = light.color;
-        const distance = light.range;
-        const decay = light.falloffMode === pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2;
-        const coneCos = Math.cos(light.innerConeAngle);
-        const penumbraCos = Math.cos(light.outerConeAngle);
+      spotLights.forEach((light2, i) => {
+        const position = light2.entity.getPosition();
+        const direction = light2.entity.forward;
+        const color = light2.color;
+        const distance = light2.range;
+        const decay = light2.falloffMode === pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2;
+        const coneCos = Math.cos(light2.innerConeAngle);
+        const penumbraCos = Math.cos(light2.outerConeAngle);
         this.setParameter(`spotLights[${i}].position`, [position.x, position.y, position.z]);
         this.setParameter(`spotLights[${i}].direction`, [direction.x, direction.y, direction.z]);
         this.setParameter(`spotLights[${i}].color`, [color.r, color.g, color.b]);
@@ -4521,17 +4575,18 @@ const createVRMCMtoonMaterial = (pcRef) => {
         this.setParameter(`spotLights[${i}].coneCos`, coneCos);
         this.setParameter(`spotLights[${i}].penumbraCos`, penumbraCos);
       });
-      pointLights.forEach((light, i) => {
-        const position = light.entity.getPosition();
-        const color = light.color;
-        const distance = light.range;
-        const decay = light.falloffMode === pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2;
+      pointLights.forEach((light2, i) => {
+        const position = light2.entity.getPosition();
+        const color = light2.color;
+        const distance = light2.range;
+        const decay = light2.falloffMode === pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2;
         this.setParameter(`pointLights[${i}].position`, [position.x, position.y, position.z]);
         this.setParameter(`pointLights[${i}].color`, [color.r, color.g, color.b]);
         this.setParameter(`pointLights[${i}].distance`, distance);
         this.setParameter(`pointLights[${i}].decay`, decay);
       });
     }
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     this.litFactor = this.diffuse, this.baseColorMap = this.diffuseMap || this.opacityMap;
@@ -4599,9 +4654,22 @@ const createVRMCMtoonMaterial = (pcRef) => {
     setLightColor(color) {
       this.setParameter("lightColor", [color.r, color.g, color.b]);
 =======
+=======
+    updateIndirectLightUniforms(scene) {
+      if (!this.envAtlas && scene.envAtlas) {
+        this.envAtlas = scene.envAtlas;
+      }
+      if (this.envAtlas) {
+        this.setParameter("ambientLightColor", [0, 0, 0]);
+      } else {
+        this.ambient.copy(scene.ambientLight);
+        this.setParameter("ambientLightColor", [this.ambient.r, this.ambient.g, this.ambient.b]);
+      }
+    }
+>>>>>>> 2cf8b80 (feat: add indirectDiffuse env map light and ambient color)
     replaceLightNumbers(dirNum, spotNum, pointNum) {
       let chunk = this.chunks.basePS;
-      chunk = chunk.replace(/#define USE_DIR_LIGHTS\n/g, "").replace(/#define USE_SPOT_LIGHTS\n/g, "").replace(/#define USE_POINT_LIGHTS\n/g, "");
+      chunk = chunk.replace(/#define USE_DIR_LIGHTS\n/g, "").replace(/#define USE_SPOT_LIGHTS\n/g, "").replace(/#define USE_POINT_LIGHTS\n/g, "").replace(/#define USE_ENV_LIGHTS\n/g, "");
       if (dirNum > 0) {
         chunk = `#define USE_DIR_LIGHTS
 ${chunk}`;
@@ -4619,6 +4687,10 @@ ${chunk}`;
           /#define NUM_POINT_LIGHTS \d+/,
           `#define NUM_POINT_LIGHTS ${pointNum}`
         );
+      }
+      if (this.envAtlas) {
+        chunk = `#define USE_ENV_LIGHTS
+${chunk}`;
       }
       this.chunks.basePS = chunk;
     }
@@ -6070,7 +6142,9 @@ class RenderStates {
   // TODO: Change to scrips
   _updateMaterialUniforms() {
     this._materials.forEach((material) => {
-      material.setLightUniforms(this.lightStates);
+      if (this._app) {
+        material.updateLightUniforms(this.lightStates, this._app.scene);
+      }
     });
   }
   addMaterial(material) {
@@ -6084,8 +6158,8 @@ class RenderStates {
       const directionalList = [];
       const spotList = [];
       const pointList = [];
-      this._app.root.findComponents("light").forEach((light) => {
-        const lightComponent = light;
+      this._app.root.findComponents("light").forEach((light2) => {
+        const lightComponent = light2;
         if (lightComponent.enabled && lightComponent.entity.enabled) {
           const type = this.lightTypes[lightComponent.type];
           if (type === this._pcRef.LIGHTTYPE_DIRECTIONAL) {

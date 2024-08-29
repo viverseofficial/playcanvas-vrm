@@ -22,8 +22,8 @@ export default /* glsl */ `
     vec3 totalEmissiveRadiance = emissive;
 
     #ifdef USE_MAP
-        vec2 mapUv = ( mapUvTransform * vec3( uv, 1 ) ).xy;
-        vec4 sampledDiffuseColor = texture2D( baseColorMap, mapUv );
+        vec2 colorMapUv = ( mapUvTransform * vec3( uv, 1 ) ).xy;
+        vec4 sampledDiffuseColor = texture2D( baseColorMap, colorMapUv );
         diffuseColor *= sampledDiffuseColor;
     #endif
 
@@ -130,9 +130,35 @@ export default /* glsl */ `
         #pragma unroll_loop_end
     #endif 
 
+    // -- MToon: Ambient --------------------------------------------------------
+    vec3 iblIrradiance = vec3( 0.0 );
+    vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );
+
+
+    // From three.js #include <lights_fragment_maps>
+    // -- MToon: Environment --------------------------------------------------------
+	#ifdef USE_ENV_LIGHTS
+		vec3 dir = normalize(cubeMapRotate(vNormal) * vec3(-1.0, 1.0, 1.0));
+        vec2 envuv = mapUv(toSphericalUv(dir), vec4(128.0, 256.0 + 128.0, 64.0, 32.0) / atlasSize);
+        vec4 raw = texture2D(texture_envAtlas, envuv);
+        vec3 linear = decodeLinear(raw);
+
+        float shrinkEnvLightRatio = 0.75;
+
+        #ifdef USE_DIR_LIGHTS
+            shrinkEnvLightRatio = 0.25;
+        #endif
+
+        irradiance += getIBLIrradiance(linear) * shrinkEnvLightRatio;
+	#endif
+
+
+    // From three.js #include <lights_fragment_end>
+    RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );
+    
 
     // force the color lighter
-    float lighter = 3.0;
+    float lighter = 2.5;
     vec3 col = lighter * reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
 
     // -- MToon: rim lighting -----------------------------------------
@@ -173,6 +199,6 @@ export default /* glsl */ `
         diffuseColor.a = 1.0;
     #endif
 
-    gl_FragColor = vec4( col,  diffuseColor.a );
+    gl_FragColor = vec4( col, 1.0 );
 `
 

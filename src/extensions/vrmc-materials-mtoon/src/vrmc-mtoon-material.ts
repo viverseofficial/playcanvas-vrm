@@ -53,12 +53,13 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
 
     private _asset: pc.Asset;
     private _renderStates: RenderStates;
+    private _vec3A: pc.Vec3;
 
     constructor(asset: pc.Asset, renderStates: RenderStates) {
       super();
       this.useLighting = false;
-      this.useSkybox = false;
       this._asset = asset;
+      this._vec3A = new pcRef.Vec3();
 
       this._renderStates = renderStates;
       this._renderStates.addMaterial(this);
@@ -287,7 +288,7 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
       if (this.isOutline) this.cull = pcRef.CULLFACE_FRONT;
 
       this.setShaderChunks();
-      this.setShaderParameters();
+      this.setShaderUniforms();
     }
 
     setShaderChunks() {
@@ -386,10 +387,11 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
       this.chunks.baseVS += shaderChunksMtoon.baseVS;
       this.chunks.endVS += shaderChunksMtoon.endVS;
       this.chunks.basePS += shaderChunksMtoon.basePS;
+      this.chunks.basePS += shaderChunksMtoon.light;
       this.chunks.endPS += shaderChunksMtoon.endPS;
     }
 
-    setShaderParameters() {
+    setShaderUniforms() {
       this.setParameter('litFactor', [this.litFactor.r, this.litFactor.g, this.litFactor.b]);
       this.setParameter('opacity', this.opacity);
       this.setParameters('giEqualizationFactor', this.giEqualizationFactor);
@@ -468,6 +470,11 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
         this.setParameter('matcapTexture', this.matcapTexture);
       }
 
+      if (this.rimMultiplyTexture) {
+        this.setParameter('rimMultiplyTexture', this.rimMultiplyTexture);
+        this.setParameter('rimMultiplyTextureUvTransform', this.rimMultiplyTextureUvTransform.data);
+      }
+
       if (this.outlineWidthMultiplyTexture) {
         this.setParameter('outlineWidthMultiplyTexture', this.outlineWidthMultiplyTexture);
       }
@@ -481,20 +488,28 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
       ]);
     }
 
-    setLightUniforms(lightStates: Map<number, any>) {
+    updateLightUniforms(lightStates: Map<number, any>, scene: pc.Scene) {
+      this.updateIndirectLightUniforms(scene);
+
       const directionalLights = lightStates.get(pcRef.LIGHTTYPE_DIRECTIONAL);
       const spotLights = lightStates.get(pcRef.LIGHTTYPE_SPOT);
       const pointLights = lightStates.get(pcRef.LIGHTTYPE_POINT);
       this.replaceLightNumbers(directionalLights.length, spotLights.length, pointLights.length);
 
       directionalLights.forEach((light: pc.LightComponent, i: number) => {
-        const direction = light.entity.forward;
+        const directional = light.data.light;
+        const direction = directional._direction;
+
+        this._vec3A.copy(direction);
+        this._vec3A.mulScalar(-1);
+        this._vec3A.normalize();
+
         const color = light.color;
         this.setParameter(`directionalLights[${i}].color`, [color.r, color.g, color.b]);
         this.setParameter(`directionalLights[${i}].direction`, [
-          direction.x,
-          direction.y,
-          direction.z,
+          this._vec3A.x,
+          this._vec3A.y,
+          this._vec3A.z,
         ]);
       });
 
@@ -528,13 +543,27 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
       });
     }
 
+    updateIndirectLightUniforms(scene: pc.Scene) {
+      if (!this.envAtlas && scene.envAtlas) {
+        this.envAtlas = scene.envAtlas;
+      }
+
+      if (this.envAtlas) {
+        this.setParameter('ambientLightColor', [0, 0, 0]);
+      } else {
+        this.ambient.copy(scene.ambientLight);
+        this.setParameter('ambientLightColor', [this.ambient.r, this.ambient.g, this.ambient.b]);
+      }
+    }
+
     replaceLightNumbers(dirNum: number, spotNum: number, pointNum: number) {
       let chunk = this.chunks.basePS;
 
       chunk = chunk
         .replace(/#define USE_DIR_LIGHTS\n/g, '')
         .replace(/#define USE_SPOT_LIGHTS\n/g, '')
-        .replace(/#define USE_POINT_LIGHTS\n/g, '');
+        .replace(/#define USE_POINT_LIGHTS\n/g, '')
+        .replace(/#define USE_ENV_LIGHTS\n/g, '');
 
       if (dirNum > 0) {
         chunk = `#define USE_DIR_LIGHTS\n${chunk}`;
@@ -552,6 +581,10 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
           /#define NUM_POINT_LIGHTS \d+/,
           `#define NUM_POINT_LIGHTS ${pointNum}`,
         );
+      }
+
+      if (this.envAtlas) {
+        chunk = `#define USE_ENV_LIGHTS\n${chunk}`;
       }
 
       this.chunks.basePS = chunk;

@@ -25,15 +25,17 @@ export class RenderStates {
   // TODO: Change to scrips
   private _updateMaterialUniforms() {
     this._materials.forEach((material) => {
-      material.setLightUniforms(this.lightStates);
+      if (this._app) {
+        material.updateLightUniforms(this.lightStates, this._app.scene);
+      }
     });
   }
 
-  addMaterial(material: pc.StandardMaterial) {
+  addMaterial(material: any) {
     this._materials.add(material);
   }
 
-  removeMaterial(material: pc.StandardMaterial) {
+  removeMaterial(material: any) {
     this._materials.delete(material);
   }
 

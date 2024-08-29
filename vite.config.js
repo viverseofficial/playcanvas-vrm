@@ -38,4 +38,5 @@ export default defineConfig({
     },
     minify: !isDevMode,
   },
+  assetsInclude: ['**/*.dds'],
 });
