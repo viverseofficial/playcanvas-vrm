@@ -107,7 +107,7 @@ export class VRMExpressionManager {
   stopEmotions(names: string[]) {
     names.forEach((name) => {
       const expression = this.getExpression(name);
-      expression.stop();
+      if (expression) expression.stop();
     });
   }
 
