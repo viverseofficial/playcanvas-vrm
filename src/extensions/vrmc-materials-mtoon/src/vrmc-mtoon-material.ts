@@ -6,7 +6,13 @@ import {
   MToonMaterialOutlineWidthMode,
   MToonMaterialOutlineWidthModeType,
 } from './constants';
-import { RenderStates } from '../../../helpers/RenderStates/RenderStates';
+import {
+  ILightStateInfo,
+  IDirectionalLightInfo,
+  IPointLightInfo,
+  ISpotLightInfo,
+  ISceneLightInfo,
+} from '../../../helpers/RenderStates/RenderStates';
 
 const textureTransformExtensionName = 'KHR_texture_transform';
 
@@ -52,17 +58,13 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
     outlineLightingMixFactor: number = 0.0;
 
     private _asset: pc.Asset;
-    private _renderStates: RenderStates;
     private _vec3A: pc.Vec3;
 
-    constructor(asset: pc.Asset, renderStates: RenderStates) {
+    constructor(asset: pc.Asset) {
       super();
       this.useLighting = false;
       this._asset = asset;
       this._vec3A = new pcRef.Vec3();
-
-      this._renderStates = renderStates;
-      this._renderStates.addMaterial(this);
     }
 
     parse(gltfMaterial: any) {
@@ -488,23 +490,20 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
       ]);
     }
 
-    updateLightUniforms(lightStates: Map<number, any>, scene: pc.Scene) {
-      this.updateIndirectLightUniforms(scene);
+    updateLightUniforms(lightStateInfo: ILightStateInfo) {
+      const { directionalLights, spotLights, pointLights, scene } = lightStateInfo;
 
-      const directionalLights = lightStates.get(pcRef.LIGHTTYPE_DIRECTIONAL);
-      const spotLights = lightStates.get(pcRef.LIGHTTYPE_SPOT);
-      const pointLights = lightStates.get(pcRef.LIGHTTYPE_POINT);
+      this.updateIndirectLightUniforms(scene);
       this.replaceLightNumbers(directionalLights.length, spotLights.length, pointLights.length);
 
-      directionalLights.forEach((light: pc.LightComponent, i: number) => {
-        const directional = light.data.light;
-        const direction = directional._direction;
-
+      directionalLights.forEach((info: IDirectionalLightInfo, i: number) => {
+        const direction = info.direction;
         this._vec3A.copy(direction);
         this._vec3A.mulScalar(-1);
         this._vec3A.normalize();
 
-        const color = light.color;
+        const color = info.color;
+
         this.setParameter(`directionalLights[${i}].color`, [color.r, color.g, color.b]);
         this.setParameter(`directionalLights[${i}].direction`, [
           this._vec3A.x,
@@ -513,14 +512,14 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
         ]);
       });
 
-      spotLights.forEach((light: pc.LightComponent, i: number) => {
-        const position = light.entity.getPosition();
-        const direction = light.entity.forward;
-        const color = light.color;
-        const distance = light.range;
-        const decay = light.falloffMode === pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2;
-        const coneCos = Math.cos(light.innerConeAngle);
-        const penumbraCos = Math.cos(light.outerConeAngle);
+      spotLights.forEach((info: ISpotLightInfo, i: number) => {
+        const position = info.position;
+        const direction = info.direction;
+        const color = info.color;
+        const distance = info.distance;
+        const decay = info.decay;
+        const coneCos = info.coneCos;
+        const penumbraCos = info.penumbraCos;
         this.setParameter(`spotLights[${i}].position`, [position.x, position.y, position.z]);
         this.setParameter(`spotLights[${i}].direction`, [direction.x, direction.y, direction.z]);
         this.setParameter(`spotLights[${i}].color`, [color.r, color.g, color.b]);
@@ -530,12 +529,11 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
         this.setParameter(`spotLights[${i}].penumbraCos`, penumbraCos);
       });
 
-      pointLights.forEach((light: pc.LightComponent, i: number) => {
-        const position = light.entity.getPosition();
-        const color = light.color;
-        const distance = light.range;
-        const decay = light.falloffMode === pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2;
-
+      pointLights.forEach((info: IPointLightInfo, i: number) => {
+        const position = info.position;
+        const color = info.color;
+        const distance = info.distance;
+        const decay = info.decay;
         this.setParameter(`pointLights[${i}].position`, [position.x, position.y, position.z]);
         this.setParameter(`pointLights[${i}].color`, [color.r, color.g, color.b]);
         this.setParameter(`pointLights[${i}].distance`, distance);
@@ -543,7 +541,9 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
       });
     }
 
-    updateIndirectLightUniforms(scene: pc.Scene) {
+    updateIndirectLightUniforms(scene?: ISceneLightInfo) {
+      if (!scene) return;
+
       if (!this.envAtlas && scene.envAtlas) {
         this.envAtlas = scene.envAtlas;
       }
@@ -588,11 +588,6 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
       }
 
       this.chunks.basePS = chunk;
-    }
-
-    destroy() {
-      super.destroy();
-      this._renderStates.removeMaterial(this);
     }
   };
 };

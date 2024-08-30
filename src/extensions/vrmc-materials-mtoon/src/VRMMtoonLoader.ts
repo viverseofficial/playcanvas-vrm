@@ -1,26 +1,15 @@
 import * as pc from 'playcanvas';
-import VRMMaterialsV0CompatPlugin from './plugins/VRMMaterialsV0CompatPlugin';
 import { GLTF as GLTFSchema } from '../../../types/gltf';
 import { createVRMCOutlineMaterial } from './vrmc-outline-material';
 import { createVRMCMtoonMaterial } from './vrmc-mtoon-material';
-import { EXTENSION_VRMC_MATERIALS_MTOON } from './constants';
-import { RenderStates } from '../../../helpers/RenderStates/RenderStates';
-
-const extensionVRMCName = EXTENSION_VRMC_MATERIALS_MTOON;
 
 export class VRMMtoonLoader {
   private _pcRef: typeof pc;
-  private _renderStates: RenderStates;
   public asset: pc.Asset;
 
-  constructor(pcRef: typeof pc, asset: pc.Asset, renderStates: RenderStates) {
+  constructor(pcRef: typeof pc, asset: pc.Asset) {
     this._pcRef = pcRef;
-    this._renderStates = renderStates;
     this.asset = asset;
-
-    const v0CompatPlugin = new VRMMaterialsV0CompatPlugin(this._pcRef, this.asset);
-    v0CompatPlugin.parseMaterials();
-    this._addUserIdToMaterials();
   }
 
   public instantiated(entity: pc.Entity) {
@@ -30,16 +19,10 @@ export class VRMMtoonLoader {
     }
 
     const gltf: GLTFSchema.IGLTF = this.asset.resource.data.gltf;
-    this._applyVRMCOutlineShader(entity, gltf);
-    this._applyVRMCMtoonShader(entity, gltf);
-  }
+    const outlineMaterials = this._applyVRMCOutlineShader(entity, gltf);
+    const mtoonMaterials = this._applyVRMCMtoonShader(entity, gltf);
 
-  private _addUserIdToMaterials() {
-    this.asset.resource?.data?.materials?.forEach(
-      (material: pc.StandardMaterial, index: number) => {
-        material.userId = `material_${index}`;
-      },
-    );
+    return [...outlineMaterials.values(), ...mtoonMaterials.values()];
   }
 
   private _applyVRMCOutlineShader(entity: pc.Entity, gltf: GLTFSchema.IGLTF) {
@@ -85,10 +68,13 @@ export class VRMMtoonLoader {
         meshInstances.push(shaderMeshInstance);
       });
     });
+
+    return outlineShaderMaterials;
   }
 
   private _applyVRMCMtoonShader(entity: pc.Entity, gltf: GLTFSchema.IGLTF) {
     const VRMCMtoonMaterial = createVRMCMtoonMaterial(this._pcRef);
+    const shaderMaterials = new Map<pc.StandardMaterial, any>();
 
     const renders = entity.findComponents('render');
     renders.forEach((renderComponent) => {
@@ -97,6 +83,7 @@ export class VRMMtoonLoader {
 
       meshInstances.forEach((meshInstance) => {
         const material = meshInstance.material as pc.StandardMaterial;
+        let shaderMaterial = shaderMaterials.get(material);
 
         const index = material.userId.split('_')?.[1] ?? -1;
         const parsedIndex = parseInt(index);
@@ -111,18 +98,18 @@ export class VRMMtoonLoader {
           return;
         }
 
-        const extension = gltfMaterial?.extensions?.[extensionVRMCName];
-
-        if (!extension) {
-          return;
+        if (!shaderMaterial) {
+          shaderMaterial = new VRMCMtoonMaterial(this.asset);
+          shaderMaterials.set(material, shaderMaterial);
         }
 
-        const shaderMaterial = new VRMCMtoonMaterial(this.asset, this._renderStates);
         shaderMaterial.copy(material);
         shaderMaterial.parse(gltfMaterial);
         meshInstance.material = shaderMaterial;
         shaderMaterial.update();
       });
     });
+
+    return shaderMaterials;
   }
 }

@@ -34,11 +34,9 @@ const createAvatar = (url: string) => {
 
     asset.on('load', (asset) => {
       VRMLoader.addIndexToNodeTags(asset);
-      const mtoonLoader = new VRMLoader.VrmcMaterialsMtoon.VRMMtoonLoader(pc, asset, renderStates);
+      VRMLoader.VrmMtoon.convertVRMMtoonMaterials(pc, asset);
 
       const renderRootEntity = asset.resource.instantiateRenderEntity();
-      mtoonLoader.instantiated(renderRootEntity);
-
       const rootEntity = new pc.Entity('VRM_AVATAR_ROOT');
       rootEntity.addChild(renderRootEntity);
 
@@ -67,6 +65,12 @@ const createAvatar = (url: string) => {
         });
 
         rootEntity.script.create('vrmSpringBone', {
+          attributes: {
+            asset,
+          },
+        });
+
+        rootEntity.script.create('vrmMtoon', {
           attributes: {
             asset,
           },
@@ -110,13 +114,7 @@ const setupAvatar = async (app: pc.Application) => {
 
 const app = setupApplication();
 
-const renderStates = new VRMLoader.RenderStates(pc, app);
-
 app.scene.ambientLight.set(0.5, 0.5, 0.5);
-
-app.on('update', () => {
-  renderStates.update();
-});
 
 app.once('start', async () => {
   const focusEntity = new pc.Entity('Test');
@@ -134,6 +132,7 @@ app.once('start', async () => {
 
   VRMLoader.VrmExpression.importScript(pc);
   VRMLoader.VrmSpringBone.importScript(pc);
+  VRMLoader.VrmMtoon.importScript(pc);
   setupAvatar(app);
 });
 
