@@ -1,20 +1,7 @@
 /**
  * name: playcanvas-vrm
- * version: v1.4.0
+ * version: v1.5.0
  */
-<<<<<<< HEAD
-var G = (s, t, e) => {
-  if (!t.has(s))
-    throw TypeError("Cannot " + e);
-};
-var C = (s, t, e) => (G(s, t, "read from private field"), e ? e.call(s) : t.get(s)), U = (s, t, e) => {
-  if (t.has(s))
-    throw TypeError("Cannot add the same private member more than once");
-  t instanceof WeakSet ? t.add(s) : t.set(s, e);
-}, Ft = (s, t, e, i) => (G(s, t, "write to private field"), i ? i.call(s, e) : t.set(s, e), e);
-var Q = (s, t, e) => (G(s, t, "access private method"), e);
-const z = [
-=======
 var __accessCheck = (obj, member, msg) => {
   if (!member.has(obj))
     throw TypeError("Cannot " + msg);
@@ -39,7 +26,6 @@ var __privateMethod = (obj, member, method) => {
 };
 var _pluginsCallbacks, _setExtensionsToNodes, setExtensionsToNodes_fn, _addEssentialTags, addEssentialTags_fn;
 const VRMHumanBoneList = [
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   "hips",
   "spine",
   "chest",
@@ -95,12 +81,8 @@ const VRMHumanBoneList = [
   "rightLittleProximal",
   "rightLittleIntermediate",
   "rightLittleDistal"
-<<<<<<< HEAD
-], $ = {
-=======
 ];
 const VRMHumanBoneParentMap = {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   hips: null,
   spine: "hips",
   chest: "spine",
@@ -218,12 +200,8 @@ const thumbBoneNameMap = {
   leftThumbIntermediate: "leftThumbProximal",
   rightThumbProximal: "rightThumbMetacarpal",
   rightThumbIntermediate: "rightThumbProximal"
-<<<<<<< HEAD
-}, Xt = {
-=======
 };
 const v0v1PresetNameMap = {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   a: "aa",
   e: "ee",
   i: "ih",
@@ -241,12 +219,8 @@ const v0v1PresetNameMap = {
   blink_l: "blinkLeft",
   blink_r: "blinkRight",
   neutral: "neutral"
-<<<<<<< HEAD
-}, q = {
-=======
 };
 const VRMExpressionPresetName = {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   Aa: "aa",
   Ih: "ih",
   Ou: "ou",
@@ -265,24 +239,16 @@ const VRMExpressionPresetName = {
   BlinkLeft: "blinkLeft",
   BlinkRight: "blinkRight",
   Neutral: "neutral"
-<<<<<<< HEAD
-}, tt = /* @__PURE__ */ new Set(["1.0", "1.0-beta"]), ge = {
-=======
 };
 const POSSIBLE_SPEC_VERSIONS$1 = /* @__PURE__ */ new Set(["1.0", "1.0-beta"]);
 const v0ExpressionMaterialColorMap = {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   _Color: "color",
   _EmissionColor: "emissionColor",
   _ShadeColor: "shadeColor",
   _RimColor: "rimColor",
   _OutlineColor: "outlineColor"
-<<<<<<< HEAD
-}, xe = {
-=======
 };
 const expressionMateriaPropertyNameMapMap = {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   isMeshStandardMaterial: {
     color: "color",
     emissionColor: "emissive"
@@ -298,23 +264,6 @@ const expressionMateriaPropertyNameMapMap = {
     rimColor: "parametricRimColorFactor",
     shadeColor: "shadeColorFactor"
   }
-<<<<<<< HEAD
-}, _e = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-  __proto__: null,
-  POSSIBLE_SPEC_VERSIONS: tt,
-  VRMExpressionPresetName: q,
-  VRMHumanBoneList: z,
-  VRMHumanBoneParentMap: $,
-  VRMRigMap: F,
-  expressionMateriaPropertyNameMapMap: xe,
-  thumbBoneNameMap: jt,
-  v0ExpressionMaterialColorMap: ge,
-  v0v1PresetNameMap: Xt
-}, Symbol.toStringTag, { value: "Module" }));
-class ve {
-  constructor(t) {
-    this.duration = 0, this.restHipsPosition = new t.Vec3(), this.humanoidTracks = {
-=======
 };
 const VrmMapList = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
@@ -329,71 +278,20 @@ const VrmMapList = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.definePr
   v0v1PresetNameMap
 }, Symbol.toStringTag, { value: "Module" }));
 class VRMAnimation {
-  /*     public expressionTracks: {
-      preset: Map<VRMExpressionPresetName, IVrmaTrack>;
-      custom: Map<string, IVrmaTrack>; 
-    };
-    public lookAtTrack: IVrmaTrack | null;  */
   constructor(pcRef) {
     this.duration = 0;
     this.restHipsPosition = new pcRef.Vec3();
     this.humanoidTracks = {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       translation: /* @__PURE__ */ new Map(),
       rotation: /* @__PURE__ */ new Map()
-    }, this.expressionTracks = {
+    };
+    this.expressionTracks = {
       preset: /* @__PURE__ */ new Map(),
       custom: /* @__PURE__ */ new Map()
-    }, this.lookAtTrack = null;
+    };
+    this.lookAtTrack = null;
   }
 }
-<<<<<<< HEAD
-function Dt(s, t) {
-  const e = s.length, i = [];
-  let n = [], r = 0;
-  for (let o = 0; o < e; o++) {
-    const a = s[o];
-    r <= 0 && (r = t, n = [], i.push(n)), n.push(a), r--;
-  }
-  return i;
-}
-function Me(s, t, e) {
-  const i = e.data, n = 1 / (i[3] * t.x + i[7] * t.y + i[11] * t.z + i[15]), r = (i[0] * t.x + i[4] * t.y + i[8] * t.z + i[12]) * n, o = (i[1] * t.x + i[5] * t.y + i[9] * t.z + i[13]) * n, a = (i[2] * t.x + i[6] * t.y + i[10] * t.z + i[14]) * n;
-  return new s.Vec3(r, o, a);
-}
-function Yt(s, t) {
-  const e = t.inputs.map(
-    (r) => new s.AnimData(r.components, r.data)
-  ), i = t.outputs.map(
-    (r) => new s.AnimData(r.components, r.data)
-  ), n = t.curves.map((r) => {
-    const o = r.paths.map((a) => {
-      const l = a;
-      return {
-        component: l.component,
-        entityPath: [...l.entityPath],
-        propertyPath: [...l.propertyPath]
-      };
-    });
-    return new s.AnimCurve(o, r.input, r.output, r.interpolation);
-  });
-  return new s.AnimTrack(t.name, t.duration, e, i, n);
-}
-const Te = /* @__PURE__ */ new Set(["1.0", "1.0-draft"]), we = new Set(Object.values(q));
-class ye {
-  constructor(t) {
-    this.pcRef = t;
-  }
-  loadVRMA(t) {
-    var _, g, p;
-    const e = t.resource.data.gltf, i = e.extensionsUsed;
-    if (i == null || i.indexOf("VRMC_vrm_animation") == -1) {
-      console.warn("CreateVRMAnimation: Please check. It is not a vrma.");
-      return;
-    }
-    const n = (_ = e.extensions) == null ? void 0 : _.VRMC_vrm_animation;
-    if (n == null) {
-=======
 function arrayChunk(array, every) {
   const N = array.length;
   const ret = [];
@@ -440,6 +338,7 @@ function cloneAnimTrack(pcRef, origAnimTrack) {
   return new pcRef.AnimTrack(origAnimTrack.name, origAnimTrack.duration, inputs, outputs, curves);
 }
 const POSSIBLE_SPEC_VERSIONS = /* @__PURE__ */ new Set(["1.0", "1.0-draft"]);
+const vrmExpressionPresetNameSet = new Set(Object.values(VRMExpressionPresetName));
 class VRMAnimationLoader {
   constructor(pcRef) {
     this.pcRef = pcRef;
@@ -454,7 +353,6 @@ class VRMAnimationLoader {
     }
     const defExtension = (_a = defGltf.extensions) == null ? void 0 : _a["VRMC_vrm_animation"];
     if (defExtension == null) {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       console.warn("CreateVRMAnimation: Please check. It is not a vrma.");
       return;
     }
@@ -463,136 +361,6 @@ class VRMAnimationLoader {
       console.warn(`CreateVRMAnimation: Unknown VRMC_vrm_animation spec version: ${specVersion}`);
       return;
     }
-<<<<<<< HEAD
-    r === "1.0-draft" && console.warn(
-      "CreateVRMAnimation: Using a draft spec version: 1.0-draft. Some behaviors may be different. Consider updating the animation file."
-    );
-    const o = t.resource.data.nodes, a = this._createNodeMap(e, n), l = this._createBoneWorldMatrixMap(o, n), h = (p = (g = n.humanoid) == null ? void 0 : g.humanBones.hips) == null ? void 0 : p.node, c = h != null ? o[h] : null, m = c ? c.getPosition() : new this.pcRef.Vec3();
-    return t.resource.data.animations.map((u, x) => {
-      const v = e.animations[x], T = this._parseAnimation(u, v, a, l);
-      return T.restHipsPosition = m, T;
-    });
-  }
-  _createNodeMap(t, e) {
-    var m, d, f, _;
-    const i = /* @__PURE__ */ new Map(), n = /* @__PURE__ */ new Map(), r = /* @__PURE__ */ new Map(), o = t.nodes;
-    o && o.forEach((g, p) => {
-      g.name && i.set(g.name, p);
-    });
-    const a = (m = e.humanoid) == null ? void 0 : m.humanBones;
-    a && Object.entries(a).forEach(([g, p]) => {
-      const u = p == null ? void 0 : p.node;
-      u != null && n.set(u, g);
-    });
-    const l = (d = e.expressions) == null ? void 0 : d.preset;
-    l && Object.entries(l).forEach(([g, p]) => {
-      const u = p == null ? void 0 : p.node;
-      u != null && r.set(u, g);
-    });
-    const h = (f = e.expressions) == null ? void 0 : f.custom;
-    h && Object.entries(h).forEach(([g, p]) => {
-      const { node: u } = p;
-      r.set(u, g);
-    });
-    const c = ((_ = e.lookAt) == null ? void 0 : _.node) ?? null;
-    return { origNameToHumanoidIndex: i, humanoidIndexToName: n, expressionsIndexToName: r, lookAtIndex: c };
-  }
-  //In THREE, it's async
-  _createBoneWorldMatrixMap(t, e) {
-    var n;
-    const i = /* @__PURE__ */ new Map();
-    if (e.humanoid == null)
-      return i;
-    for (const [r, o] of Object.entries(e.humanoid.humanBones)) {
-      const a = o == null ? void 0 : o.node;
-      if (a != null) {
-        const l = t[a];
-        i.set(r, l.getWorldTransform());
-        const h = new this.pcRef.Mat4();
-        r === "hips" && i.set("hipsParent", ((n = l.parent) == null ? void 0 : n.getWorldTransform()) ?? h);
-      }
-    }
-    return i;
-  }
-  _parseAnimation(t, e, i, n) {
-    const { inputs: r, outputs: o, curves: a } = Yt(this.pcRef, t), l = e.channels, h = new ve(this.pcRef);
-    return h.duration = t.duration, l.forEach((c, m) => {
-      const { node: d, path: f } = c.target, _ = a[m], g = r[_.input], p = o[_.output];
-      if (d == null)
-        return;
-      const u = i.humanoidIndexToName.get(d);
-      if (u != null) {
-        let v = $[u];
-        for (; v != null && n.get(v) == null; )
-          v = $[v];
-        if (v ?? (v = "hipsParent"), _.paths.forEach((T) => {
-          const M = T, y = M.entityPath.map((w) => {
-            const S = i.origNameToHumanoidIndex.get(w);
-            if (S) {
-              const P = i.humanoidIndexToName.get(S);
-              return P || u;
-            } else
-              return u;
-          });
-          M.entityPath = y;
-        }), f === "translation")
-          if (u !== "hips")
-            console.warn(
-              `The loading animation contains a translation track for ${u}, which is not permitted in the VRMC_vrm_animation spec. ignoring the track`
-            );
-          else {
-            const T = n.get("hipsParent"), M = Dt(p.data, 3).flatMap((P) => {
-              let R = new this.pcRef.Vec3(P[0], P[1], P[2]);
-              return R = Me(this.pcRef, R, T), [R.x, R.y, R.z];
-            }), y = new Float32Array(M), w = new this.pcRef.AnimData(p.components, y), S = { curve: _, input: g, output: w };
-            h.humanoidTracks.translation.set(u, S);
-          }
-        else if (f === "rotation") {
-          const T = n.get(u), M = n.get(v), y = T.getEulerAngles(), w = new this.pcRef.Quat();
-          w.setFromEulerAngles(y), w.invert();
-          const S = M.getEulerAngles(), P = new this.pcRef.Quat();
-          P.setFromEulerAngles(S);
-          const R = Dt(p.data, 4).flatMap((b) => {
-            let E = new this.pcRef.Quat(b[0], b[1], b[2], b[3]);
-            return E = E.mul2(P, E).mul(w), [E.x, E.y, E.z, E.w];
-          }), k = new Float32Array(R), V = new this.pcRef.AnimData(p.components, k), B = { curve: _, input: g, output: V };
-          h.humanoidTracks.rotation.set(u, B);
-        } else
-          throw new Error(`Invalid path "${f}"`);
-        return;
-      }
-      const x = i.expressionsIndexToName.get(d);
-      if (x != null) {
-        if (f === "translation") {
-          const v = new Float32Array(p.data.length / 3);
-          for (let M = 0; M < v.length; M++)
-            v[M] = p.data[3 * M];
-          const T = {
-            times: g.data,
-            values: v,
-            loop: !0
-          };
-          we.has(x) ? h.expressionTracks.preset.set(
-            x,
-            T
-          ) : h.expressionTracks.custom.set(x, T);
-        } else
-          throw new Error(`Invalid path "${f}"`);
-        return;
-      }
-      if (d === i.lookAtIndex)
-        if (f === "rotation") {
-          const v = { curve: _, input: g, output: p };
-          h.lookAtTrack = v;
-        } else
-          throw new Error(`Invalid path "${f}"`);
-    }), h;
-  }
-}
-class Se {
-  constructor(t, e, i, n, r, o = "v0") {
-    this.pcRef = t, this.vrmAnimation = n, this.stateName = e, this.name = i, this.humanoid = r, this.metaVersion = o;
-=======
     if (specVersion === "1.0-draft") {
       console.warn(
         "CreateVRMAnimation: Using a draft spec version: 1.0-draft. Some behaviors may be different. Consider updating the animation file."
@@ -681,9 +449,9 @@ class Se {
     result.duration = animTrack.duration;
     defChannels.forEach((channel, index) => {
       const { node, path } = channel.target;
-      const input = inputs[index];
-      const output = outputs[index];
       const curve = curves[index];
+      const input = inputs[curve.input];
+      const output = outputs[curve.output];
       if (node == null) {
         return;
       }
@@ -748,89 +516,65 @@ class Se {
         }
         return;
       }
+      const expressionName = nodeMap.expressionsIndexToName.get(node);
+      if (expressionName != null) {
+        if (path === "translation") {
+          const values = new Float32Array(output.data.length / 3);
+          for (let i = 0; i < values.length; i++) {
+            values[i] = output.data[3 * i];
+          }
+          const expressionConfig = {
+            times: input.data,
+            values,
+            loop: true
+          };
+          if (vrmExpressionPresetNameSet.has(expressionName)) {
+            result.expressionTracks.preset.set(
+              expressionName,
+              expressionConfig
+            );
+          } else {
+            result.expressionTracks.custom.set(expressionName, expressionConfig);
+          }
+        } else {
+          throw new Error(`Invalid path "${path}"`);
+        }
+        return;
+      }
+      if (node === nodeMap.lookAtIndex) {
+        if (path === "rotation") {
+          const lookAtTrack = { curve, input, output };
+          result.lookAtTrack = lookAtTrack;
+        } else {
+          throw new Error(`Invalid path "${path}"`);
+        }
+      }
     });
     return result;
   }
 }
 class VRMAnimationTrack {
-  constructor(pcRef, name, vrmAnimation, humanoid, metaVersion = "v0") {
+  constructor(pcRef, stateName, name, vrmAnimation, humanoid, metaVersion = "v0") {
     this.pcRef = pcRef;
     this.vrmAnimation = vrmAnimation;
+    this.stateName = stateName;
     this.name = name;
     this.humanoid = humanoid;
     this.metaVersion = metaVersion;
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   }
   get result() {
     return this.createVRMAnimTrack();
   }
   createVRMAnimTrack() {
-<<<<<<< HEAD
-    const t = [], e = [], i = [], n = [], r = this._createHumanoidTracks();
-    n.push(...r.translation.values()), n.push(...r.rotation.values());
-    const o = this._createLookAtTracks() ?? this._resetLookAtTrack(n[0].input);
-    n.push(...o.values());
-    for (let l = 0; l < n.length; l++) {
-      t.push(n[l].input), e.push(n[l].output);
-      const h = new this.pcRef.AnimCurve(
-        n[l].curve.paths,
-        l,
-        l,
-        n[l].curve.interpolation
-      );
-      i.push(h), n[l].curve.paths.forEach((m) => {
-        const d = m, f = d.entityPath;
-        f.unshift("SkeletonRoot");
-        const _ = f.map((g) => {
-          var v;
-          const u = F[g], x = (v = this.humanoid.getRawBoneNode(u)) == null ? void 0 : v.name;
-          return !u || !x ? g : x;
-        });
-        d.entityPath = _;
-      });
-    }
-    const a = new this.pcRef.AnimEvents([{ name: `anim-track:${this.stateName}`, time: 0 }]);
-    return new this.pcRef.AnimTrack(
-      this.name,
-      this.vrmAnimation.duration,
-      t,
-      e,
-      i,
-      a
-    );
-  }
-  _createHumanoidTracks() {
-    var i, n, r;
-    const t = /* @__PURE__ */ new Map(), e = /* @__PURE__ */ new Map();
-    for (const [o, a] of this.vrmAnimation.humanoidTracks.translation.entries())
-      if (((i = this.humanoid.getNormalizedBoneNode(o)) == null ? void 0 : i.name) != null) {
-        const h = this.vrmAnimation.restHipsPosition.y, d = (((n = this.humanoid.rawHumanBones.hips) == null ? void 0 : n.node.getPosition()) || new this.pcRef.Vec3()).y / h, f = a.output.data.map(
-          (u, x) => (this.metaVersion === "v0" && x % 3 !== 1 ? -u : u) * d
-        ), _ = new Float32Array(f), g = new this.pcRef.AnimData(a.output.components, _), p = {
-          curve: a.curve,
-          input: a.input,
-          output: g
-        };
-        t.set(o, p);
-      }
-    for (const [o, a] of this.vrmAnimation.humanoidTracks.rotation.entries())
-      if (((r = this.humanoid.getNormalizedBoneNode(o)) == null ? void 0 : r.name) != null) {
-        const h = a.output.data.map(
-          (f, _) => this.metaVersion === "v0" && _ % 2 === 0 ? -f : f
-        ), c = new Float32Array(h), m = new this.pcRef.AnimData(a.output.components, c), d = {
-          curve: a.curve,
-          input: a.input,
-          output: m
-        };
-        e.set(o, d);
-=======
     const inputs = [];
     const outputs = [];
     const curves = [];
     const vrmaTracks = [];
-    const humanoidTracks = this._createVRMAnimationHumanoidTracks();
+    const humanoidTracks = this._createHumanoidTracks();
     vrmaTracks.push(...humanoidTracks.translation.values());
     vrmaTracks.push(...humanoidTracks.rotation.values());
+    const lookAtTracks = this._createLookAtTracks() ?? this._resetLookAtTrack(vrmaTracks[0].input);
+    vrmaTracks.push(...lookAtTracks.values());
     for (let i = 0; i < vrmaTracks.length; i++) {
       inputs.push(vrmaTracks[i].input);
       outputs.push(vrmaTracks[i].output);
@@ -856,15 +600,20 @@ class VRMAnimationTrack {
           }
           return vrmNodeName;
         });
-        if (arrangedEntityPath.length == 1 && arrangedEntityPath[0] == "hips") {
-          arrangedEntityPath.unshift("SkeletonRoot");
-        }
         morphCurvePath.entityPath = arrangedEntityPath;
       });
     }
-    return new this.pcRef.AnimTrack(this.name, this.vrmAnimation.duration, inputs, outputs, curves);
+    const events = new this.pcRef.AnimEvents([{ name: `anim-track:${this.stateName}`, time: 0 }]);
+    return new this.pcRef.AnimTrack(
+      this.name,
+      this.vrmAnimation.duration,
+      inputs,
+      outputs,
+      curves,
+      events
+    );
   }
-  _createVRMAnimationHumanoidTracks() {
+  _createHumanoidTracks() {
     var _a, _b, _c;
     const translation = /* @__PURE__ */ new Map();
     const rotation = /* @__PURE__ */ new Map();
@@ -902,68 +651,84 @@ class VRMAnimationTrack {
           output: _output
         };
         rotation.set(name, vrmaTrack);
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       }
     }
     return { translation, rotation };
   }
   _createLookAtTracks() {
-    const t = this.vrmAnimation.lookAtTrack;
-    if (!t)
+    const origTrack = this.vrmAnimation.lookAtTrack;
+    if (!origTrack)
       return null;
-    const e = /* @__PURE__ */ new Map(), i = ["leftEye", "rightEye"], n = (h, c) => {
-      const m = c % 4, d = t.output.data[c + 3 - m], f = d === 0 ? 1 : d;
-      switch (m) {
+    const Tracks = /* @__PURE__ */ new Map();
+    const eyes = ["leftEye", "rightEye"];
+    const lookAtScale = (src, index) => {
+      const indexOrder = index % 4;
+      const w = origTrack.output.data[index + 3 - indexOrder];
+      const _w = w === 0 ? 1 : w;
+      switch (indexOrder) {
         case 0:
-          return h / f * 0.06;
+          return src / _w * 0.06;
         case 1:
-          return h / f * 0.08;
+          return src / _w * 0.08;
         default:
           return 1;
       }
-    }, r = t.output.data.map((h, c) => (this.metaVersion === "v0" && c % 4 == 0 ? -h : h) * n(h, c)), o = new Float32Array(r), a = new this.pcRef.AnimData(t.output.components, o), l = t.curve;
-    return l.paths.forEach((h) => {
-      const c = h;
-      i.forEach((m) => {
-        c.entityPath = [m];
-        const d = [{ ...c }], _ = {
-          curve: new this.pcRef.AnimCurve(
-            d,
-            l.input,
-            l.output,
-            l.interpolation
-          ),
-          input: t.input,
-          output: a
+    };
+    const outputData = origTrack.output.data.map((v, i) => {
+      const _v = (this.metaVersion === "v0" && i % 4 == 0 ? -v : v) * lookAtScale(v, i);
+      return _v;
+    });
+    const _outputData = new Float32Array(outputData);
+    const _output = new this.pcRef.AnimData(origTrack.output.components, _outputData);
+    const vrmaCurve = origTrack.curve;
+    vrmaCurve.paths.forEach((graph) => {
+      const morphCurvePath = graph;
+      eyes.forEach((eye) => {
+        morphCurvePath.entityPath = [eye];
+        const paths = [{ ...morphCurvePath }];
+        const _curve = new this.pcRef.AnimCurve(
+          paths,
+          vrmaCurve.input,
+          vrmaCurve.output,
+          vrmaCurve.interpolation
+        );
+        const vrmaTrack = {
+          curve: _curve,
+          input: origTrack.input,
+          output: _output
         };
-        e.set(m, _);
+        Tracks.set(eye, vrmaTrack);
       });
-    }), e;
+    });
+    return Tracks;
   }
-  _resetLookAtTrack(t) {
-    const e = /* @__PURE__ */ new Map(), i = ["leftEye", "rightEye"], n = new Float32Array(t.data.length * 4);
-    for (let o = 0; o < n.length; o++)
-      o % 4 === 3 && (n[o] = 1);
-    const r = new this.pcRef.AnimData(4, n);
-    return i.forEach((o) => {
-      const a = {
-        entityPath: [o],
+  _resetLookAtTrack(input) {
+    const Tracks = /* @__PURE__ */ new Map();
+    const eyes = ["leftEye", "rightEye"];
+    const _outputData = new Float32Array(input.data.length * 4);
+    for (let i = 0; i < _outputData.length; i++) {
+      if (i % 4 === 3) {
+        _outputData[i] = 1;
+      }
+    }
+    const _output = new this.pcRef.AnimData(4, _outputData);
+    eyes.forEach((eye) => {
+      const path = {
+        entityPath: [eye],
         component: "graph",
         propertyPath: ["localRotation"]
-      }, h = {
-        curve: new this.pcRef.AnimCurve([{ ...a }], 0, 0, 1),
-        input: t,
-        output: r
       };
-      e.set(o, h);
-    }), e;
+      const _curve = new this.pcRef.AnimCurve([{ ...path }], 0, 0, 1);
+      const vrmaTrack = {
+        curve: _curve,
+        input,
+        output: _output
+      };
+      Tracks.set(eye, vrmaTrack);
+    });
+    return Tracks;
   }
 }
-<<<<<<< HEAD
-class Pe {
-  constructor(t, e, i, n = "v0", r, o) {
-    this.pcRef = t, this.animationAsset = e, this.humanoid = i, this.metaVersion = n, this.extraSettings = r, this.origAnimTrack = o;
-=======
 class VRMViverseAnimationTrack {
   constructor(pcRef, animationAsset, humanoid, metaVersion = "v0", extraSettings, origAnimTrack) {
     this.pcRef = pcRef;
@@ -972,84 +737,11 @@ class VRMViverseAnimationTrack {
     this.metaVersion = metaVersion;
     this.extraSettings = extraSettings;
     this.origAnimTrack = origAnimTrack;
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   }
   get result() {
     return this.createViverseAnimTrack();
   }
   createViverseAnimTrack() {
-<<<<<<< HEAD
-    var p;
-    const t = ((p = this.humanoid.rawHumanBones.hips) == null ? void 0 : p.node.getPosition()) || new this.pcRef.Vec3(), e = t.y, i = Math.abs(e - 0), n = t.z, r = Math.abs(n - 0), o = {}, a = {};
-    let { motionHipsHeight: l, negativeZAnimNames: h } = this.extraSettings;
-    h || (h = []);
-    const c = Yt(this.pcRef, this.origAnimTrack), d = h.includes(this.origAnimTrack.name) ? "v1" : "v0";
-    let f = 0;
-    if (this.animationAsset.asset.type === "container") {
-      const u = this.animationAsset.asset.resource.data.nodes.find(
-        (x) => x.name === F.hips
-      );
-      u && (f = u.getPosition().y);
-    }
-    l = l || f || 0.855;
-    const _ = i / l;
-    c.curves.forEach((u) => {
-      u.paths.forEach((x) => {
-        const v = x, T = v.propertyPath.find((y) => y === "localPosition"), M = v.entityPath[v.entityPath.length - 1] === F.hips;
-        T && M && !o[u.output] && (o[u.output] = !0);
-      });
-    }), c.curves.forEach((u) => {
-      let x = !1;
-      u.paths.forEach((v) => {
-        const T = v, M = T.entityPath.map((y) => {
-          var R;
-          const S = F[y], P = (R = this.humanoid.getRawBoneNode(S)) == null ? void 0 : R.name;
-          return !S || !P ? y : P;
-        });
-        T.entityPath = M, T.propertyPath.find((y) => y === "localScale") && (x = !0);
-      }), x && !a[u.output] && (a[u.output] = !0);
-    }), c.outputs.forEach((u, x) => {
-      const v = a[x];
-      if (u.components === 3) {
-        if (!v) {
-          const T = u.data.map((M, y) => {
-            let w = M;
-            return this.metaVersion === d && y % 3 !== 1 && (w *= -1), o[x] && y % 3 === 1 && (this.animationAsset.removeY || this.animationAsset.removeUpperY && M * _ > i) ? i : o[x] && y % 3 === 2 && this.animationAsset.removeZ ? r : w * _;
-          });
-          u._data = T;
-        }
-      } else if (u.components === 4) {
-        const T = u.data.map((M, y) => this.metaVersion === d && y % 2 === 0 ? -M : M);
-        u._data = T;
-      }
-    });
-    const g = new this.pcRef.AnimEvents([
-      { name: `anim-track:${this.animationAsset.stateName}`, time: 0 }
-    ]);
-    return c.events = g, c;
-  }
-}
-class Re {
-  constructor(t) {
-    this.preset = t.expressionTracks.preset, this.custom = t.expressionTracks.custom;
-  }
-  createCustomExpression() {
-    console.log(this.custom);
-  }
-}
-function Ee(s, t, e, i, {
-  motionHipsHeight: n,
-  negativeZAnimNames: r
-} = {}) {
-  const o = { motionHipsHeight: n, negativeZAnimNames: r };
-  return console.warn(
-    "Warning: createVRMAnimation is deprecated. Please use createVRMAnimResources instead."
-  ), Gt(s, t, e, i, o);
-}
-function Gt(s, t, e, i, n = {}) {
-  var c, m;
-  if (!e) {
-=======
     var _a;
     const vrmHipsPosition = ((_a = this.humanoid.rawHumanBones.hips) == null ? void 0 : _a.node.getPosition()) || new this.pcRef.Vec3();
     const vrmHipsY = vrmHipsPosition.y;
@@ -1146,7 +838,20 @@ function Gt(s, t, e, i, n = {}) {
         output._data = newData;
       }
     });
+    const events = new this.pcRef.AnimEvents([
+      { name: `anim-track:${this.animationAsset.stateName}`, time: 0 }
+    ]);
+    animTrack.events = events;
     return animTrack;
+  }
+}
+class VRMAExpression {
+  constructor(vrmAnimation) {
+    this.preset = vrmAnimation.expressionTracks.preset;
+    this.custom = vrmAnimation.expressionTracks.custom;
+  }
+  createCustomExpression() {
+    console.log(this.custom);
   }
 }
 function createVRMAnimation(pcRef, animationAssets, asset, humanoid, {
@@ -1162,7 +867,6 @@ function createVRMAnimation(pcRef, animationAssets, asset, humanoid, {
 function createVRMAnimResources(pcRef, animationAssets, vrmAsset, humanoid, extraSettings = {}) {
   var _a, _b;
   if (!vrmAsset) {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
     console.error('CreateVRMAnimResources: Please provide "vrm asset".');
     return;
   }
@@ -1174,25 +878,6 @@ function createVRMAnimResources(pcRef, animationAssets, vrmAsset, humanoid, extr
     console.error('CreateVRMAnimResources: Please provide "humanoid" or "asset and entity".');
     return;
   }
-<<<<<<< HEAD
-  const r = (c = e.resource.data.gltf.extensions) == null ? void 0 : c.VRMC_vrm, o = (m = e.resource.data.gltf.extensions) == null ? void 0 : m.VRM, a = r ? "v1" : o ? "v0" : null, l = (d, f) => d == "animation" ? !1 : d == "container" ? !!(f && f.includes("VRMC_vrm_animation") && f.indexOf("VRMC_vrm_animation") !== -1) : !1, h = [];
-  return t.forEach((d) => {
-    var p;
-    const f = d.asset.resource, _ = d.asset.type;
-    let g;
-    if (!f)
-      g = null, console.warn(
-        `createVRMAnimResources: loadAnimation can't find available resource from ${d.stateName} asset.`
-      );
-    else {
-      const u = (p = f.data) == null ? void 0 : p.gltf.extensionsUsed;
-      l(_, u) ? g = ke(s, d, i, a) : g = Ce(
-        s,
-        d,
-        i,
-        a,
-        n
-=======
   const isV1Used = (_a = vrmAsset.resource.data.gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
   const isV0Used = (_b = vrmAsset.resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
   const version = isV1Used ? "v1" : isV0Used ? "v0" : null;
@@ -1218,7 +903,6 @@ function createVRMAnimResources(pcRef, animationAssets, vrmAsset, humanoid, extr
       resource = null;
       console.warn(
         `createVRMAnimResources: loadAnimation can't find available resource from ${animationAsset.stateName} asset.`
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       );
     } else {
       const extensionsUsed = (_a2 = assetResource.data) == null ? void 0 : _a2.gltf.extensionsUsed;
@@ -1238,64 +922,6 @@ function createVRMAnimResources(pcRef, animationAssets, vrmAsset, humanoid, extr
     if (resource) {
       resources.push(resource);
     }
-<<<<<<< HEAD
-    g && h.push(g);
-  }), h;
-}
-const Le = (s, t) => {
-  s.anim ? s.anim.assignAnimation(
-    t.name,
-    t.resource,
-    t.setting && t.setting.layerName !== void 0 ? t.setting.layerName : void 0,
-    t.setting && t.setting.speed !== void 0 ? t.setting.speed : 1,
-    t.setting && t.setting.loop !== void 0 ? t.setting.loop : !0
-  ) : console.error("AssignAnimation: Please set the anim component on the entity.");
-};
-function be(s, t, e) {
-  const i = e ?? s;
-  i.anim && i.anim.on(`anim-track:${t.name}`, () => {
-    var o, a;
-    let n = (o = i.anim) == null ? void 0 : o.baseLayer.activeState, r = i.anim.baseLayer._controller._totalTransitionTime ?? 0;
-    (a = i.anim) == null || a.layers.forEach((l) => {
-      l.name === "upperBodyLayer" && (n = l._controller._activeStateName, r = l._controller._totalTransitionTime);
-    }), t.expression ? s.fire("vrma-expression:start", t.expression) : n === t.name && n !== i.anim.lastFrameUpperBodyActiveState && s.fire("vrm-expression:reset", r), i.anim.lastFrameUpperBodyActiveState = n;
-  });
-}
-function ke(s, t, e, i) {
-  var a, l, h, c;
-  const r = new ye(s).loadVRMA(t.asset);
-  let o = (c = (h = (l = (a = t.asset.resource.animations) == null ? void 0 : a[0]) == null ? void 0 : l.resources) == null ? void 0 : h[0]) == null ? void 0 : c.name;
-  if (o || (o = ""), r) {
-    const m = new Se(
-      s,
-      t.stateName,
-      o,
-      r[0],
-      e,
-      i
-    ).result, d = new Re(r[0]);
-    return { name: t.stateName, resource: m, expression: d };
-  }
-  return null;
-}
-function Ce(s, t, e, i, n) {
-  var o, a;
-  const r = t.asset.type === "container" ? (a = (o = t.asset.resource.animations) == null ? void 0 : o[0]) == null ? void 0 : a.resource : t.asset.resource;
-  if (r) {
-    const l = new Pe(
-      s,
-      t,
-      e,
-      i,
-      n,
-      r
-    ).result;
-    return {
-      name: t.stateName,
-      resource: l,
-      ...t.setting && {
-        setting: t.setting
-=======
   });
   return resources;
 }
@@ -1312,6 +938,28 @@ const assignAnimation = (entity, resource) => {
     console.error("AssignAnimation: Please set the anim component on the entity.");
   }
 };
+function bindVRMAExpression(entity, resource, animEntity) {
+  const listenerEntity = animEntity ?? entity;
+  if (listenerEntity.anim) {
+    listenerEntity.anim.on(`anim-track:${resource.name}`, () => {
+      var _a, _b;
+      let upperBodyActiveState = (_a = listenerEntity.anim) == null ? void 0 : _a.baseLayer.activeState;
+      let transitionInterval = listenerEntity.anim.baseLayer._controller._totalTransitionTime ?? 0;
+      (_b = listenerEntity.anim) == null ? void 0 : _b.layers.forEach((layer) => {
+        if (layer.name === "upperBodyLayer") {
+          upperBodyActiveState = layer._controller._activeStateName;
+          transitionInterval = layer._controller._totalTransitionTime;
+        }
+      });
+      if (resource.expression) {
+        entity.fire(`vrma-expression:start`, resource.expression);
+      } else if (upperBodyActiveState === resource.name && upperBodyActiveState !== listenerEntity.anim.lastFrameUpperBodyActiveState) {
+        entity.fire(`vrm-expression:reset`, transitionInterval);
+      }
+      listenerEntity.anim.lastFrameUpperBodyActiveState = upperBodyActiveState;
+    });
+  }
+}
 function createVRMAResource(pcRef, animationAsset, humanoid, version) {
   var _a, _b, _c, _d;
   const vrmaLoader = new VRMAnimationLoader(pcRef);
@@ -1322,12 +970,14 @@ function createVRMAResource(pcRef, animationAsset, humanoid, version) {
   if (vrmAnimations) {
     const animTrack = new VRMAnimationTrack(
       pcRef,
+      animationAsset.stateName,
       name,
       vrmAnimations[0],
       humanoid,
       version
     ).result;
-    return { name: animationAsset.stateName, resource: animTrack };
+    const expression = new VRMAExpression(vrmAnimations[0]);
+    return { name: animationAsset.stateName, resource: animTrack, expression };
   }
   return null;
 }
@@ -1348,7 +998,6 @@ function createViverseAnimResource(pcRef, animationAsset, humanoid, version, ext
       resource: animTrack,
       ...animationAsset.setting && {
         setting: animationAsset.setting
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       }
     };
     return parsedAnimAsset;
@@ -1359,26 +1008,10 @@ function createViverseAnimResource(pcRef, animationAsset, humanoid, version, ext
     return null;
   }
 }
-<<<<<<< HEAD
-const Ae = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-  __proto__: null,
-  assignAnimation: Le,
-  bindVRMAExpression: be,
-  createVRMAnimResources: Gt,
-  createVRMAnimation: Ee
-}, Symbol.toStringTag, { value: "Module" }));
-class Z {
-  constructor(t) {
-    this.name = t, this._timers = {}, this._nextFreeId = 0, this.timer = {}, this.handle = null, this.isPausing = !0;
-  }
-  add(t, e, i) {
-    if (t > 0) {
-      this.isPausing = !1;
-      const n = { id: this._nextFreeId };
-=======
 const VrmAnimation = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
   assignAnimation,
+  bindVRMAExpression,
   createVRMAnimResources,
   createVRMAnimation
 }, Symbol.toStringTag, { value: "Module" }));
@@ -1395,7 +1028,6 @@ class Timer {
     if (durationSecs > 0) {
       this.isPausing = false;
       const handle = { id: this._nextFreeId };
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       this._timers[this._nextFreeId] = {
         secsLeft: durationSecs,
         callback,
@@ -1429,29 +1061,6 @@ class Timer {
     }
   }
 }
-<<<<<<< HEAD
-function Qt(s) {
-  return Math.max(Math.min(s, 1), 0);
-}
-function Ie(s, t) {
-  return s = Math.ceil(s), t = Math.floor(t), Math.floor(Math.random() * (t - s) + s);
-}
-function N(s, t) {
-  return Math.random() * (t - s) + s;
-}
-function W(s, t, e = 0) {
-  return s.x = t[e], s.y = t[e + 1], s.z = t[e + 2], s;
-}
-function Ut(s, t) {
-  return s.copy(t.transformPoint(s));
-}
-class Ve {
-  constructor(t, e) {
-    this._pcRef = t, this.matrix = e, this._inverseCache = new this._pcRef.Mat4(), this._shouldUpdateInverse = !0;
-    const i = {
-      // @ts-ignore
-      set: (n, r, o) => (this._shouldUpdateInverse = !0, n[r] = o, !0)
-=======
 function saturate(value) {
   return Math.max(Math.min(value, 1), 0);
 }
@@ -1485,7 +1094,6 @@ class Matrix4InverseCache {
         obj[prop] = newVal;
         return true;
       }
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
     };
     this._originalElements = matrix.data;
     this.matrix.set(new Proxy(Array.from(matrix.data), handler));
@@ -1507,17 +1115,6 @@ class Matrix4InverseCache {
     this.matrix.set(Array.from(this._originalElements));
   }
 }
-<<<<<<< HEAD
-function Zt(s, t) {
-  const e = new s.Mat4();
-  return t.invert ? t.invert() : t.getInverse(e.copy(t)), t;
-}
-function Be(s, t, e) {
-  let i = t.dot(e) + 1;
-  return i < Number.EPSILON ? (i = 0, Math.abs(t.x) > Math.abs(t.z) ? (s.x = -t.y, s.y = t.x, s.z = 0, s.w = i) : (s.x = 0, s.y = -t.z, s.z = t.y, s.w = i)) : (s.x = t.y * e.z - t.z * e.y, s.y = t.z * e.x - t.x * e.z, s.z = t.x * e.y - t.y * e.x, s.w = i), s.normalize();
-}
-class Wt {
-=======
 function mat4InvertCompat(pcRef, target) {
   const _matA = new pcRef.Mat4();
   if (target.invert) {
@@ -1551,7 +1148,6 @@ function setFromUnitVectors(quat, vFrom, vTo) {
   return quat.normalize();
 }
 class VRMExpressionManager {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   constructor() {
     this.managerName = "expression";
     this.blinkExpressionNames = ["blink", "blinkLeft", "blinkRight"];
@@ -1572,11 +1168,6 @@ class VRMExpressionManager {
     return this._expressionMap[name] ?? null;
   }
   getTalkingExpression() {
-<<<<<<< HEAD
-    const t = this.getExpression("aa"), e = this.getExpression("ee"), i = this.getExpression("ih"), n = this.getExpression("oh"), r = this.getExpression("ou");
-    return [t, e, i, n, r].filter(
-      (o) => o
-=======
     const aExpression = this.getExpression("aa");
     const eExpression = this.getExpression("ee");
     const iExpression = this.getExpression("ih");
@@ -1584,7 +1175,6 @@ class VRMExpressionManager {
     const uExpression = this.getExpression("ou");
     return [aExpression, eExpression, iExpression, oExpression, uExpression].filter(
       (expression) => expression
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
     );
   }
   setValue(name, weight) {
@@ -1624,26 +1214,16 @@ class VRMExpressionManager {
     expression.isPausing = false;
     this.clearAllAppliedWeight(true);
   }
-  stopEmotions(t) {
-    t.forEach((e) => {
-      this.getExpression(e).stop();
+  stopEmotions(names) {
+    names.forEach((name) => {
+      const expression = this.getExpression(name);
+      if (expression)
+        expression.stop();
     });
   }
   getNextTalking() {
     if (this.talkExpressions.length === 0)
       return null;
-<<<<<<< HEAD
-    const t = Ie(0, this.talkExpressions.length - 1);
-    return this.talkExpressions[t].name === this.previousTalkName && this.talkExpressions.length > 1 ? this.getNextTalking() : (this.previousTalkName = this.talkExpressions[t].expressionName, this.talkExpressions[t]);
-  }
-  startTalking(t, e) {
-    this.talkExpressions.length === 0 && (this.talkExpressions = this.getTalkingExpression());
-    const i = this.getNextTalking();
-    i && (i.animatedMorph = {
-      times: t,
-      values: e
-    });
-=======
     const expressionIndex = getRandomInt(0, this.talkExpressions.length - 1);
     if (this.talkExpressions[expressionIndex].name === this.previousTalkName && this.talkExpressions.length > 1) {
       return this.getNextTalking();
@@ -1662,7 +1242,6 @@ class VRMExpressionManager {
       times,
       values
     };
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   }
   stopTalking() {
     this.talkExpressions.forEach((expression) => {
@@ -1835,20 +1414,6 @@ class VRMExpression {
       this.setValue(lastValue);
       return;
     }
-<<<<<<< HEAD
-    this.time += t;
-    const n = this.time < e[1] ? 0 : e.findIndex(
-      (r, o) => e[o - 1] < this.time && e[o + 1] > this.time
-    );
-    if (n !== -1) {
-      this.currentTimeIndex !== n && (this.currentValue = i[n]), this.currentTimeIndex = n;
-      const r = i[this.currentTimeIndex + 1], o = e[this.currentTimeIndex] - e[this.currentTimeIndex + 1], l = (i[this.currentTimeIndex] - i[this.currentTimeIndex + 1]) / o, h = this.currentValue + l * t;
-      l > 0 && h >= r || l < 0 && r >= h ? this.setValue(r) : this.setValue(h);
-    }
-  }
-}
-class Ht {
-=======
     this.time += dt;
     const timeIndex = this.time < times[1] ? 0 : times.findIndex(
       (_, index) => times[index - 1] < this.time && times[index + 1] > this.time
@@ -1872,7 +1437,6 @@ class Ht {
   }
 }
 class VRMExpressionMorphTargetBind {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   constructor({
     primitives,
     targetIndex,
@@ -1900,25 +1464,6 @@ class VRMExpressionMorphTargetBind {
     });
   }
 }
-<<<<<<< HEAD
-class Ne {
-  constructor(t, e) {
-    this.asset = t, this.meshInstances = e;
-  }
-  import() {
-    const t = this.asset.resource.data.gltf, e = this._v1Import(t);
-    if (e)
-      return e;
-    const i = this._v0Import(t);
-    return i || null;
-  }
-  _v1Import(t) {
-    var l;
-    if (!((t == null ? void 0 : t.extensionsUsed.indexOf("VRMC_vrm")) !== -1))
-      return null;
-    const i = (l = t == null ? void 0 : t.extensions) == null ? void 0 : l.VRMC_vrm;
-    if (!i)
-=======
 class VRMExpressionLoaderPlugin {
   constructor(asset, meshInstances) {
     this.asset = asset;
@@ -1944,57 +1489,11 @@ class VRMExpressionLoaderPlugin {
     }
     const extension = (_a = gltf == null ? void 0 : gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
     if (!extension) {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       return null;
     }
     const schemaExpressions = extension.expressions;
     if (!schemaExpressions) {
       return null;
-<<<<<<< HEAD
-    const r = new Set(Object.values(q)), o = /* @__PURE__ */ new Map();
-    n.preset != null && Object.entries(n.preset).forEach(([h, c]) => {
-      if (c != null) {
-        if (!r.has(h)) {
-          console.warn(
-            `VRMExpressionLoaderPlugin: Unknown preset name "${h}" detected. Ignoring the expression`
-          );
-          return;
-        }
-        o.set(h, c);
-      }
-    }), n.custom != null && Object.entries(n.custom).forEach(([h, c]) => {
-      if (r.has(h)) {
-        console.warn(
-          `VRMExpressionLoaderPlugin: Custom expression cannot have preset name "${h}". Ignoring the expression`
-        );
-        return;
-      }
-      o.set(h, c);
-    });
-    const a = new Wt();
-    return Array.from(o.entries()).map(([h, c]) => {
-      const m = new Ot(h);
-      m.isBinary = c.isBinary ?? !1, m.overrideBlink = c.overrideBlink ?? "none", m.overrideLookAt = c.overrideLookAt ?? "none", m.overrideMouth = c.overrideMouth ?? "none", c.morphTargetBinds && c.morphTargetBinds.forEach((d) => {
-        if (d.node === void 0 || d.index === void 0)
-          return;
-        const f = this.meshInstances.filter((g) => g.node.tags.has(`node_${d.node}`)), _ = d.index;
-        m.addBind(
-          new Ht({
-            primitives: f,
-            targetIndex: _,
-            weight: d.weight ?? 1
-          })
-        );
-      }), a.registerExpression(m);
-    }), a;
-  }
-  _v0Import(t) {
-    var l, h;
-    if (!(((l = t.extensionsUsed) == null ? void 0 : l.indexOf("VRM")) !== -1))
-      return null;
-    const i = (h = t.extensions) == null ? void 0 : h.VRM;
-    if (!i)
-=======
     }
     const presetNameSet = new Set(Object.values(VRMExpressionPresetName));
     const nameSchemaExpressionMap = /* @__PURE__ */ new Map();
@@ -2060,21 +1559,11 @@ class VRMExpressionLoaderPlugin {
     }
     const vrmExt = (_b = gltf.extensions) == null ? void 0 : _b.VRM;
     if (!vrmExt) {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       return null;
     }
     const schemaBlendShape = vrmExt.blendShapeMaster;
     if (!schemaBlendShape) {
       return null;
-<<<<<<< HEAD
-    const r = new Wt(), o = n.blendShapeGroups;
-    if (!o)
-      return r;
-    const a = /* @__PURE__ */ new Set();
-    return o.map((c) => {
-      const m = c.presetName, f = (m != null && Xt[m] || null) ?? c.name;
-      if (f == null) {
-=======
     }
     const manager = new VRMExpressionManager();
     const schemaBlendShapeGroups = schemaBlendShape.blendShapeGroups;
@@ -2087,59 +1576,17 @@ class VRMExpressionLoaderPlugin {
       const v1PresetName = v0PresetName != null && v0v1PresetNameMap[v0PresetName] || null;
       const name = v1PresetName ?? schemaGroup.name;
       if (name == null) {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
         console.warn(
           "VRMExpressionLoaderPlugin: One of custom expressions has no name. Ignoring the expression"
         );
         return;
       }
-<<<<<<< HEAD
-      if (a.has(f)) {
-=======
       if (blendShapeNameSet.has(name)) {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
         console.warn(
           `VRMExpressionLoaderPlugin: An expression preset ${v0PresetName} has duplicated entries. Ignoring the expression`
         );
         return;
       }
-<<<<<<< HEAD
-      a.add(f);
-      const _ = new Ot(f);
-      _.isBinary = c.isBinary ?? !1, c.binds && (c.binds.forEach((g) => {
-        if (g.mesh === void 0 || g.index === void 0)
-          return;
-        const p = [];
-        t.nodes.forEach((x, v) => {
-          x.mesh === g.mesh && p.push({ gltfNode: x, index: v });
-        });
-        const u = g.index;
-        p.map((x) => {
-          const v = this.meshInstances.filter((T) => T.node.tags.has(`node_${x.index}`));
-          _.addBind(
-            new Ht({
-              primitives: v,
-              targetIndex: u,
-              weight: 0.01 * (g.weight ?? 100)
-              // narrowing the range from [ 0.0 - 100.0 ] to [ 0.0 - 1.0 ]
-            })
-          );
-        });
-      }), r.registerExpression(_));
-    }), r;
-  }
-}
-const Fe = (s) => {
-  const t = [];
-  if (s) {
-    const e = s.findComponents("render");
-    for (let i = 0; i < e.length; i++) {
-      const n = e[i];
-      if (n.meshInstances)
-        for (let r = 0; r < n.meshInstances.length; r++) {
-          const o = n.meshInstances[r];
-          t.push(o);
-=======
       blendShapeNameSet.add(name);
       const expression = new VRMExpression(name);
       expression.isBinary = schemaGroup.isBinary ?? false;
@@ -2185,33 +1632,12 @@ const collectMeshInstances = (entity) => {
         for (let m = 0; m < render.meshInstances.length; m++) {
           const meshInstance = render.meshInstances[m];
           meshInstances.push(meshInstance);
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
         }
       }
     }
   }
   return meshInstances;
 };
-<<<<<<< HEAD
-function De(s, t) {
-  const e = [];
-  let i = s;
-  for (; i !== null; )
-    e.unshift(i), i = i.parent;
-  e.forEach((n) => {
-    t(n);
-  });
-}
-const Ue = (s) => {
-  class t extends s.ScriptType {
-    constructor() {
-      super(...arguments), this.previousTalkName = "", this.previousEmotions = [], this.vrmaEmotionWasPlaying = !1;
-    }
-    initialize() {
-      const i = Fe(this.entity), n = new Ne(this.asset, i);
-      this.expressionManager = n.import(), this.blinkTimer = new Z("blink"), this.talkTimer = new Z("talk"), this.resetEmotionTimer = new Z("resetEmotion"), this.startBlink(), this.entity.on("vrm-expression:start-emotion", this.startEmotion, this), this.entity.on("audio:is-talking-change", this.onIsTalkingChange, this), this.entity.on("vrma-expression:start", this.startVRMAExpression, this), this.on("destroy", () => {
-        this.entity.off("vrm-expression:start-emotion", this.startEmotion, this), this.entity.off("audio:is-talking-change", this.onIsTalkingChange, this), this.entity.off("vrma-expression:start", this.startVRMAExpression, this), this.entity.off("vrm-expression:reset", this.resetExpression, this);
-=======
 function traverseAncestorsFromRoot(object, callback) {
   const ancestors = [];
   let head = object;
@@ -2228,6 +1654,8 @@ const importScript$2 = (pcRef) => {
     constructor() {
       super(...arguments);
       this.previousTalkName = "";
+      this.previousEmotions = [];
+      this.vrmaEmotionWasPlaying = false;
     }
     initialize() {
       const meshInstances = collectMeshInstances(this.entity);
@@ -2235,13 +1663,16 @@ const importScript$2 = (pcRef) => {
       this.expressionManager = loaderPlugin.import();
       this.blinkTimer = new Timer("blink");
       this.talkTimer = new Timer("talk");
+      this.resetEmotionTimer = new Timer("resetEmotion");
       this.startBlink();
       this.entity.on("vrm-expression:start-emotion", this.startEmotion, this);
       this.entity.on("audio:is-talking-change", this.onIsTalkingChange, this);
+      this.entity.on(`vrma-expression:start`, this.startVRMAExpression, this);
       this.on("destroy", () => {
         this.entity.off("vrm-expression:start-emotion", this.startEmotion, this);
         this.entity.off("audio:is-talking-change", this.onIsTalkingChange, this);
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
+        this.entity.off(`vrma-expression:start`, this.startVRMAExpression, this);
+        this.entity.off(`vrm-expression:reset`, this.resetExpression, this);
       });
     }
     // Specific Expression Animation
@@ -2252,39 +1683,28 @@ const importScript$2 = (pcRef) => {
         this.blinkTimer.add(randomValue, this.startBlink, this);
       }
     }
-<<<<<<< HEAD
-    stopBlink(i, n) {
-      this.expressionManager && (this.stopExpressionLoop("blink"), this.expressionManager.stopBlink(), n || i && this.blinkTimer.add(i, this.startBlink, this));
-=======
-    stopBlink(restartSeconds) {
+    stopBlink(restartSeconds, loop) {
       if (!this.expressionManager)
         return;
       this.stopExpressionLoop("blink");
       this.expressionManager.stopBlink();
-      if (restartSeconds) {
-        this.blinkTimer.add(restartSeconds, this.startBlink, this);
+      if (!loop) {
+        if (restartSeconds) {
+          this.blinkTimer.add(restartSeconds, this.startBlink, this);
+        }
       }
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
     }
     startEmotion(name, config) {
       if (!this.expressionManager)
         return;
-<<<<<<< HEAD
-      const r = n ? n.times[n.times.length - 1] : 3, o = n ? !!n.loop : !1;
-      this.stopBlink(r, o), this.expressionManager.startEmotion(i, n);
-=======
-      this.expressionManager.startEmotion(name, config);
       const time = config ? config.times[config.times.length - 1] : 3;
-      this.stopBlink(time);
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
+      const loop = config ? !!config.loop : false;
+      this.stopBlink(time, loop);
+      this.expressionManager.startEmotion(name, config);
     }
     startTalking(speed = 0.25) {
       if (!this.expressionManager)
         return;
-<<<<<<< HEAD
-      const n = Math.random() * 0.5, r = Math.random() * 0.5 + 0.5, o = N(0.5, 1), a = N(0.4, 0.6) * o, l = N(0.4, 0.6) * o, h = [0, n, 0.5, r, 1].filter((d) => d * i), c = [0, a, o, l, 0], m = N(0.5, 1);
-      this.expressionManager.startTalking(h, c), this.talkTimer.add(m, this.startTalking, this);
-=======
       const time1 = Math.random() * 0.5;
       const time2 = Math.random() * 0.5 + 0.5;
       const valueMiddle = getRandom(0.5, 1);
@@ -2295,7 +1715,6 @@ const importScript$2 = (pcRef) => {
       const timerRandomValue = getRandom(0.5, 1);
       this.expressionManager.startTalking(times, values);
       this.talkTimer.add(timerRandomValue, this.startTalking, this);
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
     }
     stopTalking(restartSeconds) {
       this.stopExpressionLoop("talk");
@@ -2324,41 +1743,45 @@ const importScript$2 = (pcRef) => {
     restartAllExpression() {
       this.app.timeScale = 1;
     }
-<<<<<<< HEAD
-    update(i) {
-      this.expressionManager && (this.expressionManager.update(i), this.blinkTimer.update(i), this.talkTimer.update(i), this.resetEmotionTimer.update(i));
-    }
-    startVRMAExpression(i) {
-      this.expressionManager && this.expressionManager.stopEmotions(this.previousEmotions);
-      for (const [n, r] of i.preset.entries())
-        this.startEmotion(n, r);
-      this.previousEmotions.length === 0 && (this.previousEmotions = Array.from(i.preset.keys())), this.vrmaEmotionWasPlaying = !0, this.entity.hasEvent("vrm-expression:reset") || this.entity.on("vrm-expression:reset", this.resetExpression, this);
-    }
-    resetExpression(i) {
-      if (this.vrmaEmotionWasPlaying) {
-        const n = () => {
-          this.expressionManager && this.expressionManager.stopEmotions(this.previousEmotions), this.startBlink(), this.previousEmotions = [], this.vrmaEmotionWasPlaying = !1;
-        };
-        i ? this.resetEmotionTimer.add(i, n, this) : n();
-      }
-    }
-  }
-  s.registerScript(t, "vrmExpression"), t.attributes.add("asset", {
-    type: "asset",
-    description: "Set the container asset loaded from vrm avatar."
-  });
-}, We = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-  __proto__: null,
-  importScript: Ue
-}, Symbol.toStringTag, { value: "Module" }));
-class zt {
-=======
     update(dt) {
       if (!this.expressionManager)
         return;
       this.expressionManager.update(dt);
       this.blinkTimer.update(dt);
       this.talkTimer.update(dt);
+      this.resetEmotionTimer.update(dt);
+    }
+    startVRMAExpression(vrmaExpression) {
+      if (this.expressionManager) {
+        this.expressionManager.stopEmotions(this.previousEmotions);
+      }
+      for (const [name, config] of vrmaExpression.preset.entries()) {
+        this.startEmotion(name, config);
+      }
+      if (this.previousEmotions.length === 0) {
+        this.previousEmotions = Array.from(vrmaExpression.preset.keys());
+      }
+      this.vrmaEmotionWasPlaying = true;
+      if (!this.entity.hasEvent(`vrm-expression:reset`)) {
+        this.entity.on(`vrm-expression:reset`, this.resetExpression, this);
+      }
+    }
+    resetExpression(transitionInterval) {
+      if (this.vrmaEmotionWasPlaying) {
+        const reset = () => {
+          if (this.expressionManager) {
+            this.expressionManager.stopEmotions(this.previousEmotions);
+          }
+          this.startBlink();
+          this.previousEmotions = [];
+          this.vrmaEmotionWasPlaying = false;
+        };
+        if (transitionInterval) {
+          this.resetEmotionTimer.add(transitionInterval, reset, this);
+        } else {
+          reset();
+        }
+      }
     }
   }
   pcRef.registerScript(VrmExpression2, "vrmExpression");
@@ -2372,7 +1795,6 @@ const VrmExpression = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defin
   importScript: importScript$2
 }, Symbol.toStringTag, { value: "Module" }));
 class VRMSpringBoneManager {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   constructor() {
     this._joints = /* @__PURE__ */ new Set();
     this._objectSpringBonesMap = /* @__PURE__ */ new Map();
@@ -2424,19 +1846,6 @@ class VRMSpringBoneManager {
       );
     }
   }
-<<<<<<< HEAD
-  update(t, e) {
-    const i = /* @__PURE__ */ new Set(), n = /* @__PURE__ */ new Set(), r = /* @__PURE__ */ new Set();
-    e ? (this.strength >= this.limitHeight ? (this.direction = -0.2, this.limitHeight = Math.random() * (0.2 - this.limitLow) + this.limitLow) : this.strength <= this.limitLow && (this.direction = 0.2, this.limitLow = Math.random() * 0.2), this.strength += this.direction * t) : this.strength <= 0.5 && (this.strength += 0.1 * t);
-    for (const o of this._joints)
-      this._processSpringBone(
-        o,
-        i,
-        n,
-        r,
-        (a) => {
-          a.update(t, this.strength);
-=======
   update(dt, isWalking) {
     const springBonesTried = /* @__PURE__ */ new Set();
     const springBonesDone = /* @__PURE__ */ new Set();
@@ -2463,7 +1872,6 @@ class VRMSpringBoneManager {
         objectUpdated,
         (springBone2) => {
           springBone2.update(dt, this.strength);
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
         }
       );
     }
@@ -2476,15 +1884,6 @@ class VRMSpringBoneManager {
       throw new Error(
         "VRMSpringBoneManager: Circular dependency detected while updating springbones"
       );
-<<<<<<< HEAD
-    e.add(t);
-    const o = this._getDependencies(t);
-    for (const a of o)
-      De(a, (l) => {
-        const h = this._objectSpringBonesMap.get(l);
-        if (h)
-          for (const c of h)
-=======
     }
     springBonesTried.add(springBone);
     const depObjects = this._getDependencies(springBone);
@@ -2493,7 +1892,6 @@ class VRMSpringBoneManager {
         const objectSet = this._objectSpringBonesMap.get(depObjectAncestor);
         if (objectSet) {
           for (const depSpringBone of objectSet) {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
             this._processSpringBone(
               depSpringBone,
               springBonesTried,
@@ -2501,15 +1899,10 @@ class VRMSpringBoneManager {
               objectUpdated,
               callback
             );
-<<<<<<< HEAD
-        else
-          n.has(l) || n.add(l);
-=======
           }
         } else if (!objectUpdated.has(depObjectAncestor)) {
           objectUpdated.add(depObjectAncestor);
         }
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       });
     }
     callback(springBone);
@@ -2517,14 +1910,6 @@ class VRMSpringBoneManager {
     springBonesDone.add(springBone);
   }
   // Return a set of objects that are dependant of given spring bone.
-<<<<<<< HEAD
-  _getDependencies(t) {
-    var n;
-    const e = /* @__PURE__ */ new Set(), i = t.bone.parent;
-    return i && e.add(i), (n = t.colliderGroups) == null || n.forEach((r) => {
-      r.colliders.forEach((o) => {
-        e.add(o);
-=======
   _getDependencies(springBone) {
     var _a;
     const set = /* @__PURE__ */ new Set();
@@ -2535,42 +1920,19 @@ class VRMSpringBoneManager {
     (_a = springBone.colliderGroups) == null ? void 0 : _a.forEach((colliderGroup) => {
       colliderGroup.colliders.forEach((collider) => {
         set.add(collider);
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       });
     });
     return set;
   }
 }
-<<<<<<< HEAD
-class Oe {
-  constructor(t, e) {
-    this.offset = (e == null ? void 0 : e.offset) ?? new t.Vec3(), this.radius = (e == null ? void 0 : e.radius) ?? 0;
-=======
 class VRMSpringBoneColliderShapeSphere {
   constructor(pcRef, params) {
     this.offset = (params == null ? void 0 : params.offset) ?? new pcRef.Vec3();
     this.radius = (params == null ? void 0 : params.radius) ?? 0;
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   }
   get type() {
     return "sphere";
   }
-<<<<<<< HEAD
-  calculateCollision(t, e, i, n) {
-    n.copy(this.offset).copy(t.transformPoint(n)), n.mulScalar(-1).add(e);
-    const r = i + this.radius, o = n.length() - r;
-    return n.normalize(), o;
-  }
-}
-const $t = (s) => class extends s.Entity {
-  constructor(e) {
-    super(), this.shape = e;
-  }
-};
-class He {
-  constructor(t, e) {
-    this.offset = (e == null ? void 0 : e.offset) ?? new t.Vec3(), this.tail = (e == null ? void 0 : e.tail) ?? new t.Vec3(), this.radius = (e == null ? void 0 : e.radius) ?? 0, this._v3A = new t.Vec3(), this._v3B = new t.Vec3();
-=======
   calculateCollision(colliderMatrix, objectPosition, objectRadius, target) {
     target.copy(this.offset).copy(colliderMatrix.transformPoint(target));
     target.mulScalar(-1).add(objectPosition);
@@ -2595,33 +1957,10 @@ class VRMSpringBoneColliderShapeCapsule {
     this.radius = (params == null ? void 0 : params.radius) ?? 0;
     this._v3A = new pcRef.Vec3();
     this._v3B = new pcRef.Vec3();
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   }
   get type() {
     return "capsule";
   }
-<<<<<<< HEAD
-  calculateCollision(t, e, i, n) {
-    this._v3A.copy(this.offset).copy(t.transformPoint(this._v3A)), this._v3B.copy(this.tail).copy(t.transformPoint(this._v3B)), this._v3B.sub(this._v3A);
-    const r = this._v3B.lengthSq();
-    n.copy(e).sub(this._v3A);
-    const o = this._v3B.dot(n);
-    o <= 0 || (r <= o ? n.sub(this._v3B) : (this._v3B.mulScalar(o / r), n.sub(this._v3B)));
-    const a = i + this.radius, l = n.length() - a;
-    return n.normalize(), l;
-  }
-}
-class ze {
-  constructor(t, e, i, n = {}, r = []) {
-    var o;
-    this._center = null, this._worldSpaceBoneLength = 0, this._pcRef = t, this._v3A = new this._pcRef.Vec3(), this._v3B = new this._pcRef.Vec3(), this._nextTail = new this._pcRef.Vec3(), this._quatA = new this._pcRef.Quat(), this._matA = new this._pcRef.Mat4(), this._matB = new this._pcRef.Mat4(), this._identityMat4 = new this._pcRef.Mat4(), this._worldSpacePosition = new this._pcRef.Vec3(), this._centerSpacePosition = new this._pcRef.Vec3(), this._matrixWorldToCenterTranslation = new this._pcRef.Vec3(), this._worldSpaceBoneLength = 0, this.bone = e, this.child = i, this.settings = {
-      hitRadius: n.hitRadius ?? 0,
-      stiffness: n.stiffness ?? 1,
-      gravityPower: n.gravityPower ?? 0,
-      gravityDir: ((o = n.gravityDir) == null ? void 0 : o.clone()) ?? new this._pcRef.Vec3(0, -1, 0),
-      dragForce: n.dragForce ?? 0.4
-    }, this.colliderGroups = r, this._initialLocalMatrix = new this._pcRef.Mat4(), this._initialLocalRotation = new this._pcRef.Quat(), this._initialLocalChildPosition = new this._pcRef.Vec3(), this._currentTail = new this._pcRef.Vec3(), this._prevTail = new this._pcRef.Vec3(), this._boneAxis = new this._pcRef.Vec3(), this._center = null;
-=======
   calculateCollision(colliderMatrix, objectPosition, objectRadius, target) {
     this._v3A.copy(this.offset).copy(colliderMatrix.transformPoint(this._v3A));
     this._v3B.copy(this.tail).copy(colliderMatrix.transformPoint(this._v3B));
@@ -2677,19 +2016,10 @@ class VRMSpringBoneJoint {
     this._prevTail = new this._pcRef.Vec3();
     this._boneAxis = new this._pcRef.Vec3();
     this._center = null;
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   }
   get center() {
     return this._center;
   }
-<<<<<<< HEAD
-  set center(t) {
-    var e;
-    (e = this._center) != null && e.userData.inverseCacheProxy && (this._center.userData.inverseCacheProxy.revert(), delete this._center.userData.inverseCacheProxy), this._center = t, this._center && (this._center.userData || (this._center.userData = {}), this._center.userData.inverseCacheProxy || (this._center.userData.inverseCacheProxy = new Ve(
-      this._pcRef,
-      this._center.getWorldTransform()
-    )));
-=======
   set center(center) {
     var _a;
     if ((_a = this._center) == null ? void 0 : _a.userData.inverseCacheProxy) {
@@ -2708,31 +2038,11 @@ class VRMSpringBoneJoint {
         );
       }
     }
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   }
   get _parentMatrixWorld() {
     return this.bone.parent ? this.bone.parent.getWorldTransform() : this._identityMat4;
   }
   setInitState() {
-<<<<<<< HEAD
-    this._initialLocalMatrix.copy(this.bone.getLocalTransform()), this._initialLocalRotation.copy(this.bone.getLocalRotation()), this.child ? this._initialLocalChildPosition.copy(this.child.getLocalPosition()) : this._initialLocalChildPosition.copy(this.bone.getLocalPosition()).normalize().mulScalar(0.07);
-    const t = this.bone.getWorldTransform();
-    Ut(this._currentTail.copy(this._initialLocalChildPosition), t), this._prevTail.copy(this._currentTail), this._boneAxis.copy(this._initialLocalChildPosition).normalize();
-    const e = this.bone.getWorldTransform().transformPoint(new this._pcRef.Vec3());
-    this._worldSpaceBoneLength = this._v3A.copy(this._initialLocalChildPosition).copy(this.bone.getWorldTransform().transformPoint(this._v3A)).sub(e).length();
-  }
-  reset() {
-    this.bone.setLocalRotation(this._initialLocalRotation);
-    const t = new this._pcRef.Mat4();
-    t.mul2(this._parentMatrixWorld, this.bone.getLocalTransform());
-    const e = t.transformPoint(new this._pcRef.Vec3());
-    this.bone.setPosition(e.x, e.y, e.z);
-    const i = this._getMatrixWorldToCenter(this._matA), n = this.bone.getWorldTransform();
-    Ut(this._currentTail.copy(this._initialLocalChildPosition), n), this._currentTail.copy(i.transformPoint(this._currentTail)), this._prevTail.copy(this._currentTail);
-  }
-  update(t, e) {
-    if (t <= 0)
-=======
     this._initialLocalMatrix.copy(this.bone.getLocalTransform());
     this._initialLocalRotation.copy(this.bone.getLocalRotation());
     if (this.child) {
@@ -2761,22 +2071,10 @@ class VRMSpringBoneJoint {
   }
   update(dt, strength) {
     if (dt <= 0)
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       return;
     this._worldSpacePosition.copy(
       this.bone.getWorldTransform().getTranslation(new this._pcRef.Vec3())
     );
-<<<<<<< HEAD
-    let i = this._getMatrixWorldToCenter(this._matA);
-    this._matrixWorldToCenterTranslation.set(0, 0, 0), i.getTranslation(this._matrixWorldToCenterTranslation), this._centerSpacePosition.copy(this._worldSpacePosition).add(this._matrixWorldToCenterTranslation);
-    const n = this._quatA.setFromMat4(i), r = this._matB.copy(i).mul(this._parentMatrixWorld), o = this._v3B.copy(this._boneAxis).copy(this._initialLocalMatrix.transformPoint(this._v3B)).copy(r.transformPoint(this._v3B)).sub(this._centerSpacePosition).normalize(), a = this._v3A.copy(this.settings.gravityDir).copy(n.transformVector(this._v3A)).normalize(), l = this._getMatrixCenterToWorld(this._matA);
-    this._nextTail.copy(this._currentTail).add(
-      this._v3A.copy(this._currentTail).sub(this._prevTail).mulScalar(1 - this.settings.dragForce)
-    ).add(this._v3A.copy(o).mulScalar(this.settings.stiffness * t)).add(this._v3A.copy(a).mulScalar(this.settings.gravityPower * t)).copy(l.transformPoint(this._nextTail)), this._nextTail.sub(this._worldSpacePosition).normalize().mulScalar(this._worldSpaceBoneLength).add(this._worldSpacePosition);
-    const h = this._v3A.copy(this._nextTail).sub(this._currentTail).mulScalar(0.2);
-    this._nextTail.sub(this._v3A.set(0, h.y, 0)), this._collision(this._nextTail), i = this._getMatrixWorldToCenter(this._matA), this._prevTail.copy(this._currentTail), this._currentTail.copy(
-      this._v3A.copy(this._nextTail).copy(i.transformPoint(this._v3A))
-=======
     let matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
     this._matrixWorldToCenterTranslation.set(0, 0, 0);
     matrixWorldToCenter.getTranslation(this._matrixWorldToCenterTranslation);
@@ -2797,21 +2095,10 @@ class VRMSpringBoneJoint {
     this._prevTail.copy(this._currentTail);
     this._currentTail.copy(
       this._v3A.copy(this._nextTail).copy(matrixWorldToCenter.transformPoint(this._v3A))
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
     );
     const worldSpaceInitialMatrixInv = mat4InvertCompat(
       this._pcRef,
       this._matA.copy(this._parentMatrixWorld).mul(this._initialLocalMatrix)
-<<<<<<< HEAD
-    ), m = Be(
-      this._quatA,
-      this._boneAxis,
-      this._v3A.copy(this._nextTail).copy(c.transformPoint(this._v3A)).normalize()
-    ), d = m.getEulerAngles();
-    m.setFromEulerAngles(d.x * e, d.y * e, d.z * e);
-    const f = this._initialLocalRotation.clone().mul(m);
-    this.bone.setLocalRotation(f);
-=======
     );
     const applyRotation = setFromUnitVectors(
       this._quatA,
@@ -2822,7 +2109,6 @@ class VRMSpringBoneJoint {
     applyRotation.setFromEulerAngles(angles.x * strength, angles.y * strength, angles.z * strength);
     const rotation = this._initialLocalRotation.clone().mul(applyRotation);
     this.bone.setLocalRotation(rotation);
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   }
   _getMatrixCenterToWorld(target) {
     if (this._center) {
@@ -2860,35 +2146,6 @@ class VRMSpringBoneJoint {
     });
   }
 }
-<<<<<<< HEAD
-const I = class I {
-  constructor(t, e, i) {
-    this.asset = e, this.entity = i, this._pcRef = t;
-  }
-  import() {
-    const t = this.asset.resource.data.gltf, e = this.asset.resource.data, i = this._v1Import(t, e);
-    if (i)
-      return i;
-    const n = this._v0Import(t, e);
-    return n || null;
-  }
-  _v1Import(t, e) {
-    var _, g;
-    if (!(((_ = t.extensionsUsed) == null ? void 0 : _.indexOf(I.EXTENSION_NAME)) !== -1) || !((t == null ? void 0 : t.extensionsUsed.indexOf("VRMC_vrm")) !== -1))
-      return null;
-    const r = new zt(), o = t == null ? void 0 : t.nodes, a = (g = t.extensions) == null ? void 0 : g[I.EXTENSION_NAME];
-    if (!a)
-      return null;
-    const l = a.specVersion;
-    if (!tt.has(l))
-      return console.warn(
-        `VRMSpringBoneLoaderPlugin: Unknown ${I.EXTENSION_NAME} specVersion "${l}"`
-      ), null;
-    const h = a.colliders, c = h == null ? void 0 : h.map((p, u) => {
-      var T;
-      const x = (T = this.entity.findByTag(`node_${p.node}`)) == null ? void 0 : T[0], v = p.shape;
-      if (!x) {
-=======
 const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
   constructor(pcRef, asset, entity) {
     this.asset = asset;
@@ -2937,28 +2194,11 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
       const node = (_a2 = this.entity.findByTag(`node_${schemaCollider.node}`)) == null ? void 0 : _a2[0];
       const schemaShape = schemaCollider.shape;
       if (!node) {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
         console.error(
           "VRMSpringBoneLoaderPlugin Error: Did not find the node map to schemaColliderGroup"
         );
         return;
       }
-<<<<<<< HEAD
-      if (v) {
-        if (v.sphere)
-          return this._importSphereCollider(x, {
-            offset: W(new this._pcRef.Vec3(), v.sphere.offset ?? [0, 0, 0]),
-            radius: v.sphere.radius ?? 0
-          });
-        if (v.capsule)
-          return this._importCapsuleCollider(x, {
-            offset: W(
-              new this._pcRef.Vec3(),
-              v.capsule.offset ?? [0, 0, 0]
-            ),
-            radius: v.capsule.radius ?? 0,
-            tail: W(new this._pcRef.Vec3(), v.capsule.tail ?? [0, 0, 0])
-=======
       if (schemaShape) {
         if (schemaShape.sphere) {
           return this._importSphereCollider(node, {
@@ -2973,54 +2213,9 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
             ),
             radius: schemaShape.capsule.radius ?? 0,
             tail: fromArray(new this._pcRef.Vec3(), schemaShape.capsule.tail ?? [0, 0, 0])
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
           });
         }
       }
-<<<<<<< HEAD
-      throw new Error(`VRMSpringBoneLoaderPlugin: The collider #${u} has no valid shape`);
-    }), m = a.colliderGroups, d = m == null ? void 0 : m.map((p, u) => ({
-      colliders: (p.colliders ?? []).map((v) => {
-        const T = c == null ? void 0 : c[v];
-        if (T == null)
-          throw new Error(
-            `VRMSpringBoneLoaderPlugin: The colliderGroup #${u} attempted to use a collider #${v} but not found`
-          );
-        return T;
-      }),
-      name: p.name
-    }));
-    return a.springs.forEach((p, u) => {
-      var y;
-      const x = p.joints, v = (y = p.colliderGroups) == null ? void 0 : y.map((w) => {
-        const S = d == null ? void 0 : d[w];
-        if (S == null)
-          throw new Error(
-            `VRMSpringBoneLoaderPlugin: The spring #${u} attempted to use a colliderGroup ${w} but not found`
-          );
-        return S;
-      }), T = p.center != null ? e.nodes[p.center] : void 0;
-      let M;
-      x.forEach((w) => {
-        if (M) {
-          const S = M.node, P = o[S], R = this.entity.findByName(P.name), k = w.node, V = o[k], B = this.entity.findByName(V.name), b = {
-            hitRadius: M.hitRadius,
-            dragForce: M.dragForce,
-            gravityPower: M.gravityPower,
-            stiffness: M.stiffness,
-            gravityDir: M.gravityDir != null ? W(new this._pcRef.Vec3(), M.gravityDir) : void 0
-          }, E = this._importJoint(R, B, b, v);
-          T && (E.center = T), r.addJoint(E);
-        }
-        M = w;
-      });
-    }), r.setInitState(), r;
-  }
-  _v0Import(t, e) {
-    var h, c, m;
-    const i = (h = t.extensions) == null ? void 0 : h.VRM;
-    if (!(((c = t.extensionsUsed) == null ? void 0 : c.indexOf("VRM")) !== -1))
-=======
       throw new Error(`VRMSpringBoneLoaderPlugin: The collider #${iCollider} has no valid shape`);
     });
     const extensionColliderGroups = extension.colliderGroups;
@@ -3086,21 +2281,11 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
     const extension = (_a = gltf.extensions) == null ? void 0 : _a.VRM;
     const isVRMUsed = ((_b = gltf.extensionsUsed) == null ? void 0 : _b.indexOf("VRM")) !== -1;
     if (!isVRMUsed) {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       return null;
     }
     const schemaSecondaryAnimation = extension == null ? void 0 : extension.secondaryAnimation;
     if (!schemaSecondaryAnimation) {
       return null;
-<<<<<<< HEAD
-    const o = r == null ? void 0 : r.boneGroups;
-    if (!o)
-      return null;
-    const a = new zt(), l = (m = r.colliderGroups) == null ? void 0 : m.map((d) => {
-      var g;
-      const f = (g = this.entity.findByTag(`node_${d.node}`)) == null ? void 0 : g[0];
-      if (!f) {
-=======
     }
     const schemaBoneGroups = schemaSecondaryAnimation == null ? void 0 : schemaSecondaryAnimation.boneGroups;
     if (!schemaBoneGroups) {
@@ -3111,24 +2296,11 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
       var _a2;
       const node = (_a2 = this.entity.findByTag(`node_${schemaColliderGroup.node}`)) == null ? void 0 : _a2[0];
       if (!node) {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
         console.error(
           "VRMSpringBoneLoaderPlugin Error: Did not find the node map to schemaColliderGroup"
         );
         return;
       }
-<<<<<<< HEAD
-      return { colliders: (d.colliders ?? []).map((p) => {
-        const u = new this._pcRef.Vec3(0, 0, 0);
-        return p.offset && u.set(
-          p.offset.x ?? 0,
-          p.offset.y ?? 0,
-          p.offset.z ? -p.offset.z : 0
-          // z is opposite in VRM0.0
-        ), this._importSphereCollider(f, {
-          offset: u,
-          radius: p.radius ?? 0
-=======
       const colliders = (schemaColliderGroup.colliders ?? []).map((schemaCollider) => {
         const offset = new this._pcRef.Vec3(0, 0, 0);
         if (schemaCollider.offset) {
@@ -3142,19 +2314,10 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
         return this._importSphereCollider(node, {
           offset,
           radius: schemaCollider.radius ?? 0
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
         });
       });
       return { colliders };
     });
-<<<<<<< HEAD
-    return o == null || o.forEach((d, f) => {
-      const _ = d.bones;
-      _ && _.forEach((g) => {
-        var M, y;
-        const p = (M = this.entity.findByTag(`node_${g}`)) == null ? void 0 : M[0];
-        if (!p) {
-=======
     schemaBoneGroups == null ? void 0 : schemaBoneGroups.forEach((schemaBoneGroup, iBoneGroup) => {
       const rootIndices = schemaBoneGroup.bones;
       if (!rootIndices) {
@@ -3164,55 +2327,11 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
         var _a2, _b2;
         const root = (_a2 = this.entity.findByTag(`node_${rootIndex}`)) == null ? void 0 : _a2[0];
         if (!root) {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
           console.error(
             "VRMSpringBoneLoaderPlugin Error: Did not find the node map to schemaColliderGroup"
           );
           return;
         }
-<<<<<<< HEAD
-        const u = new this._pcRef.Vec3();
-        d.gravityDir ? u.set(
-          d.gravityDir.x ?? 0,
-          d.gravityDir.y ?? 0,
-          d.gravityDir.z ?? 0
-        ) : u.set(0, -1, 0);
-        const x = d.center != null ? e.nodes[d.center] : void 0, v = {
-          hitRadius: d.hitRadius,
-          dragForce: d.dragForce,
-          gravityPower: d.gravityPower,
-          stiffness: d.stiffiness,
-          gravityDir: u
-        }, T = (y = d.colliderGroups) == null ? void 0 : y.map((w) => {
-          const S = l == null ? void 0 : l[w];
-          if (S == null)
-            throw new Error(
-              `VRMSpringBoneLoaderPlugin: The spring #${f} attempted to use a colliderGroup ${w} but not found`
-            );
-          return S;
-        });
-        p.forEach((w) => {
-          const S = w.children[0] ?? null, P = this._importJoint(w, S, v, T);
-          x && (P.center = x), a.addJoint(P);
-        });
-      });
-    }), a.setInitState(), a;
-  }
-  _importSphereCollider(t, { offset: e, radius: i }) {
-    const n = new Oe(this._pcRef, { offset: e, radius: i }), r = $t(this._pcRef), o = new r(n);
-    return t.addChild(o), o;
-  }
-  _importCapsuleCollider(t, { offset: e, radius: i, tail: n }) {
-    const r = new He(this._pcRef, {
-      offset: e,
-      radius: i,
-      tail: n
-    }), o = $t(this._pcRef), a = new o(r);
-    return t.addChild(a), a;
-  }
-  _importJoint(t, e, i, n) {
-    return new ze(
-=======
         const gravityDir = new this._pcRef.Vec3();
         if (schemaBoneGroup.gravityDir) {
           gravityDir.set(
@@ -3273,7 +2392,6 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
   }
   _importJoint(node, child, setting, colliderGroupsForSpring) {
     const springBone = new VRMSpringBoneJoint(
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       this._pcRef,
       node,
       child,
@@ -3283,28 +2401,16 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
     return springBone;
   }
 };
-<<<<<<< HEAD
-I.EXTENSION_NAME = "VRMC_springBone";
-let J = I;
-const $e = (s) => {
-  class t extends s.ScriptType {
-=======
 _VRMSpringBoneLoaderPlugin.EXTENSION_NAME = "VRMC_springBone";
 let VRMSpringBoneLoaderPlugin = _VRMSpringBoneLoaderPlugin;
 const importScript$1 = (pcRef) => {
   class VrmSpringBone2 extends pcRef.ScriptType {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
     constructor() {
       super(...arguments);
       this.activeSpringBone = true;
       this.isWalking = false;
     }
     initialize() {
-<<<<<<< HEAD
-      const i = new J(s, this.asset, this.entity);
-      this.springBoneManager = i.import(), this.isWalking = !1, this.entity.on("toggle-spring-bone", this.toggleSpringBone, this), this.entity.on("toggle-is-walking", this.toggleIsWalking, this), this.on("destroy", () => {
-        this.entity.off("toggle-spring-bone", this.toggleSpringBone, this), this.entity.on("toggle-is-walking", this.toggleIsWalking, this);
-=======
       const springBoneLoader = new VRMSpringBoneLoaderPlugin(pcRef, this.asset, this.entity);
       this.springBoneManager = springBoneLoader.import();
       this.isWalking = false;
@@ -3313,7 +2419,6 @@ const importScript$1 = (pcRef) => {
       this.on("destroy", () => {
         this.entity.off("toggle-spring-bone", this.toggleSpringBone, this);
         this.entity.on("toggle-is-walking", this.toggleIsWalking, this);
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       });
     }
     toggleSpringBone(isActive) {
@@ -3328,12 +2433,8 @@ const importScript$1 = (pcRef) => {
       this.springBoneManager.update(dt, this.isWalking);
     }
   }
-<<<<<<< HEAD
-  s.registerScript(t, "vrmSpringBone"), t.attributes.add("activeSpringBone", {
-=======
   pcRef.registerScript(VrmSpringBone2, "vrmSpringBone");
   VrmSpringBone2.attributes.add("activeSpringBone", {
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
     type: "boolean",
     default: true
   });
@@ -3341,114 +2442,6 @@ const importScript$1 = (pcRef) => {
     type: "asset",
     description: "Set the container asset loaded from vrm avatar."
   });
-<<<<<<< HEAD
-}, je = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-  __proto__: null,
-  importScript: $e
-}, Symbol.toStringTag, { value: "Module" })), K = "VRMC_materials_mtoon", Xe = "VRM";
-var Jt = /* @__PURE__ */ ((s) => (s[s.Off = 0] = "Off", s[s.Front = 1] = "Front", s[s.Back = 2] = "Back", s))(Jt || {});
-const A = (s) => Math.pow(s, 2.2), Ye = (s, t, e) => {
-  var st, ot, rt, at, lt, ht, ct, dt, ut, mt, pt, ft, gt, xt, _t, vt, Mt, Tt, wt, yt, St, Pt, Rt, Et, Lt, bt, kt, Ct, At, It, Vt, Bt;
-  const i = ((st = t.keywordMap) == null ? void 0 : st._ALPHABLEND_ON) ?? !1, r = ((ot = t.floatProperties) == null ? void 0 : ot._ZWrite) === 1 && i, o = ((rt = t.keywordMap) == null ? void 0 : rt._ALPHATEST_ON) ?? !1, a = i ? "BLEND" : o ? "MASK" : "OPAQUE", l = o ? ((at = t.floatProperties) == null ? void 0 : at._Cutoff) ?? 0.5 : void 0, c = (((lt = t.floatProperties) == null ? void 0 : lt._CullMode) ?? 2) === 0, m = (((ht = t.vectorProperties) == null ? void 0 : ht._Color) ?? [1, 1, 1, 1]).map(
-    (Nt, fe) => fe === 3 ? Nt : A(Nt)
-    // alpha channel is stored in linear
-  ), d = (ct = t.textureProperties) == null ? void 0 : ct._MainTex, f = d != null ? {
-    index: d
-    // extensions: {
-    //   ...textureTransformExt,
-    // },
-  } : void 0, _ = ((dt = t.floatProperties) == null ? void 0 : dt._BumpScale) ?? 1, g = (ut = t.textureProperties) == null ? void 0 : ut._BumpMap, p = g != null ? {
-    index: g,
-    scale: _
-    // extensions: {
-    //   ...textureTransformExt,
-    // },
-  } : void 0, u = (((mt = t.vectorProperties) == null ? void 0 : mt._EmissionColor) ?? [0, 0, 0, 1]).map(A), x = (pt = t.textureProperties) == null ? void 0 : pt._EmissionMap, v = x != null ? {
-    index: x
-    // extensions: {
-    //   ...textureTransformExt,
-    // },
-  } : void 0, T = (((ft = t.vectorProperties) == null ? void 0 : ft._ShadeColor) ?? [0.97, 0.81, 0.86, 1]).map(A), M = (gt = t.textureProperties) == null ? void 0 : gt._ShadeTexture, y = M != null ? {
-    index: M
-    // extensions: {
-    //   ...textureTransformExt,
-    // },
-  } : void 0;
-  let w = ((xt = t.floatProperties) == null ? void 0 : xt._ShadeShift) ?? 0, S = ((_t = t.floatProperties) == null ? void 0 : _t._ShadeToony) ?? 0.9;
-  S = s.math.lerp(S, 1, 0.5 + 0.5 * w), w = -w - (1 - S);
-  const P = ((vt = t.floatProperties) == null ? void 0 : vt._IndirectLightIntensity) ?? 0.1, R = P ? 1 - P : void 0, k = (Mt = t.textureProperties) == null ? void 0 : Mt._SphereAdd, V = k != null ? [1, 1, 1] : void 0, B = k != null ? {
-    index: k
-  } : void 0, b = ((Tt = t.floatProperties) == null ? void 0 : Tt._RimLightingMix) ?? 0, E = (wt = t.textureProperties) == null ? void 0 : wt._RimTexture, se = E != null ? {
-    index: E
-    // extensions: {
-    //   ...textureTransformExt,
-    // },
-  } : void 0, oe = (((yt = t.vectorProperties) == null ? void 0 : yt._RimColor) ?? [0, 0, 0, 1]).map(A), re = ((St = t.floatProperties) == null ? void 0 : St._RimFresnelPower) ?? 1, ae = ((Pt = t.floatProperties) == null ? void 0 : Pt._RimLift) ?? 0, le = ["none", "worldCoordinates", "screenCoordinates"][((Rt = t.floatProperties) == null ? void 0 : Rt._OutlineWidthMode) ?? 0];
-  let Y = ((Et = t.floatProperties) == null ? void 0 : Et._OutlineWidth) ?? 0;
-  Y = 0.01 * Y;
-  const it = (Lt = t.textureProperties) == null ? void 0 : Lt._OutlineWidthTexture, he = it != null ? {
-    index: it
-    // extensions: {
-    //   ...textureTransformExt,
-    // },
-  } : void 0, ce = (((bt = t.vectorProperties) == null ? void 0 : bt._OutlineColor) ?? [0, 0, 0]).map(A), de = (((kt = t.floatProperties) == null ? void 0 : kt._OutlineColorMode) ?? 0) === 1 ? ((Ct = t.floatProperties) == null ? void 0 : Ct._OutlineLightingMix) ?? 1 : 0, nt = (At = t.textureProperties) == null ? void 0 : At._UvAnimMaskTexture, ue = nt != null ? {
-    index: nt
-    // extensions: {
-    //   ...textureTransformExt,
-    // },
-  } : void 0, me = ((It = t.floatProperties) == null ? void 0 : It._UvAnimScrollX) ?? 0;
-  let D = ((Vt = t.floatProperties) == null ? void 0 : Vt._UvAnimScrollY) ?? 0;
-  D != null && (D = -D);
-  const pe = ((Bt = t.floatProperties) == null ? void 0 : Bt._UvAnimRotation) ?? 0;
-  return {
-    ...e,
-    pbrMetallicRoughness: {
-      baseColorFactor: m,
-      baseColorTexture: f
-    },
-    normalTexture: p,
-    emissiveTexture: v,
-    emissiveFactor: u,
-    alphaMode: a,
-    alphaCutoff: l,
-    doubleSided: c,
-    extensions: {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
-      VRMC_materials_mtoon: {
-        specVersion: "1.0",
-        transparentWithZWrite: r,
-        // renderQueueOffsetNumber,
-        shadeColorFactor: T,
-        shadeMultiplyTexture: y,
-        shadingShiftFactor: w,
-        shadingToonyFactor: S,
-        giEqualizationFactor: R,
-        matcapFactor: V,
-        matcapTexture: B,
-        rimLightingMixFactor: b,
-        rimMultiplyTexture: se,
-        parametricRimColorFactor: oe,
-        parametricRimFresnelPowerFactor: re,
-        parametricRimLiftFactor: ae,
-        outlineWidthMode: le,
-        outlineWidthFactor: Y,
-        outlineWidthMultiplyTexture: he,
-        outlineColorFactor: ce,
-        outlineLightingMixFactor: de,
-        uvAnimationMaskTexture: ue,
-        uvAnimationScrollXSpeedFactor: me,
-        uvAnimationScrollYSpeedFactor: D,
-        uvAnimationRotationSpeedFactor: pe
-      }
-    }
-  };
-}, Ge = (
-  /* glsl */
-  `
-varying vec3 vViewPosition;
-`
-), Qe = (
-=======
 };
 const VrmSpringBone = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
@@ -3489,217 +2482,6 @@ const setUvTransform = (mat3, tx, ty, sx, sy, rotation, cx, cy) => {
     1
   ]);
 };
-<<<<<<< HEAD
-const baseVS$1 = (
-  /* glsl */
-  `
-varying vec3 vViewPosition;
-varying vec3 vViewDirection;
-varying vec3 vNormal;
-
-uniform vec3 view_position;
-
-uniform float outlineWidthFactor;
-
-#ifdef USE_OUTLINEWIDTHMULTIPLYTEXTURE
-  uniform sampler2D outlineWidthMultiplyTexture;
-  uniform mat3 outlineWidthMultiplyTextureUvTransform;
-#endif
-`
-);
-const endVS$1 = (
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
-  /* glsl */
-  `
-    #ifdef MTOON_USE_UV
-       vUv0 = vertex_texCoord0;
-    #endif
-
-
-    // Transform the vertex position to world space
-    vec4 mvPosition = matrix_model * vec4(vertex_position, 1.0);
-    // Pass the view position to the fragment shader
-    vViewPosition = -mvPosition.xyz;
-
-
-    vec4 worldPosition = mvPosition;
-    vViewDirection = view_position - worldPosition.xyz;
-
-    vec3 objectNormal = vertex_normal;
-    vec3 transformedNormal = normalize(matrix_normal * objectNormal);
-    vNormal = transformedNormal;
-
-
-    #ifdef OUTLINE
-        float outlineTex = 1.0;
-        
-        #ifdef USE_OUTLINEWIDTHMULTIPLYTEXTURE
-            vec2 outlineWidthMultiplyTextureUv = ( outlineWidthMultiplyTextureUvTransform * vec3( vUv0, 1 ) ).xy;
-            outlineTex = texture2D( outlineWidthMultiplyTexture, outlineWidthMultiplyTextureUv ).g;
-        #endif
-
-        #ifdef OUTLINE_WIDTH_WORLD
-            float worldNormalLength = length( transformedNormal );
-            vec3 outlineOffset = outlineWidthFactor * outlineTex * worldNormalLength * objectNormal;
-            gl_Position = matrix_viewProjection * getModelMatrix()  * vec4( outlineOffset + vertex_position, 1.0);
-        #endif
-
-        #ifdef OUTLINE_WIDTH_SCREEN
-            // TODO: Wait until an avatar containing this information is found before proceeding with the implementation.
-        #endif
-
-        gl_Position.z += 1E-6 * gl_Position.w; // anti-artifact magic
-    #endif
-`
-<<<<<<< HEAD
-), Ze = (
-=======
-);
-const basePS$1 = (
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
-  /* glsl */
-  `
-    #define RECIPROCAL_PI 0.3183098861837907
-
-    uniform vec3 litFactor;
-    uniform float opacity;
-    uniform vec3 shadeColorFactor;
-    uniform vec3 ambientLightColor;
-
-    #ifdef USE_SHADEMULTIPLYTEXTURE
-        uniform sampler2D shadeMultiplyTexture;
-        uniform mat3 shadeMultiplyTextureUvTransform;
-    #endif
-
-    uniform float shadingShiftFactor;
-    uniform float shadingToonyFactor;
-
-    #ifdef USE_SHADINGSHIFTTEXTURE
-        uniform sampler2D shadingShiftTexture;
-        uniform mat3 shadingShiftTextureUvTransform;
-        uniform float shadingShiftTextureScale;
-    #endif
-
-    uniform float giEqualizationFactor;
-    uniform vec3 parametricRimColorFactor;
-    #ifdef USE_RIMMULTIPLYTEXTURE
-        uniform sampler2D rimMultiplyTexture;
-        uniform mat3 rimMultiplyTextureUvTransform;
-    #endif
-
-    uniform float rimLightingMixFactor;
-    uniform float parametricRimFresnelPowerFactor;
-    uniform float parametricRimLiftFactor;
-
-    #ifdef USE_MATCAPTEXTURE
-        uniform vec3 matcapFactor;
-        uniform sampler2D matcapTexture;
-        uniform mat3 matcapTextureUvTransform;
-    #endif
-
-    uniform vec3 emissive;
-    uniform float emissiveIntensity;
-
-    uniform vec3 outlineColorFactor;
-    uniform float outlineLightingMixFactor;
-
-    #ifdef USE_UVANIMATIONMASKTEXTURE
-        // TODO:  Wait until an avatar containing this information is found before proceeding with the implementation.
-        // uniform sampler2D uvAnimationMaskTexture;
-        // uniform mat3 uvAnimationMaskTextureUvTransform;
-    #endif
-
-    uniform float uvAnimationScrollXOffset;
-    uniform float uvAnimationScrollYOffset;
-    uniform float uvAnimationRotationPhase;
-
-
-    #ifdef USE_MAP
-        uniform sampler2D baseColorMap;
-        uniform mat3 mapUvTransform;
-    #endif
-
-    #ifdef USE_EMISSIVEMAP
-        uniform sampler2D emissiveMap;
-        uniform mat3 emissiveMapUvTransform;
-    #endif
-
-    varying vec3 vViewPosition;
-
-    struct MToonMaterial {
-        vec3 diffuseColor;
-        vec3 shadeColor;
-        float shadingShift;
-    };
-
-    struct GeometricContext {
-	    vec3 position;
-	    vec3 normal;
-	    vec3 viewDir;
-    };
-    
-    float linearstep( float a, float b, float t ) {
-        return clamp( ( t - a ) / ( b - a ), 0.0, 1.0 );
-    }
-
-    vec3 BRDF_Lambert( const in vec3 diffuseColor ) {
-        return RECIPROCAL_PI * diffuseColor;
-    }
-
-    /**
-        * Convert NdotL into toon shading factor using shadingShift and shadingToony
-    */
-    float getShading(
-        const in float dotNL,
-        const in float shadow,
-        const in float shadingShift
-    ) {
-        float shading = dotNL;
-        shading = shading + shadingShift;
-        shading = linearstep( -1.0 + shadingToonyFactor, 1.0 - shadingToonyFactor, shading );
-        shading *= shadow;
-        return shading;
-    }
-
-    vec3 getDiffuse(
-        const in MToonMaterial material,
-        const in float shading,
-            in vec3 lightColor
-    ) {
-        vec3 col = lightColor * BRDF_Lambert( mix( material.shadeColor, material.diffuseColor, shading ) );
-        return col;
-    }
-
-
-    #ifdef USE_NORMALMAP
-        uniform sampler2D normalMap;
-        uniform mat3 normalMapUvTransform;
-        uniform vec2 normalScale;
-    #endif
-
-    uniform mat3 normalMatrix;
-
-
-    mat3 getTangentFrame( vec3 eye_pos, vec3 surf_norm, vec2 uv ) {
-
-        vec3 q0 = dFdx( eye_pos.xyz );
-        vec3 q1 = dFdy( eye_pos.xyz );
-        vec2 st0 = dFdx( uv.st );
-        vec2 st1 = dFdy( uv.st );
-
-        vec3 N = surf_norm;
-
-        vec3 q1perp = cross( q1, N );
-        vec3 q0perp = cross( N, q0 );
-
-        vec3 T = q1perp * st0.x + q0perp * st1.x;
-        vec3 B = q1perp * st0.y + q0perp * st1.y;
-
-        float det = max( dot( T, T ), dot( B, B ) );
-        float scale = ( det == 0.0 ) ? 0.0 : inversesqrt( det );
-
-        return mat3( T * scale, B * scale, N );
-=======
 class VRMMaterialsV0CompatPlugin {
   constructor(pcRef, asset) {
     this._pcRef = pcRef;
@@ -3714,7 +2496,6 @@ class VRMMaterialsV0CompatPlugin {
     const v0MaterialProperties = v0VRMExtension == null ? void 0 : v0VRMExtension.materialProperties;
     if (!v0MaterialProperties) {
       return;
->>>>>>> 30d0d14 (feat: create vrm-mtoon script & use setting from layer light store)
     }
     this._populateRenderQueueMap(v0MaterialProperties);
     v0MaterialProperties.forEach((materialProperties, materialIndex) => {
@@ -4384,16 +3165,8 @@ const basePS = (
     varying vec3 vNormal;
     varying vec3 vViewDirection;
 `
-<<<<<<< HEAD
-), Je = (
-=======
 );
-<<<<<<< HEAD
-const endPS$1 = (
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
-=======
 const endPS = (
->>>>>>> 310c2b2 (feat: combine outline material to mtoon material & add morph instances)
   /* glsl */
   `
     vec2 uv = vec2(0.5, 0.5);
@@ -4702,50 +3475,6 @@ const light = (
         }
     #endif
 `
-<<<<<<< HEAD
-), O = {
-  baseVS: Ge,
-  endVS: Qe,
-  basePS: Ze,
-  endPS: Je
-}, Ke = (s) => class extends s.StandardMaterial {
-  constructor() {
-    super(), this.litFactor = new s.Color(1, 1, 1, 1), this.alphaTest = 0, this.baseColorMap = null, this.mapUvTransform = new s.Mat3(), this.normalMapUvTransform = new s.Mat3(), this.normalScale = new s.Vec2(1, 1), this.emissiveMapUvTransform = new s.Mat3(), this.shadeColorFactor = new s.Color(0, 0, 0, 1), this.shadeMultiplyTexture = null, this.shadeMultiplyTextureUvTransform = new s.Mat3(), this.shadingShiftFactor = 0, this.shadingShiftTexture = null, this.shadingShiftTextureUvTransform = new s.Mat3(), this.shadingShiftTextureScale = 1, this.shadingToonyFactor = 0.9, this.giEqualizationFactor = 0, this.matcapFactor = new s.Color(1, 1, 1, 1), this.matcapTexture = null, this.matcapTextureUvTransform = new s.Mat3(), this.parametricRimColorFactor = new s.Color(0, 0, 0, 1), this.rimMultiplyTexture = null, this.rimMultiplyTextureUvTransform = new s.Mat3(), this.rimLightingMixFactor = 0, this.parametricRimFresnelPowerFactor = 5, this.parametricRimLiftFactor = 0, this.outlineWidthMultiplyTexture = null, this.outlineWidthMultiplyTextureUvTransform = new s.Mat3(), this.outlineWidthFactor = 0.02, this.outlineColorFactor = new s.Color(1, 0.5, 0, 1), this.outlineLightingMixFactor = 0, this.uvAnimationMaskTexture = null, this.uvAnimationMaskTextureUvTransform = new s.Mat3(), this.uvAnimationScrollXOffset = 0, this.uvAnimationScrollYOffset = 0, this.uvAnimationRotationPhase = 0, this.useLighting = !1, this.useSkybox = !1;
-  }
-  parseGLTFAttrs(e, i, n) {
-    var u;
-    if (e.hasOwnProperty("alphaMode"))
-      switch (e.alphaMode) {
-        case "MASK":
-          this.blendType = s.BLEND_NONE, e.hasOwnProperty("alphaCutoff") ? this.alphaTest = e.alphaCutoff : this.alphaTest = 0.5;
-          break;
-        case "BLEND":
-          this.blendType = s.BLEND_NORMAL, this.depthWrite = !1;
-          break;
-        default:
-        case "OPAQUE":
-          this.blendType = s.BLEND_NONE;
-          break;
-      }
-    else
-      this.blendType = s.BLEND_NONE;
-    if (e != null && e.emissiveFactor) {
-      const x = e.emissiveFactor;
-      this.emissive = new s.Color(
-        Math.pow(x[0], 1 / 2.2),
-        Math.pow(x[1], 1 / 2.2),
-        Math.pow(x[2], 1 / 2.2),
-        1
-      );
-    }
-    if ((u = e == null ? void 0 : e.pbrMetallicRoughness) != null && u.baseColorFactor) {
-      const x = e.pbrMetallicRoughness.baseColorFactor;
-      this.diffuse = new s.Color(
-        Math.pow(x[0], 1 / 2.2),
-        Math.pow(x[1], 1 / 2.2),
-        Math.pow(x[2], 1 / 2.2),
-        x[3]
-=======
 );
 const shaderChunksMtoon = {
   baseVS,
@@ -5089,14 +3818,6 @@ const createVRMCMtoonMaterial = (pcRef) => {
         this.matcapFactor.g,
         this.matcapFactor.b
       ]);
-<<<<<<< HEAD
-      this.setParameter(
-        "shadeMultiplyTextureUvTransform",
-        this.shadeMultiplyTextureUvTransform.data
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
-      );
-=======
->>>>>>> 310c2b2 (feat: combine outline material to mtoon material & add morph instances)
       if (this.shadingShiftTexture) {
         this.setParameter("shadingShiftTexture", this.shadingShiftTexture);
       }
@@ -5196,75 +3917,6 @@ const createVRMCMtoonMaterial = (pcRef) => {
         this.setParameter(`pointLights[${i}].decay`, decay);
       });
     }
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-    this.litFactor = this.diffuse, this.baseColorMap = this.diffuseMap || this.opacityMap;
-    const {
-      version: r,
-      shadeColorFactor: o,
-      shadeMultiplyTexture: a,
-      shadingShiftFactor: l,
-      shadingToonyFactor: h,
-      parametricRimColorFactor: c,
-      rimLightingMixFactor: m,
-      parametricRimFresnelPowerFactor: d,
-      parametricRimLiftFactor: f,
-      outlineWidthFactor: _,
-      outlineColorFactor: g,
-      outlineLightingMixFactor: p
-    } = n;
-    r == "0.0" && (this.emissiveIntensity = 0), o && (this.shadeColorFactor = new s.Color(
-      Math.pow(o[0], 1 / 2.2),
-      Math.pow(o[1], 1 / 2.2),
-      Math.pow(o[2], 1 / 2.2),
-      1
-    )), this.shadeMultiplyTexture = a, this.shadingShiftFactor = l, this.shadingToonyFactor = h, c && (this.parametricRimColorFactor = new s.Color(
-      Math.pow(c[0], 1 / 2.2),
-      Math.pow(c[1], 1 / 2.2),
-      Math.pow(c[2], 1 / 2.2),
-      1
-    )), this.rimLightingMixFactor = m, this.parametricRimFresnelPowerFactor = d, this.parametricRimLiftFactor = f, this.outlineWidthFactor = _, g && (this.outlineColorFactor = new s.Color(
-      Math.pow(g[0], 1 / 2.2),
-      Math.pow(g[1], 1 / 2.2),
-      Math.pow(g[2], 1 / 2.2),
-      1
-    )), this.outlineLightingMixFactor = p, this.cull = s.CULLFACE_NONE, this.setShaderChunks(), this.setShaderParameters();
-  }
-  setShaderChunks() {
-    this.chunks.APIVersion = s.CHUNKAPI_1_70;
-    const e = s.shaderChunks;
-    this.chunks.baseVS = e.baseVS, this.chunks.endVS = e.endVS, this.chunks.basePS = e.basePS, this.chunks.endPS = e.endPS, this.shadeMultiplyTexture && (this.chunks.basePS += `
-        #define USE_SHADEMULTIPLYTEXTURE
-        `), this.emissiveMap && (this.chunks.basePS += `
-        #define USE_EMISSIVEMAP
-        `), this.cull == s.CULLFACE_NONE && (this.chunks.basePS += `
-        #define DOUBLE_SIDED
-        `), this.chunks.baseVS += O.baseVS, this.chunks.endVS += O.endVS, this.chunks.basePS += O.basePS, this.chunks.endPS += O.endPS;
-  }
-  setShaderParameters() {
-    this.setParameter("opacity", this.opacity), this.setParameter("litFactor", [this.litFactor.r, this.litFactor.g, this.litFactor.b]), this.baseColorMap && this.setParameter("baseColorMap", this.baseColorMap), this.setParameter("shadeColorFactor", [
-      this.shadeColorFactor.r,
-      this.shadeColorFactor.g,
-      this.shadeColorFactor.b
-    ]), this.shadeMultiplyTexture && this.setParameter("shadeMultiplyTexture", this.shadeMultiplyTexture), this.setParameter("shadingShiftFactor", this.shadingShiftFactor), this.setParameter("shadingToonyFactor", this.shadingToonyFactor), this.emissive && this.setParameter("emissive", [this.emissive.r, this.emissive.g, this.emissive.b]), this.emissiveIntensity && this.setParameter("emissiveIntensity", this.emissiveIntensity), this.setParameter("parametricRimColorFactor", [
-      this.parametricRimColorFactor.r,
-      this.parametricRimColorFactor.g,
-      this.parametricRimColorFactor.b
-    ]), this.setParameter("rimLightingMixFactor", this.rimLightingMixFactor), this.setParameter("parametricRimFresnelPowerFactor", this.parametricRimFresnelPowerFactor), this.setParameter("parametricRimLiftFactor", this.parametricRimLiftFactor), this.emissiveMap && this.setParameter("emissiveMap", this.emissiveMap);
-  }
-  setLightDirection(e) {
-    this.setParameter("lightDirection", [e.x, e.y, e.z]);
-  }
-  setLightColor(e) {
-    this.setParameter("lightColor", [e.r, e.g, e.b]);
-  }
-}, qe = (
-=======
-    setLightColor(color) {
-      this.setParameter("lightColor", [color.r, color.g, color.b]);
-=======
-=======
     updateIndirectLightUniforms(scene) {
       if (!scene)
         return;
@@ -5278,7 +3930,6 @@ const createVRMCMtoonMaterial = (pcRef) => {
         this.setParameter("ambientLightColor", [this.ambient.r, this.ambient.g, this.ambient.b]);
       }
     }
->>>>>>> 2cf8b80 (feat: add indirectDiffuse env map light and ambient color)
     replaceLightNumbers(dirNum, spotNum, pointNum) {
       let chunk = this.chunks.basePS;
       chunk = chunk.replace(/#define USE_DIR_LIGHTS\n/g, "").replace(/#define USE_SPOT_LIGHTS\n/g, "").replace(/#define USE_POINT_LIGHTS\n/g, "").replace(/#define USE_ENV_LIGHTS\n/g, "");
@@ -5306,294 +3957,9 @@ ${chunk}`;
       }
       this.chunks.basePS = chunk;
     }
-<<<<<<< HEAD
-    destroy() {
-      super.destroy();
-      this._renderStates.removeMaterial(this);
->>>>>>> 825be66 (feat: add render state to handle multiple lights & mtoon support point and spot)
-    }
-=======
->>>>>>> 30d0d14 (feat: create vrm-mtoon script & use setting from layer light store)
   };
 };
-<<<<<<< HEAD
-const baseVS = (
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
-  /* glsl */
-  `
-uniform float outlineWidthFactor;
-
-#ifdef USE_OUTLINEWIDTHMULTIPLYTEXTURE
-  uniform sampler2D outlineWidthMultiplyTexture;
-  uniform mat3 outlineWidthMultiplyTextureUvTransform;
-#endif
-`
-<<<<<<< HEAD
-), ti = (
-=======
-);
-const endVS = (
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
-  /* glsl */
-  `
-    vUv0 = vertex_texCoord0;
-
-    vec3 objectNormal = vertex_normal;
-
-    // we need this to compute the outline properly
-    objectNormal = normalize( objectNormal );
-    vec3 transformedNormal = objectNormal;
-
-    float outlineTex = 1.0;
-
-    #ifdef USE_OUTLINEWIDTHMULTIPLYTEXTURE
-        vec2 outlineWidthMultiplyTextureUv = ( outlineWidthMultiplyTextureUvTransform * vec3( vUv0, 1 ) ).xy;
-        outlineTex = texture2D( outlineWidthMultiplyTexture, outlineWidthMultiplyTextureUv ).g;
-    #endif
-    
-    #ifdef OUTLINE_WIDTH_WORLD
-        float worldNormalLength = length( transformedNormal );
-        vec3 outlineOffset = outlineWidthFactor * outlineTex * worldNormalLength * objectNormal;
-        gl_Position = matrix_viewProjection * getModelMatrix()  * vec4( outlineOffset + vertex_position, 1.0);
-    #endif
-
-    
-    #ifdef OUTLINE_WIDTH_SCREEN
-        // TODO: Wait until an avatar containing this information is found before proceeding with the implementation.
-    #endif
-
-    gl_Position.z += 1E-6 * gl_Position.w; // anti-artifact magic
-`
-<<<<<<< HEAD
-), ei = (
-=======
-);
-const basePS = (
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
-  /* glsl */
-  `
-uniform sampler2D baseColorMap;
-uniform vec3 outlineColorFactor;
-uniform float outlineLightingMixFactor;
-`
-<<<<<<< HEAD
-), ii = (
-=======
-);
-const endPS = (
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
-  /* glsl */
-  `
-    vec4 color = texture2D(baseColorMap, vUv0);
-    color.rgb = outlineColorFactor.rgb * mix( vec3( 1.0 ), color.rgb, outlineLightingMixFactor );
-    gl_FragColor = color;
-`
-<<<<<<< HEAD
-), H = {
-  baseVS: qe,
-  endVS: ti,
-  basePS: ei,
-  endPS: ii
-}, ni = (s) => class extends s.StandardMaterial {
-  parseGLTFAttrs(e) {
-    var i, n;
-    if (e.hasOwnProperty("alphaMode"))
-      switch (e.alphaMode) {
-        case "MASK":
-          this.blendType = s.BLEND_NONE, e.hasOwnProperty("alphaCutoff") ? this.alphaTest = e.alphaCutoff : this.alphaTest = 0.5;
-          break;
-        case "BLEND":
-          this.blendType = s.BLEND_NORMAL, this.depthWrite = !1;
-          break;
-        default:
-        case "OPAQUE":
-          this.blendType = s.BLEND_NONE;
-          break;
-      }
-    else
-      this.blendType = s.BLEND_NONE;
-    if ((i = e == null ? void 0 : e.extensions) != null && i[K]) {
-      const r = (n = e == null ? void 0 : e.extensions) == null ? void 0 : n[K], {
-        outlineColorFactor: o,
-        outlineWidthFactor: a,
-        outlineLightingMixFactor: l
-        // outlineWidthMultiplyTexture,
-      } = r;
-      o && this.setOutlineColorFactor(
-        new s.Color(
-          Math.pow(o[0], 1 / 2.2),
-          Math.pow(o[1], 1 / 2.2),
-          Math.pow(o[2], 1 / 2.2)
-        )
-      ), a && this.setOutlineWidthFactor(a), l && this.setOutlineLightingMixFactor(l);
-    }
-    this.cull = s.CULLFACE_FRONT, this.setShaderChunks();
-  }
-  setShaderChunks() {
-    this.chunks.APIVersion = s.CHUNKAPI_1_70;
-    const e = s.shaderChunks;
-    this.chunks.baseVS = e.baseVS, this.chunks.endVS = e.endVS, this.chunks.basePS = e.basePS, this.chunks.endPS = e.endPS, this.chunks.baseVS += H.baseVS, this.chunks.endVS += H.endVS, this.chunks.basePS += H.basePS, this.chunks.endPS += H.endPS;
-  }
-  setOutlineWidthFactor(e) {
-    this.setParameter("outlineWidthFactor", e);
-  }
-  setOutlineLightingMixFactor(e) {
-    this.setParameter("outlineLightingMixFactor", e);
-  }
-  setOutlineColorFactor(e) {
-    this.setParameter("outlineColorFactor", [
-      e.r,
-      e.g,
-      e.b
-    ]);
-  }
-  setBaseColorMap(e) {
-    e && this.setParameter("baseColorMap", e);
-  }
-}, si = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-  __proto__: null,
-  EXTENSION_VRM: Xe,
-  EXTENSION_VRMC_MATERIALS_MTOON: K,
-  MToonMaterialCullMode: Jt,
-  createVRMCMtoonMaterial: Ke,
-  createVRMCOutlineMaterial: ni,
-  gammaEOTF: A,
-  parseV0MToonProperties: Ye
-=======
-);
-const shaderChunksOutline = {
-  baseVS,
-  endVS,
-  basePS,
-  endPS
-};
-const createVRMCOutlineMaterial = (pcRef) => {
-  return class VRMCOutlineMaterial extends pcRef.StandardMaterial {
-    constructor(asset) {
-      super();
-      this.baseColorMap = null;
-      this.outlineWidthMode = MToonMaterialOutlineWidthMode.None;
-      this.outlineWidthMultiplyTexture = null;
-      this._asset = asset;
-    }
-    parseGLTFAttrs(gltfMaterial) {
-      var _a, _b, _c, _d;
-      if (gltfMaterial.hasOwnProperty("alphaMode")) {
-        switch (gltfMaterial.alphaMode) {
-          case "MASK":
-            this.blendType = pcRef.BLEND_NONE;
-            if (gltfMaterial.hasOwnProperty("alphaCutoff")) {
-              this.alphaTest = gltfMaterial.alphaCutoff;
-            } else {
-              this.alphaTest = 0.5;
-            }
-            break;
-          case "BLEND":
-            this.blendType = pcRef.BLEND_NORMAL;
-            this.depthWrite = false;
-            break;
-          default:
-          case "OPAQUE":
-            this.blendType = pcRef.BLEND_NONE;
-            break;
-        }
-      } else {
-        this.blendType = pcRef.BLEND_NONE;
-      }
-      const extension = (_a = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _a[EXTENSION_VRMC_MATERIALS_MTOON];
-      if (extension) {
-        const {
-          outlineColorFactor,
-          outlineWidthFactor,
-          outlineLightingMixFactor,
-          outlineWidthMode,
-          outlineWidthMultiplyTexture: outlineWidthMultiplyTextureInfo
-        } = extension;
-        if (outlineWidthMode) {
-          this.outlineWidthMode = outlineWidthMode;
-        }
-        if (outlineWidthMultiplyTextureInfo !== void 0) {
-          const texture = (_d = (_c = (_b = this._asset.resource) == null ? void 0 : _b.textures) == null ? void 0 : _c[outlineWidthMultiplyTextureInfo.index]) == null ? void 0 : _d.resource;
-          if (texture) {
-            this.outlineWidthMultiplyTexture = texture;
-            this.setOutlineWidthMultiplyTexture(texture);
-          }
-        }
-        if (outlineColorFactor) {
-          this.setOutlineColorFactor(
-            new pcRef.Color(
-              Math.pow(outlineColorFactor[0], 1 / 2.2),
-              Math.pow(outlineColorFactor[1], 1 / 2.2),
-              Math.pow(outlineColorFactor[2], 1 / 2.2)
-            )
-          );
-        }
-        if (outlineWidthFactor) {
-          this.setOutlineWidthFactor(outlineWidthFactor);
-        }
-        if (outlineLightingMixFactor) {
-          this.setOutlineLightingMixFactor(outlineLightingMixFactor);
-        }
-      }
-      this.cull = pcRef.CULLFACE_FRONT;
-      this.setShaderChunks();
-      this.baseColorMap = this.diffuseMap || this.opacityMap;
-      if (this.baseColorMap) {
-        this.setParameter("baseColorMap", this.baseColorMap);
-      }
-    }
-    setShaderChunks() {
-      this.chunks.APIVersion = pcRef.CHUNKAPI_1_70;
-      let pcShaderChunks = pcRef.shaderChunks;
-      this.chunks.baseVS = pcShaderChunks.baseVS;
-      this.setShaderDefines();
-      this.chunks.endVS = pcShaderChunks.endVS;
-      this.chunks.basePS = pcShaderChunks.basePS;
-      this.chunks.endPS = pcShaderChunks.endPS;
-      this.chunks.baseVS += shaderChunksOutline.baseVS;
-      this.chunks.endVS += shaderChunksOutline.endVS;
-      this.chunks.basePS += shaderChunksOutline.basePS;
-      this.chunks.endPS += shaderChunksOutline.endPS;
-    }
-    setShaderDefines() {
-      let defines = ``;
-      const USE_OUTLINEWIDTHMULTIPLYTEXTURE = this.outlineWidthMultiplyTexture !== null;
-      if (USE_OUTLINEWIDTHMULTIPLYTEXTURE) {
-        defines += "#define USE_OUTLINEWIDTHMULTIPLYTEXTURE\n";
-      }
-      const OUTLINE_WIDTH_WORLD = this.outlineWidthMode === MToonMaterialOutlineWidthMode.WorldCoordinates;
-      if (OUTLINE_WIDTH_WORLD) {
-        defines += "#define OUTLINE_WIDTH_WORLD\n";
-      }
-      const OUTLINE_WIDTH_SCREEN = this.outlineWidthMode === MToonMaterialOutlineWidthMode.ScreenCoordinates;
-      if (OUTLINE_WIDTH_SCREEN) {
-        defines += "#define OUTLINE_WIDTH_SCREEN\n";
-      }
-      this.chunks.baseVS += defines;
-    }
-    setOutlineWidthFactor(outlineWidthFactor) {
-      this.setParameter("outlineWidthFactor", outlineWidthFactor);
-    }
-    setOutlineLightingMixFactor(outlineLightingMixFactor) {
-      this.setParameter("outlineLightingMixFactor", outlineLightingMixFactor);
-    }
-    setOutlineColorFactor(outlineColorFactor) {
-      this.setParameter("outlineColorFactor", [
-        outlineColorFactor.r,
-        outlineColorFactor.g,
-        outlineColorFactor.b
-      ]);
-    }
-    setOutlineWidthMultiplyTexture(texture) {
-      this.setParameter("outlineWidthMultiplyTexture", texture);
-      const mat3 = new pcRef.Mat3();
-      this.setParameter("outlineWidthMultiplyTextureUvTransform", mat3.data);
-    }
-  };
-};
-=======
 const extensionVRMCName = EXTENSION_VRMC_MATERIALS_MTOON;
->>>>>>> 310c2b2 (feat: combine outline material to mtoon material & add morph instances)
 class VRMMtoonLoader {
   constructor(pcRef, asset) {
     this._pcRef = pcRef;
@@ -5745,22 +4111,8 @@ const importScript = (pcRef) => {
 };
 const VrmMtoon = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-<<<<<<< HEAD
-  EXTENSION_VRM,
-  EXTENSION_VRMC_MATERIALS_MTOON,
-  MToonMaterialCullMode,
-  MToonMaterialOutlineWidthMode,
-  VRMMtoonLoader,
-  createVRMCMtoonMaterial,
-  createVRMCOutlineMaterial,
-  gammaEOTF,
-  setUvTransform,
-  updateTextureMatrix
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
-=======
   convertVRMMtoonMaterials,
   importScript
->>>>>>> 30d0d14 (feat: create vrm-mtoon script & use setting from layer light store)
 }, Symbol.toStringTag, { value: "Module" }));
 class VRMRig {
   constructor(humanBones) {
@@ -5779,64 +4131,6 @@ class VRMRig {
     return ((_a = this.humanBones[name]) == null ? void 0 : _a.node) ?? null;
   }
 }
-<<<<<<< HEAD
-class et extends Kt {
-  static _setupTransforms(t, e) {
-    const i = new t.Entity();
-    i.name = "VRMHumanoidRig";
-    const n = {}, r = {}, o = {};
-    z.forEach((l) => {
-      const h = e.getBoneNode(l);
-      if (h) {
-        n[l] = h.getPosition().clone(), h.getRotation().clone(), r[l] = h.getLocalRotation().clone();
-        const c = new t.Quat();
-        h.parent && c.copy(h.parent.getRotation()), o[l] = c;
-      }
-    });
-    const a = {};
-    return z.forEach((l) => {
-      var c;
-      const h = e.getBoneNode(l);
-      if (h) {
-        const m = n[l];
-        let d = l, f;
-        for (; f == null && (d = $[d], d != null); )
-          f = n[d];
-        const _ = new t.Entity();
-        _.name = h.name, (d ? (c = a[d]) == null ? void 0 : c.node : i).addChild(_);
-        const p = new t.Vec3().copy(m);
-        f && p.sub(f), _.setLocalPosition(p), a[l] = { node: _ };
-      }
-    }), {
-      rigBones: a,
-      root: i,
-      parentWorldRotations: o,
-      boneRotations: r
-    };
-  }
-  constructor(t, e) {
-    const { rigBones: i, root: n, parentWorldRotations: r, boneRotations: o } = et._setupTransforms(
-      t,
-      e
-    );
-    super(i), this.pcRef = t, this.original = e, this.root = n, this._parentWorldRotations = r, this._boneRotations = o, this._quatA = new t.Quat(), this._quatB = new t.Quat(), this._vec3A = new t.Vec3(), this._mat4A = new t.Mat4();
-    const a = t.Application.getApplication();
-    a && a.root.addChild(n);
-  }
-  applyMatrix4(t, e) {
-    const i = t.x, n = t.y, r = t.z, o = e.data, a = 1 / (o[3] * i + o[7] * n + o[11] * r + o[15]);
-    return t.x = (o[0] * i + o[4] * n + o[8] * r + o[12]) * a, t.y = (o[1] * i + o[5] * n + o[9] * r + o[13]) * a, t.z = (o[2] * i + o[6] * n + o[10] * r + o[14]) * a, t;
-  }
-  update() {
-    z.forEach((t) => {
-      var n;
-      const e = (n = this.original.humanBones[t]) == null ? void 0 : n.entity, i = this.getBoneNode(t);
-      if (e != null && i) {
-        const r = this._parentWorldRotations[t], o = this._quatB.copy(r).invert(), a = this._boneRotations[t];
-        if (this._quatA.copy(i.getLocalRotation()), this._quatA.mul(r), this._quatA.copy(o.mul(this._quatA)), this._quatA.mul(a), e.setLocalRotation(this._quatA), t === "hips") {
-          const l = this._vec3A.copy(i.getPosition()), h = this._mat4A.copy(e.parent.getWorldTransform()), c = this.applyMatrix4(l, h.invert());
-          e.setLocalPosition(c);
-=======
 class VRMHumanoidRig extends VRMRig {
   static _setupTransforms(pcRef, modelRig) {
     const root = new pcRef.Entity();
@@ -5931,38 +4225,20 @@ class VRMHumanoidRig extends VRMRig {
         this._quatA.mul(boneRotation);
         boneNode.setLocalRotation(this._quatA);
         if (boneName === "hips") {
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 310c2b2 (feat: combine outline material to mtoon material & add morph instances)
           const boneWorldPosition = this._vec3A.copy(rigBoneNode.getPosition());
           const parentWorldMatrix = this._mat4A.copy(boneNode.parent.getWorldTransform());
           const localPosition = this.applyMatrix4(boneWorldPosition, parentWorldMatrix.invert());
           boneNode.setLocalPosition(localPosition);
-<<<<<<< HEAD
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
-=======
-          const boneLocalPosition = rigBoneNode.getLocalPosition();
-          boneNode.setLocalPosition(boneLocalPosition);
->>>>>>> 9cd4cbf (fix: v1 normalized bone animation transform use local position)
-=======
->>>>>>> 310c2b2 (feat: combine outline material to mtoon material & add morph instances)
         }
       }
     });
   }
 }
-<<<<<<< HEAD
-class oi {
-  constructor(t, e, i) {
-    this.autoUpdateHumanBones = (i == null ? void 0 : i.autoUpdateHumanBones) ?? !0, this._rawHumanBones = new Kt(e), this._normalizedHumanBones = new et(t, this._rawHumanBones);
-=======
 class VRMHumanoid {
   constructor(pcRef, humanBones, options) {
     this.autoUpdateHumanBones = (options == null ? void 0 : options.autoUpdateHumanBones) ?? true;
     this._rawHumanBones = new VRMRig(humanBones);
     this._normalizedHumanBones = new VRMHumanoidRig(pcRef, this._rawHumanBones);
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   }
   get humanBones() {
     return this._rawHumanBones.humanBones;
@@ -6023,47 +4299,6 @@ class VRMHumanoid {
     }
   }
 }
-<<<<<<< HEAD
-function ri(s, t, e) {
-  const i = s.humanBones, n = {};
-  return s.humanBones != null && Object.entries(i).map(([, r]) => {
-    var h;
-    let o = r.bone;
-    const a = r.node;
-    if (o == null || a == null)
-      return;
-    const l = t.resource.data.nodes[a];
-    if (l == null) {
-      console.warn(
-        `A glTF node bound to the humanoid bone ${o} (index = ${a}) does not exist`
-      );
-      return;
-    }
-    n[o] = {
-      node: l,
-      entity: ((h = e.findByTag(`node_${a}`)) == null ? void 0 : h[0]) || null
-    };
-  }), n;
-}
-function ai(s, t, e) {
-  var r;
-  const i = {}, n = s.humanBones.leftThumbIntermediate != null || s.humanBones.rightThumbIntermediate != null;
-  if (s.humanBones)
-    for (const o in s.humanBones) {
-      let a = o;
-      const l = s.humanBones[o].node, h = t.resource.data.nodes[l];
-      if (n) {
-        const c = jt[a];
-        c != null && (a = c);
-      }
-      if (h == null)
-        return console.warn(
-          `A glTF node bound to the humanoid bone ${a} (index = ${l}) does not exist`
-        ), null;
-      i[a] = {
-        node: h,
-        entity: ((r = e.findByTag(`node_${l}`)) == null ? void 0 : r[0]) || null
-=======
 function createVRMHumanBones(schemaHumanoid, glbAsset, entity) {
   const schemaHumanBones = schemaHumanoid.humanBones;
   const humanBones = {};
@@ -6114,135 +4349,11 @@ function createVRMCHumanBones(schemaHumanoid, glbAsset, entity) {
       humanBones[boneName] = {
         node,
         entity: ((_a = entity.findByTag(`node_${index}`)) == null ? void 0 : _a[0]) || null
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       };
     }
   }
   return humanBones;
 }
-<<<<<<< HEAD
-function li(s, t, e, i) {
-  var a, l, h, c, m, d, f, _, g, p;
-  const n = (l = (a = t.resource.data.gltf) == null ? void 0 : a.extensions) == null ? void 0 : l.VRM, r = (c = (h = t.resource.data.gltf) == null ? void 0 : h.extensions) == null ? void 0 : c.VRMC_vrm;
-  if (!n && !r)
-    return console.warn("CreateFormattedVRMHumanoid: Please check. It is not a vrm avatar."), null;
-  let o = null;
-  if (n) {
-    const u = (f = (d = (m = t.resource.data.gltf) == null ? void 0 : m.extensions) == null ? void 0 : d.VRM) == null ? void 0 : f.humanoid;
-    o = ri(u, t, e);
-  } else if (r) {
-    const u = r.specVersion;
-    if (!tt.has(u))
-      return console.warn(`Unknown VRMC_vrm specVersion "${u}"`), null;
-    const x = (p = (g = (_ = t.resource.data.gltf) == null ? void 0 : _.extensions) == null ? void 0 : g.VRMC_vrm) == null ? void 0 : p.humanoid;
-    o = ai(x, t, e);
-  }
-  if (o) {
-    const u = !!(i != null && i.autoUpdateHumanBones);
-    return new oi(s, o, { autoUpdateHumanBones: u });
-  }
-  return null;
-}
-const hi = function(s, t, e, i, n, r) {
-  const o = r;
-  if (!o) {
-    console.error("loadGlbContainerFromAsset: Can not find app.");
-    return;
-  }
-  const a = function(l) {
-    const h = new Blob([l.resource]), c = URL.createObjectURL(h);
-    return qt(
-      s,
-      c,
-      e,
-      i,
-      function(m, d) {
-        n(m, d), URL.revokeObjectURL(c);
-      },
-      o
-    );
-  };
-  t.loaded ? a(t) : (t.ready(a), o.assets.load(t));
-}, qt = function(s, t, e, i, n, r) {
-  const o = r;
-  if (!o) {
-    console.error("loadGlbContainerFromAsset: Can not find app.");
-    return;
-  }
-  const a = i, l = {
-    url: t,
-    filename: a
-  }, h = new s.Asset(a, "container", l, void 0, e);
-  return h.once("load", function(c) {
-    if (n) {
-      const m = c.resource.animations;
-      if (m.length == 1)
-        m[0].name = i;
-      else if (m.length > 1)
-        for (let d = 0; d < m.length; ++d)
-          m[d].name = i + " " + d.toString();
-      n(null, c);
-    }
-  }), o.assets.add(h), o.assets.load(h), h;
-}, te = (s) => {
-  if (!s.resource) {
-    console.error("addIndexToNodeTags Error: asset.resource is not available");
-    return;
-  }
-  if (!(s.resource.data && s.resource.data.gltf)) {
-    console.error("addIndexToNodeTags Error: asset.resource.data.gltf is not available");
-    return;
-  }
-  s.resource.data.nodes.forEach((i, n) => {
-    i.tags.add(`node_${n}`);
-  });
-}, ee = (s) => {
-  var i, n;
-  const t = (i = s.resource.data.gltf.extensions) == null ? void 0 : i.VRMC_vrm, e = (n = s.resource.data.gltf.extensions) == null ? void 0 : n.VRM;
-  return t ? "v1" : e ? "v0" : null;
-};
-var L, j, ie, X, ne;
-class ci {
-  constructor(t, e) {
-    U(this, j);
-    U(this, X);
-    U(this, L, void 0);
-    Ft(this, L, /* @__PURE__ */ new Map()), this.loading = !1, this._pcRef = t, this.app = e;
-  }
-  async parse(t, e = "Model", i = void 0, n = {}, r = !0) {
-    const o = [];
-    return new Promise(
-      (a, l) => {
-        const h = (c, m) => {
-          c && (this.loading = !1, l(`GLTFLoader Error: ${c}`)), C(this, L).forEach((g) => {
-            const p = g(m);
-            o.push(p);
-          }), r && Q(this, X, ne).call(this, m);
-          const d = m.resource.instantiateRenderEntity(n), f = new this._pcRef.Entity(e, this.app);
-          f.addChild(d), o.forEach((g) => {
-            g.instantiated && g.instantiated(f);
-          }), this.loading = !1;
-          const _ = ee(m);
-          a({ entity: f, asset: m, version: _ });
-        };
-        t || l("GLTFLoader Error: Please pass the asset or url to parse."), this.loading = !0, t instanceof this._pcRef.Asset ? t.type === "container" ? t.loaded ? h(null, t) : (t.once("load", () => {
-          h(null, t);
-        }), this.app.assets.get(t.id) || this.app.assets.add(t), this.app.assets.load(t)) : t.type === "binary" ? hi(
-          this._pcRef,
-          t,
-          i,
-          e,
-          h.bind(this),
-          this.app
-        ) : l("GLTFLoader Error: Please pass available asset or url to parse.") : qt(
-          this._pcRef,
-          t,
-          i,
-          e,
-          h.bind(this),
-          this.app
-        );
-=======
 function createFormattedVRMHumanoid(pcRef, vrmAsset, renderEntity, options) {
   var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
   const VRM = (_b = (_a = vrmAsset.resource.data.gltf) == null ? void 0 : _a.extensions) == null ? void 0 : _b.VRM;
@@ -6427,19 +4538,10 @@ class GLTFLoader {
             this.app
           );
         }
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       }
     );
   }
   // Register Plugin to loader
-<<<<<<< HEAD
-  register(t, e) {
-    C(this, L).has(t) || C(this, L).set(t, e);
-  }
-  // Deregister Plugin to loader
-  deregister(t) {
-    C(this, L).has(t) && C(this, L).delete(t);
-=======
   register(name, callback) {
     if (!__privateGet(this, _pluginsCallbacks).has(name)) {
       __privateGet(this, _pluginsCallbacks).set(name, callback);
@@ -6450,58 +4552,11 @@ class GLTFLoader {
     if (__privateGet(this, _pluginsCallbacks).has(name)) {
       __privateGet(this, _pluginsCallbacks).delete(name);
     }
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   }
   static registerAnimation(entity, animations, { useResourceName, defaultPlayIndex } = {
     useResourceName: false,
     defaultPlayIndex: 0
   }) {
-<<<<<<< HEAD
-    if (e.length !== 0 && (t.addComponent("anim", {
-      activate: !0
-    }), e.forEach((r, o) => {
-      const a = r.resource.name.replace(".", "_");
-      t.anim && t.anim.assignAnimation(
-        i ? a : `ANIMATION_${o}`,
-        r.resource
-      );
-    }), n !== null)) {
-      const r = i ? e[n].resource.name : `ANIMATION_${n}`;
-      t.anim && t.anim.baseLayer.states.find((o) => o === r) && t.anim.baseLayer.transition(r);
-    }
-  }
-}
-L = new WeakMap(), j = new WeakSet(), ie = function(t, e) {
-  t.forEach((i, n) => {
-    const r = e[n].extensions;
-    r && (i.extensions = r);
-  });
-}, X = new WeakSet(), ne = function(t) {
-  const e = t.resource.data.gltf.nodes, i = t.resource.data.nodes;
-  Q(this, j, ie).call(this, i, e), te(t);
-};
-window.VRMLoader = {
-  VrmAnimation: Ae,
-  VrmExpression: We,
-  VrmSpringBone: je,
-  VrmMapList: _e,
-  VrmcMaterialsMtoon: si,
-  createFormattedVRMHumanoid: li,
-  addIndexToNodeTags: te,
-  getVersion: ee
-};
-window.GLTFLoader = ci;
-export {
-  ci as GLTFLoader,
-  Ae as VrmAnimation,
-  We as VrmExpression,
-  _e as VrmMapList,
-  je as VrmSpringBone,
-  si as VrmcMaterialsMtoon,
-  te as addIndexToNodeTags,
-  li as createFormattedVRMHumanoid,
-  ee as getVersion
-=======
     if (animations.length === 0) {
       return;
     }
@@ -6564,5 +4619,4 @@ export {
   addIndexToNodeTags,
   createFormattedVRMHumanoid,
   getVersion
->>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
 };
