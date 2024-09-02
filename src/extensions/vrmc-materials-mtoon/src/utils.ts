@@ -14,7 +14,7 @@ export const updateTextureMatrix = (
 
   const offset = new pcRef.Vec2(0, 0);
   const repeat = new pcRef.Vec2(1, 1);
-  const center = new pcRef.Vec2(0, 0);
+  const center = new pcRef.Vec2(0.5, 0.5);
   let rotation = 0;
 
   if (textureTransform.offset) {

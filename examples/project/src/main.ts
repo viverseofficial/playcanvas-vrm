@@ -5,6 +5,7 @@ import setupApplication, {
   loadScript,
   createScene,
   setSkyBox,
+  createMiniStats,
 } from './setup';
 import { createDefaultAnimations, createWindowTestAnimation } from './utils/animations';
 
@@ -58,6 +59,18 @@ const createAvatar = (url: string) => {
 
       rootEntity.addComponent('script');
       if (rootEntity.script) {
+        /**
+         * VRM Script Note:
+         * If you are using vrm-mtoon script,
+         * please add vrm-expression script after vrm-mtoon script.
+         */
+
+        rootEntity.script.create('vrmMtoon', {
+          attributes: {
+            asset,
+          },
+        });
+
         rootEntity.script.create('vrmExpression', {
           attributes: {
             asset,
@@ -65,12 +78,6 @@ const createAvatar = (url: string) => {
         });
 
         rootEntity.script.create('vrmSpringBone', {
-          attributes: {
-            asset,
-          },
-        });
-
-        rootEntity.script.create('vrmMtoon', {
           attributes: {
             asset,
           },
@@ -113,7 +120,7 @@ const setupAvatar = async (app: pc.Application) => {
 };
 
 const app = setupApplication();
-
+createMiniStats(app);
 app.scene.ambientLight.set(0.5, 0.5, 0.5);
 
 app.once('start', async () => {

@@ -1,7 +1,9 @@
 import * as pc from 'playcanvas';
 import { GLTF as GLTFSchema } from '../../../types/gltf';
-import { createVRMCOutlineMaterial } from './vrmc-outline-material';
 import { createVRMCMtoonMaterial } from './vrmc-mtoon-material';
+import { EXTENSION_VRMC_MATERIALS_MTOON, MToonMaterialOutlineWidthMode } from './constants';
+
+const extensionVRMCName = EXTENSION_VRMC_MATERIALS_MTOON;
 
 export class VRMMtoonLoader {
   private _pcRef: typeof pc;
@@ -32,7 +34,7 @@ export class VRMMtoonLoader {
     renders.forEach((renderComponent) => {
       const render = renderComponent as pc.RenderComponent;
       const meshInstances = render.meshInstances;
-      const VRMCOutlineMaterial = createVRMCOutlineMaterial(this._pcRef);
+      const VRMCOutlineMaterial = createVRMCMtoonMaterial(this._pcRef);
       meshInstances.forEach((meshInstance) => {
         const material = meshInstance.material as pc.StandardMaterial;
         let shaderMaterial = outlineShaderMaterials.get(material);
@@ -51,10 +53,20 @@ export class VRMMtoonLoader {
             return;
           }
 
+          const extension = gltfMaterial?.extensions?.[extensionVRMCName] as any;
+          if (!extension) {
+            return;
+          }
+
+          if (extension.outlineWidthMode === MToonMaterialOutlineWidthMode.None) {
+            return;
+          }
+
           shaderMaterial = new VRMCOutlineMaterial(this.asset);
+          shaderMaterial.isOutline = true;
           shaderMaterial.copy(material);
           shaderMaterial.name = material.name + '_outline';
-          shaderMaterial.parseGLTFAttrs(gltfMaterial);
+          shaderMaterial.parse(gltfMaterial);
           shaderMaterial.update();
           outlineShaderMaterials.set(material, shaderMaterial);
         }
@@ -64,6 +76,11 @@ export class VRMMtoonLoader {
           shaderMaterial,
           render.entity,
         );
+
+        if (meshInstance.morphInstance) {
+          const morphInstance = meshInstance.morphInstance.clone();
+          shaderMeshInstance.morphInstance = morphInstance;
+        }
 
         meshInstances.push(shaderMeshInstance);
       });
@@ -82,6 +99,10 @@ export class VRMMtoonLoader {
       const meshInstances = render.meshInstances;
 
       meshInstances.forEach((meshInstance) => {
+        if ((meshInstance.material as any).isMtoonMaterial) {
+          return;
+        }
+
         const material = meshInstance.material as pc.StandardMaterial;
         let shaderMaterial = shaderMaterials.get(material);
 
@@ -95,6 +116,11 @@ export class VRMMtoonLoader {
         const gltfMaterial = gltf.materials?.[parsedIndex];
         if (!gltfMaterial) {
           console.error('applyVRMCMtoonShader: gltfMaterial is undefined');
+          return;
+        }
+
+        const extension = gltfMaterial?.extensions?.[extensionVRMCName];
+        if (!extension) {
           return;
         }
 

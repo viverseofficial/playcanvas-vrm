@@ -50,21 +50,21 @@ export class RenderStates {
 
     this.defaultInfoSetting = {
       directionalLight: {
-        direction: new pc.Vec3(0, 0, 0),
-        color: new pc.Color(0, 0, 0),
+        direction: new pcRef.Vec3(0, 0, 0),
+        color: new pcRef.Color(0, 0, 0),
       },
       spotLight: {
-        position: new pc.Vec3(0, 0, 0),
-        direction: new pc.Vec3(0, 0, 0),
-        color: new pc.Color(0, 0, 0),
+        position: new pcRef.Vec3(0, 0, 0),
+        direction: new pcRef.Vec3(0, 0, 0),
+        color: new pcRef.Color(0, 0, 0),
         distance: 0,
         decay: 0,
         coneCos: 0,
         penumbraCos: 0,
       },
       pointLight: {
-        position: new pc.Vec3(0, 0, 0),
-        color: new pc.Color(0, 0, 0),
+        position: new pcRef.Vec3(0, 0, 0),
+        color: new pcRef.Color(0, 0, 0),
         distance: 0,
         decay: 0,
       },

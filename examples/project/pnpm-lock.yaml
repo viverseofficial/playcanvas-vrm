@@ -12,8 +12,8 @@ importers:
         specifier: ^8.57.0
         version: 8.57.0
       playcanvas:
-        specifier: ^1.69.2
-        version: 1.69.2
+        specifier: ^1.73.4
+        version: 1.73.4
       vite-plugin-mkcert:
         specifier: ^1.17.5
         version: 1.17.5(vite@5.2.2)
@@ -333,8 +333,8 @@ packages:
   '@types/estree@1.0.5':
     resolution: {integrity: sha512-/kYRxGDLWzHOB7q+wtSUQlFrtcdUccpfy+X+9iMBpHK8QLLhx2wIPYuS5DYtR9Wa/YlZAbIovy7qVdB1Aq6Lyw==}
 
-  '@types/webxr@0.5.14':
-    resolution: {integrity: sha512-UEMMm/Xn3DtEa+gpzUrOcDj+SJS1tk5YodjwOxcqStNhCfPcwgyC5Srg2ToVKyg2Fhq16Ffpb0UWUQHqoT9AMA==}
+  '@types/webxr@0.5.20':
+    resolution: {integrity: sha512-JGpU6qiIJQKUuVSKx1GtQnHJGxRjtfGIhzO2ilq43VZZS//f1h1Sgexbdk+Lq+7569a6EYhOWrUpIruR/1Enmg==}
 
   '@ungap/structured-clone@1.2.0':
     resolution: {integrity: sha512-zuVdFrMJiuCDQUMCzQaD6KL28MjnqqN8XnAqiEq9PNm/hCPTSGfrXCOfwj1ow4LFb/tNymJPwsNbVePc1xFqrQ==}
@@ -654,8 +654,9 @@ packages:
   picocolors@1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
 
-  playcanvas@1.69.2:
-    resolution: {integrity: sha512-UOjfvzkDHWHnyL9wSaFCYs04W/2owZoPS7pOZDKHneMlEE/OMg0bvdwYuWfy1mZRiGT00TFvqrP2Mla+BYgu9w==}
+  playcanvas@1.73.4:
+    resolution: {integrity: sha512-HgnnVlPbCC0jDOABW66fbnsnosTQ/pWyXXVVrY0t8AGJ5BINwD8ATp0gPYaS9CcPiGaxr6KfL7IFirl62V9f4Q==}
+    engines: {node: '>=18.0.0'}
 
   postcss@8.4.38:
     resolution: {integrity: sha512-Wglpdk03BSfXkHoQa3b/oulrotAkwrlLDRSOb9D0bN86FdRyE9lppSp33aHNPgBa0JKCoB+drFLZkQoRRYae5A==}
@@ -1016,7 +1017,7 @@ snapshots:
 
   '@types/estree@1.0.5': {}
 
-  '@types/webxr@0.5.14': {}
+  '@types/webxr@0.5.20': {}
 
   '@ungap/structured-clone@1.2.0': {}
 
@@ -1225,7 +1226,7 @@ snapshots:
   flatted@3.3.1: {}
 
   follow-redirects@1.15.6(debug@4.3.4):
-    dependencies:
+    optionalDependencies:
       debug: 4.3.4
 
   form-data@4.0.0:
@@ -1360,9 +1361,9 @@ snapshots:
 
   picocolors@1.0.0: {}
 
-  playcanvas@1.69.2:
+  playcanvas@1.73.4:
     dependencies:
-      '@types/webxr': 0.5.14
+      '@types/webxr': 0.5.20
       '@webgpu/types': 0.1.40
 
   postcss@8.4.38:

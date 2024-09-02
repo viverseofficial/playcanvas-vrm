@@ -18,6 +18,8 @@ const textureTransformExtensionName = 'KHR_texture_transform';
 
 export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
   return class VRMCMtoonMaterial extends pcRef.StandardMaterial {
+    isMtoonMaterial: boolean = true;
+
     litFactor: pc.Color = new pcRef.Color(1.0, 1.0, 1.0, 1.0);
     alphaTest: number = 0;
     baseColorMap: pc.Texture | null = null;
@@ -155,21 +157,22 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
         rimLightingMixFactor,
         parametricRimFresnelPowerFactor,
         parametricRimLiftFactor,
-        outlineWidthFactor,
-        outlineColorFactor,
-        outlineLightingMixFactor,
         shadingShiftTexture: shadingShiftTextureInfo,
         giEqualizationFactor,
         rimMultiplyTexture: rimMultiplyTextureInfo,
         matcapTexture: matcapTextureInfo,
         matcapFactor,
         uvAnimationMaskTexture,
+        outlineWidthFactor,
+        outlineColorFactor,
+        outlineLightingMixFactor,
         outlineWidthMode,
         outlineWidthMultiplyTexture: outlineWidthMultiplyTextureInfo,
+        transparentWithZWrite,
       } = extension;
 
       if (uvAnimationMaskTexture) {
-        TODO: uvAnimationMaskTexture;
+        // TODO: uvAnimationMaskTexture;
       }
 
       if (giEqualizationFactor !== undefined) {
@@ -258,6 +261,10 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
       this.parametricRimFresnelPowerFactor = parametricRimFresnelPowerFactor;
       this.parametricRimLiftFactor = parametricRimLiftFactor;
 
+      if (transparentWithZWrite) {
+        this.depthWrite = true;
+      }
+
       // Outline
       this.outlineWidthFactor = outlineWidthFactor;
       if (outlineColorFactor) {
@@ -287,6 +294,7 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
         }
       }
       this.outlineLightingMixFactor = outlineLightingMixFactor;
+
       if (this.isOutline) this.cull = pcRef.CULLFACE_FRONT;
 
       this.setShaderChunks();
@@ -405,23 +413,22 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
 
       if (this.shadeMultiplyTexture) {
         this.setParameter('shadeMultiplyTexture', this.shadeMultiplyTexture);
+        this.setParameter(
+          'shadeMultiplyTextureUvTransform',
+          this.shadeMultiplyTextureUvTransform.data,
+        );
       }
 
       if (this.matcapTexture) {
         this.setParameter('matcapTexture', this.matcapTexture);
+        this.setParameter('matcapTextureUvTransform', this.matcapTextureUvTransform.data);
       }
 
-      this.setParameter('matcapTextureUvTransform', this.matcapTextureUvTransform.data);
       this.setParameter('matcapFactor', [
         this.matcapFactor.r,
         this.matcapFactor.g,
         this.matcapFactor.b,
       ]);
-
-      this.setParameter(
-        'shadeMultiplyTextureUvTransform',
-        this.shadeMultiplyTextureUvTransform.data,
-      );
 
       if (this.shadingShiftTexture) {
         this.setParameter('shadingShiftTexture', this.shadingShiftTexture);
@@ -479,6 +486,10 @@ export const createVRMCMtoonMaterial = (pcRef: typeof pc) => {
 
       if (this.outlineWidthMultiplyTexture) {
         this.setParameter('outlineWidthMultiplyTexture', this.outlineWidthMultiplyTexture);
+        this.setParameter(
+          'outlineWidthMultiplyTextureUvTransform',
+          this.outlineWidthMultiplyTextureUvTransform.data,
+        );
       }
 
       this.setParameter('outlineWidthFactor', this.outlineWidthFactor);

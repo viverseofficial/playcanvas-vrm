@@ -44,11 +44,6 @@ export default /* glsl */ `
             mat3 tbn = getTangentFrame( - vViewPosition, normal, normalMapUv );
         #endif
 
-        // #if defined( DOUBLE_SIDED ) && ! defined( FLAT_SHADED )
-        //   tbn[0] *= faceDirection;
-        //   tbn[1] *= faceDirection;
-        // #endif
-
         vec3 mapN = texture2D( normalMap, normalMapUv ).xyz * 2.0 - 1.0;
         mapN.xy *= normalScale;
 
@@ -186,12 +181,13 @@ export default /* glsl */ `
     col += rimMix * rim;
 
     // -- MToon: Emission --------------------------------------------------------
-    // Note: Look wired, but this is the implemention from three-vrm.
+    // Note: Sometimes look wired, but this is the implemention from three-vrm.
     // Remove it temporarily.
     // col += totalEmissiveRadiance;
 
+
     // -- MToon: Outline --------------------------------------------------------
-    #if defined( OUTLINE )
+    #ifdef OUTLINE
         col = outlineColorFactor.rgb * mix( vec3( 1.0 ), col, outlineLightingMixFactor );
     #endif
 
@@ -199,6 +195,5 @@ export default /* glsl */ `
         diffuseColor.a = 1.0;
     #endif
 
-    gl_FragColor = vec4( col, 1.0 );
+    gl_FragColor = vec4( col, diffuseColor.a );
 `
-

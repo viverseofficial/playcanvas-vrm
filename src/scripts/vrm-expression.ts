@@ -7,6 +7,7 @@ import { collectMeshInstances } from '../entity-utils';
 import { IAnimatedMorphConfig } from '../extensions/vrm-expression/vrm-expression';
 import { VRMExpressionPresetName } from '../extensions/vrm-map-list';
 
+// Note: If you are using vrm-mtoon script, please add vrm-expression script after vrm-mtoon script.
 export const importScript = (pcRef: typeof pc) => {
   class VrmExpression extends pcRef.ScriptType {
     asset!: pc.Asset;

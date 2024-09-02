@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       playcanvas:
-        specifier: ^1.73.0
-        version: 1.73.0
+        specifier: ^1.73.4
+        version: 1.73.4
       vite-plugin-glsl:
         specifier: ^1.3.0
         version: 1.3.0(rollup@4.13.0)(vite@5.1.6(@types/node@20.14.11))
@@ -1005,8 +1005,8 @@ packages:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
 
-  playcanvas@1.73.0:
-    resolution: {integrity: sha512-XYGu9IRHJyg38bwMwSgEMDXqfmXuZPLGBBv6P1udj9V7JzFL0kmT+2VEtejg+oecYNyvCEtie0LkG4bsrJSXrA==}
+  playcanvas@1.73.4:
+    resolution: {integrity: sha512-HgnnVlPbCC0jDOABW66fbnsnosTQ/pWyXXVVrY0t8AGJ5BINwD8ATp0gPYaS9CcPiGaxr6KfL7IFirl62V9f4Q==}
     engines: {node: '>=18.0.0'}
 
   postcss@8.4.36:
@@ -1593,7 +1593,7 @@ snapshots:
 
   '@types/playcanvas@1.23.0':
     dependencies:
-      playcanvas: 1.73.0
+      playcanvas: 1.73.4
 
   '@types/semver@7.5.8': {}
 
@@ -2244,7 +2244,7 @@ snapshots:
 
   picomatch@2.3.1: {}
 
-  playcanvas@1.73.0:
+  playcanvas@1.73.4:
     dependencies:
       '@types/webxr': 0.5.19
       '@webgpu/types': 0.1.44

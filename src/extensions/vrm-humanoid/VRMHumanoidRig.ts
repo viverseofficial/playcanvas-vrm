@@ -11,8 +11,8 @@ export class VRMHumanoidRig extends VRMRig {
   protected readonly _boneRotations: { [boneName in VRMHumanBoneName]?: pc.Quat };
   private _quatA: pc.Quat;
   private _quatB: pc.Quat;
-  // private _vec3A: pc.Vec3;
-  // private _mat4A: pc.Mat4;
+  private _vec3A: pc.Vec3;
+  private _mat4A: pc.Mat4;
 
   static _setupTransforms(pcRef: typeof pc, modelRig: VRMRig) {
     const root = new pcRef.Entity();
@@ -105,11 +105,8 @@ export class VRMHumanoidRig extends VRMRig {
     // For calculation
     this._quatA = new pcRef.Quat();
     this._quatB = new pcRef.Quat();
-    // this._vec3A = new pcRef.Vec3();
-    // this._mat4A = new pcRef.Mat4();
-
-    const app = pcRef.Application.getApplication();
-    if (app) app.root.addChild(root);
+    this._vec3A = new pcRef.Vec3();
+    this._mat4A = new pcRef.Mat4();
   }
 
   applyMatrix4(position: pc.Vec3, m: pc.Mat4) {
@@ -151,14 +148,10 @@ export class VRMHumanoidRig extends VRMRig {
 
         // Move the mass center of the VRM
         if (boneName === 'hips') {
-          const boneLocalPosition = rigBoneNode.getLocalPosition();
-          boneNode.setLocalPosition(boneLocalPosition);
-
-          // three-vrm calculation: normalizedBone root is at app root 0,0,0 will cause this model not transform correctly
-          // const boneWorldPosition = this._vec3A.copy(rigBoneNode.getPosition());
-          // const parentWorldMatrix = this._mat4A.copy(boneNode.parent!.getWorldTransform());
-          // const localPosition = this.applyMatrix4(boneWorldPosition, parentWorldMatrix.invert());
-          // boneNode.setLocalPosition(localPosition);
+          const boneWorldPosition = this._vec3A.copy(rigBoneNode.getPosition());
+          const parentWorldMatrix = this._mat4A.copy(boneNode.parent!.getWorldTransform());
+          const localPosition = this.applyMatrix4(boneWorldPosition, parentWorldMatrix.invert());
+          boneNode.setLocalPosition(localPosition);
         }
       }
     });

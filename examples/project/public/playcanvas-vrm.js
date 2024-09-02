@@ -38,7 +38,6 @@ var __privateMethod = (obj, member, method) => {
   return method;
 };
 var _pluginsCallbacks, _setExtensionsToNodes, setExtensionsToNodes_fn, _addEssentialTags, addEssentialTags_fn;
-import * as pc from "playcanvas";
 const VRMHumanBoneList = [
 >>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   "hips",
@@ -3463,7 +3462,7 @@ const updateTextureMatrix = (pcRef, mat3, textureTransform) => {
     return;
   const offset = new pcRef.Vec2(0, 0);
   const repeat = new pcRef.Vec2(1, 1);
-  const center = new pcRef.Vec2(0, 0);
+  const center = new pcRef.Vec2(0.5, 0.5);
   let rotation = 0;
   if (textureTransform.offset) {
     offset.x = textureTransform.offset[0];
@@ -3973,21 +3972,21 @@ class RenderStates {
     this.lightStateInfo = null;
     this.defaultInfoSetting = {
       directionalLight: {
-        direction: new pc.Vec3(0, 0, 0),
-        color: new pc.Color(0, 0, 0)
+        direction: new pcRef.Vec3(0, 0, 0),
+        color: new pcRef.Color(0, 0, 0)
       },
       spotLight: {
-        position: new pc.Vec3(0, 0, 0),
-        direction: new pc.Vec3(0, 0, 0),
-        color: new pc.Color(0, 0, 0),
+        position: new pcRef.Vec3(0, 0, 0),
+        direction: new pcRef.Vec3(0, 0, 0),
+        color: new pcRef.Color(0, 0, 0),
         distance: 0,
         decay: 0,
         coneCos: 0,
         penumbraCos: 0
       },
       pointLight: {
-        position: new pc.Vec3(0, 0, 0),
-        color: new pc.Color(0, 0, 0),
+        position: new pcRef.Vec3(0, 0, 0),
+        color: new pcRef.Color(0, 0, 0),
         distance: 0,
         decay: 0
       }
@@ -4078,42 +4077,47 @@ const MToonMaterialOutlineWidthMode = {
   WorldCoordinates: "worldCoordinates",
   ScreenCoordinates: "screenCoordinates"
 };
-const baseVS$1 = (
+const baseVS = (
   /* glsl */
   `
 varying vec3 vViewPosition;
 varying vec3 vViewDirection;
 varying vec3 vNormal;
 
+// position of the camera
 uniform vec3 view_position;
 
-uniform float outlineWidthFactor;
+#ifdef OUTLINE
+  uniform float outlineWidthFactor;
 
-#ifdef USE_OUTLINEWIDTHMULTIPLYTEXTURE
-  uniform sampler2D outlineWidthMultiplyTexture;
-  uniform mat3 outlineWidthMultiplyTextureUvTransform;
+  #ifdef USE_OUTLINEWIDTHMULTIPLYTEXTURE
+    uniform sampler2D outlineWidthMultiplyTexture;
+    uniform mat3 outlineWidthMultiplyTextureUvTransform;
+  #endif
+
 #endif
 `
 );
-const endVS$1 = (
+const endVS = (
   /* glsl */
   `
-    #ifdef MTOON_USE_UV
-       vUv0 = vertex_texCoord0;
-    #endif
-
+    vUv0 = vertex_texCoord0;
 
     // Transform the vertex position to world space
-    vec4 mvPosition = matrix_model * vec4(vertex_position, 1.0);
+    vec4 mvPosition = getModelMatrix() * vec4(vertex_position, 1.0);
     // Pass the view position to the fragment shader
     vViewPosition = -mvPosition.xyz;
 
 
     vec4 worldPosition = mvPosition;
     vViewDirection = view_position - worldPosition.xyz;
+    vViewDirection = normalize(vViewDirection);
 
     vec3 objectNormal = vertex_normal;
-    vec3 transformedNormal = normalize(matrix_normal * objectNormal);
+
+    // we need this to compute the outline properly
+    objectNormal = normalize( objectNormal );
+    vec3 transformedNormal = getNormal();
     vNormal = transformedNormal;
 
 
@@ -4128,7 +4132,31 @@ const endVS$1 = (
         #ifdef OUTLINE_WIDTH_WORLD
             float worldNormalLength = length( transformedNormal );
             vec3 outlineOffset = outlineWidthFactor * outlineTex * worldNormalLength * objectNormal;
-            gl_Position = matrix_viewProjection * getModelMatrix()  * vec4( outlineOffset + vertex_position, 1.0);
+            vec3 localPos = vertex_position;     
+
+            // From playcanvas transform.js vertex shader
+            #ifdef MORPHING
+            #ifdef MORPHING_POS03
+            localPos.xyz += morph_weights_a[0] * morph_pos0;
+            localPos.xyz += morph_weights_a[1] * morph_pos1;
+            localPos.xyz += morph_weights_a[2] * morph_pos2;
+            localPos.xyz += morph_weights_a[3] * morph_pos3;
+            #endif // MORPHING_POS03
+            #ifdef MORPHING_POS47
+            localPos.xyz += morph_weights_b[0] * morph_pos4;
+            localPos.xyz += morph_weights_b[1] * morph_pos5;
+            localPos.xyz += morph_weights_b[2] * morph_pos6;
+            localPos.xyz += morph_weights_b[3] * morph_pos7;
+            #endif // MORPHING_POS47
+            #endif // MORPHING
+
+            #ifdef MORPHING_TEXTURE_BASED_POSITION
+                vec2 morphUV = getTextureMorphCoords();
+                    vec3 morphPos = texture2D(morphPositionTex, morphUV).xyz;
+                localPos += morphPos;
+            #endif
+
+            gl_Position = matrix_viewProjection * getModelMatrix() * vec4( localPos + outlineOffset, 1.0 );
         #endif
 
         #ifdef OUTLINE_WIDTH_SCREEN
@@ -4139,7 +4167,7 @@ const endVS$1 = (
     #endif
 `
 );
-const basePS$1 = (
+const basePS = (
   /* glsl */
   `
     #define RECIPROCAL_PI 0.3183098861837907
@@ -4360,8 +4388,12 @@ const basePS$1 = (
 ), Je = (
 =======
 );
+<<<<<<< HEAD
 const endPS$1 = (
 >>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
+=======
+const endPS = (
+>>>>>>> 310c2b2 (feat: combine outline material to mtoon material & add morph instances)
   /* glsl */
   `
     vec2 uv = vec2(0.5, 0.5);
@@ -4408,11 +4440,6 @@ const endPS$1 = (
         #else
             mat3 tbn = getTangentFrame( - vViewPosition, normal, normalMapUv );
         #endif
-
-        // #if defined( DOUBLE_SIDED ) && ! defined( FLAT_SHADED )
-        //   tbn[0] *= faceDirection;
-        //   tbn[1] *= faceDirection;
-        // #endif
 
         vec3 mapN = texture2D( normalMap, normalMapUv ).xyz * 2.0 - 1.0;
         mapN.xy *= normalScale;
@@ -4551,12 +4578,13 @@ const endPS$1 = (
     col += rimMix * rim;
 
     // -- MToon: Emission --------------------------------------------------------
-    // Note: Look wired, but this is the implemention from three-vrm.
+    // Note: Sometimes look wired, but this is the implemention from three-vrm.
     // Remove it temporarily.
     // col += totalEmissiveRadiance;
 
+
     // -- MToon: Outline --------------------------------------------------------
-    #if defined( OUTLINE )
+    #ifdef OUTLINE
         col = outlineColorFactor.rgb * mix( vec3( 1.0 ), col, outlineLightingMixFactor );
     #endif
 
@@ -4564,7 +4592,7 @@ const endPS$1 = (
         diffuseColor.a = 1.0;
     #endif
 
-    gl_FragColor = vec4( col, 1.0 );
+    gl_FragColor = vec4( col, diffuseColor.a );
 `
 );
 const light = (
@@ -4720,10 +4748,10 @@ const light = (
 =======
 );
 const shaderChunksMtoon = {
-  baseVS: baseVS$1,
-  endVS: endVS$1,
-  basePS: basePS$1,
-  endPS: endPS$1,
+  baseVS,
+  endVS,
+  basePS,
+  endPS,
   light
 };
 const textureTransformExtensionName = "KHR_texture_transform";
@@ -4731,6 +4759,7 @@ const createVRMCMtoonMaterial = (pcRef) => {
   return class VRMCMtoonMaterial extends pcRef.StandardMaterial {
     constructor(asset) {
       super();
+      this.isMtoonMaterial = true;
       this.litFactor = new pcRef.Color(1, 1, 1, 1);
       this.alphaTest = 0;
       this.baseColorMap = null;
@@ -4845,17 +4874,18 @@ const createVRMCMtoonMaterial = (pcRef) => {
         rimLightingMixFactor,
         parametricRimFresnelPowerFactor,
         parametricRimLiftFactor,
-        outlineWidthFactor,
-        outlineColorFactor,
-        outlineLightingMixFactor,
         shadingShiftTexture: shadingShiftTextureInfo,
         giEqualizationFactor,
         rimMultiplyTexture: rimMultiplyTextureInfo,
         matcapTexture: matcapTextureInfo,
         matcapFactor,
         uvAnimationMaskTexture,
+        outlineWidthFactor,
+        outlineColorFactor,
+        outlineLightingMixFactor,
         outlineWidthMode,
-        outlineWidthMultiplyTexture: outlineWidthMultiplyTextureInfo
+        outlineWidthMultiplyTexture: outlineWidthMultiplyTextureInfo,
+        transparentWithZWrite
       } = extension;
       if (giEqualizationFactor !== void 0) {
         this.giEqualizationFactor = giEqualizationFactor;
@@ -4931,6 +4961,9 @@ const createVRMCMtoonMaterial = (pcRef) => {
       this.rimLightingMixFactor = rimLightingMixFactor;
       this.parametricRimFresnelPowerFactor = parametricRimFresnelPowerFactor;
       this.parametricRimLiftFactor = parametricRimLiftFactor;
+      if (transparentWithZWrite) {
+        this.depthWrite = true;
+      }
       this.outlineWidthFactor = outlineWidthFactor;
       if (outlineColorFactor) {
         this.outlineColorFactor = new pcRef.Color(
@@ -5042,21 +5075,28 @@ const createVRMCMtoonMaterial = (pcRef) => {
       ]);
       if (this.shadeMultiplyTexture) {
         this.setParameter("shadeMultiplyTexture", this.shadeMultiplyTexture);
+        this.setParameter(
+          "shadeMultiplyTextureUvTransform",
+          this.shadeMultiplyTextureUvTransform.data
+        );
       }
       if (this.matcapTexture) {
         this.setParameter("matcapTexture", this.matcapTexture);
+        this.setParameter("matcapTextureUvTransform", this.matcapTextureUvTransform.data);
       }
-      this.setParameter("matcapTextureUvTransform", this.matcapTextureUvTransform.data);
       this.setParameter("matcapFactor", [
         this.matcapFactor.r,
         this.matcapFactor.g,
         this.matcapFactor.b
       ]);
+<<<<<<< HEAD
       this.setParameter(
         "shadeMultiplyTextureUvTransform",
         this.shadeMultiplyTextureUvTransform.data
 >>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
       );
+=======
+>>>>>>> 310c2b2 (feat: combine outline material to mtoon material & add morph instances)
       if (this.shadingShiftTexture) {
         this.setParameter("shadingShiftTexture", this.shadingShiftTexture);
       }
@@ -5099,6 +5139,10 @@ const createVRMCMtoonMaterial = (pcRef) => {
       }
       if (this.outlineWidthMultiplyTexture) {
         this.setParameter("outlineWidthMultiplyTexture", this.outlineWidthMultiplyTexture);
+        this.setParameter(
+          "outlineWidthMultiplyTextureUvTransform",
+          this.outlineWidthMultiplyTextureUvTransform.data
+        );
       }
       this.setParameter("outlineWidthFactor", this.outlineWidthFactor);
       this.setParameter("outlineLightingMixFactor", this.outlineLightingMixFactor);
@@ -5272,6 +5316,7 @@ ${chunk}`;
 >>>>>>> 30d0d14 (feat: create vrm-mtoon script & use setting from layer light store)
   };
 };
+<<<<<<< HEAD
 const baseVS = (
 >>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
   /* glsl */
@@ -5546,6 +5591,9 @@ const createVRMCOutlineMaterial = (pcRef) => {
     }
   };
 };
+=======
+const extensionVRMCName = EXTENSION_VRMC_MATERIALS_MTOON;
+>>>>>>> 310c2b2 (feat: combine outline material to mtoon material & add morph instances)
 class VRMMtoonLoader {
   constructor(pcRef, asset) {
     this._pcRef = pcRef;
@@ -5568,9 +5616,9 @@ class VRMMtoonLoader {
     renders.forEach((renderComponent) => {
       const render = renderComponent;
       const meshInstances = render.meshInstances;
-      const VRMCOutlineMaterial = createVRMCOutlineMaterial(this._pcRef);
+      const VRMCOutlineMaterial = createVRMCMtoonMaterial(this._pcRef);
       meshInstances.forEach((meshInstance) => {
-        var _a, _b;
+        var _a, _b, _c;
         const material = meshInstance.material;
         let shaderMaterial = outlineShaderMaterials.get(material);
         if (!shaderMaterial) {
@@ -5584,10 +5632,18 @@ class VRMMtoonLoader {
             console.error("applyVRMCOutlineShader: gltfMaterial is undefined");
             return;
           }
+          const extension = (_c = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _c[extensionVRMCName];
+          if (!extension) {
+            return;
+          }
+          if (extension.outlineWidthMode === MToonMaterialOutlineWidthMode.None) {
+            return;
+          }
           shaderMaterial = new VRMCOutlineMaterial(this.asset);
+          shaderMaterial.isOutline = true;
           shaderMaterial.copy(material);
           shaderMaterial.name = material.name + "_outline";
-          shaderMaterial.parseGLTFAttrs(gltfMaterial);
+          shaderMaterial.parse(gltfMaterial);
           shaderMaterial.update();
           outlineShaderMaterials.set(material, shaderMaterial);
         }
@@ -5596,6 +5652,10 @@ class VRMMtoonLoader {
           shaderMaterial,
           render.entity
         );
+        if (meshInstance.morphInstance) {
+          const morphInstance = meshInstance.morphInstance.clone();
+          shaderMeshInstance.morphInstance = morphInstance;
+        }
         meshInstances.push(shaderMeshInstance);
       });
     });
@@ -5609,7 +5669,10 @@ class VRMMtoonLoader {
       const render = renderComponent;
       const meshInstances = render.meshInstances;
       meshInstances.forEach((meshInstance) => {
-        var _a, _b;
+        var _a, _b, _c;
+        if (meshInstance.material.isMtoonMaterial) {
+          return;
+        }
         const material = meshInstance.material;
         let shaderMaterial = shaderMaterials.get(material);
         const index = ((_a = material.userId.split("_")) == null ? void 0 : _a[1]) ?? -1;
@@ -5620,6 +5683,10 @@ class VRMMtoonLoader {
         const gltfMaterial = (_b = gltf.materials) == null ? void 0 : _b[parsedIndex];
         if (!gltfMaterial) {
           console.error("applyVRMCMtoonShader: gltfMaterial is undefined");
+          return;
+        }
+        const extension = (_c = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _c[extensionVRMCName];
+        if (!extension) {
           return;
         }
         if (!shaderMaterial) {
@@ -5771,8 +5838,6 @@ class et extends Kt {
           e.setLocalPosition(c);
 =======
 class VRMHumanoidRig extends VRMRig {
-  // private _vec3A: pc.Vec3;
-  // private _mat4A: pc.Mat4;
   static _setupTransforms(pcRef, modelRig) {
     const root = new pcRef.Entity();
     root.name = "VRMHumanoidRig";
@@ -5839,9 +5904,8 @@ class VRMHumanoidRig extends VRMRig {
     this._boneRotations = boneRotations;
     this._quatA = new pcRef.Quat();
     this._quatB = new pcRef.Quat();
-    const app = pcRef.Application.getApplication();
-    if (app)
-      app.root.addChild(root);
+    this._vec3A = new pcRef.Vec3();
+    this._mat4A = new pcRef.Mat4();
   }
   applyMatrix4(position, m) {
     const x = position.x, y = position.y, z = position.z;
@@ -5868,15 +5932,21 @@ class VRMHumanoidRig extends VRMRig {
         boneNode.setLocalRotation(this._quatA);
         if (boneName === "hips") {
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 310c2b2 (feat: combine outline material to mtoon material & add morph instances)
           const boneWorldPosition = this._vec3A.copy(rigBoneNode.getPosition());
           const parentWorldMatrix = this._mat4A.copy(boneNode.parent.getWorldTransform());
           const localPosition = this.applyMatrix4(boneWorldPosition, parentWorldMatrix.invert());
           boneNode.setLocalPosition(localPosition);
+<<<<<<< HEAD
 >>>>>>> dbe474c (feat: change apply mtoon function to lib to mtoonLoader & add some uniforms implement)
 =======
           const boneLocalPosition = rigBoneNode.getLocalPosition();
           boneNode.setLocalPosition(boneLocalPosition);
 >>>>>>> 9cd4cbf (fix: v1 normalized bone animation transform use local position)
+=======
+>>>>>>> 310c2b2 (feat: combine outline material to mtoon material & add morph instances)
         }
       }
     });
@@ -6197,6 +6267,9 @@ function createFormattedVRMHumanoid(pcRef, vrmAsset, renderEntity, options) {
   if (humanBones) {
     const autoUpdateHumanBones = !!(options == null ? void 0 : options.autoUpdateHumanBones);
     const humanoid = new VRMHumanoid(pcRef, humanBones, { autoUpdateHumanBones });
+    if (VRMC_vrm) {
+      renderEntity.addChild(humanoid.normalizedHumanBonesRoot);
+    }
     return humanoid;
   }
   return null;

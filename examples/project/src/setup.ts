@@ -186,6 +186,29 @@ export const setSkyBox = (app: pc.Application) => {
   app.assets.load(cubemapAsset);
 };
 
+export const createMiniStats = (app: pc.Application) => {
+  // @ts-ignore
+  // set up options for mini-stats, start with the default options
+  const options: {
+    sizes: { width: number; height: number; spacing: number; graphs: boolean }[];
+    startSizeIndex: number;
+  } = pc.MiniStats.getDefaultOptions();
+
+  // configure sizes
+  options.sizes = [
+    { width: 128, height: 16, spacing: 0, graphs: false },
+    { width: 256, height: 32, spacing: 2, graphs: true },
+    { width: 500, height: 64, spacing: 2, graphs: true },
+  ];
+
+  // when the application starts, use the largest size
+  options.startSizeIndex = 0;
+
+  // @ts-ignore
+  const miniStats = new pc.MiniStats(app, options);
+  miniStats.div.style.cursor = 'pointer';
+};
+
 const setupApplication = () => {
   const canvas = document.getElementById('application-canvas');
   if (!(canvas instanceof HTMLCanvasElement)) {
