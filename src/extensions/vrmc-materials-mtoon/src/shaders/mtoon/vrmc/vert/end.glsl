@@ -15,7 +15,7 @@ export default /* glsl */ `
 
     // we need this to compute the outline properly
     objectNormal = normalize( objectNormal );
-    vec3 transformedNormal = getNormal();
+    vec3 transformedNormal = vNormalW;
     vNormal = transformedNormal;
 
 
