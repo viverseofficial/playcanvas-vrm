@@ -67,13 +67,16 @@ export const importScript = (pcRef: typeof pc) => {
       }
     }
 
-    startEmotion(name: string, config?: IAnimatedMorphConfig) {
+    startEmotion(name: string, config?: IAnimatedMorphConfig, skipStopBlink = false) {
       if (!this.expressionManager) return;
 
       const time = config ? config.times[config.times.length - 1] : 3;
       const loop = config ? !!config.loop : false;
 
-      this.stopBlink(time, loop);
+      if (!skipStopBlink) {
+        this.stopBlink(time, loop);
+      }
+
       this.expressionManager.startEmotion(name, config);
     }
 
@@ -148,8 +151,30 @@ export const importScript = (pcRef: typeof pc) => {
       if (this.expressionManager) {
         this.expressionManager.stopEmotions(this.previousEmotions);
       }
+
+      // If there is blink-related expressions, stop the blink timer once and continue starting all emotions.
+      const blinkExpressions = [...vrmaExpression.preset].filter((preset) => {
+        const name = preset[0] as VRMExpressionPresetName;
+        return name === 'blink' || name === 'blinkLeft' || name === 'blinkRight';
+      });
+
+      const blinkExpressionIncluded = blinkExpressions.length > 0;
+      if (blinkExpressionIncluded) {
+        // Use the longest blink expression time
+        blinkExpressions.sort((presetA, presetB) => {
+          const timeA = presetA[1].times.length;
+          const timeB = presetB[1].times.length;
+          return timeB - timeA;
+        });
+
+        const [, config] = blinkExpressions[0];
+        const time = config ? config.times[config.times.length - 1] : 3;
+        const loop = config ? !!config.loop : false;
+        this.stopBlink(time, loop);
+      }
+
       for (const [name, config] of vrmaExpression.preset.entries()) {
-        this.startEmotion(name, config);
+        this.startEmotion(name, config, !!blinkExpressionIncluded);
       }
       if (this.previousEmotions.length === 0) {
         this.previousEmotions = Array.from(vrmaExpression.preset.keys());

@@ -1,6 +1,6 @@
 /**
  * name: playcanvas-vrm
- * version: v1.5.0
+ * version: v1.5.1
  */
 var __accessCheck = (obj, member, msg) => {
   if (!member.has(obj))
@@ -1694,12 +1694,14 @@ const importScript$2 = (pcRef) => {
         }
       }
     }
-    startEmotion(name, config) {
+    startEmotion(name, config, skipStopBlink = false) {
       if (!this.expressionManager)
         return;
       const time = config ? config.times[config.times.length - 1] : 3;
       const loop = config ? !!config.loop : false;
-      this.stopBlink(time, loop);
+      if (!skipStopBlink) {
+        this.stopBlink(time, loop);
+      }
       this.expressionManager.startEmotion(name, config);
     }
     startTalking(speed = 0.25) {
@@ -1755,8 +1757,24 @@ const importScript$2 = (pcRef) => {
       if (this.expressionManager) {
         this.expressionManager.stopEmotions(this.previousEmotions);
       }
+      const blinkExpressions = [...vrmaExpression.preset].filter((preset) => {
+        const name = preset[0];
+        return name === "blink" || name === "blinkLeft" || name === "blinkRight";
+      });
+      const blinkExpressionIncluded = blinkExpressions.length > 0;
+      if (blinkExpressionIncluded) {
+        blinkExpressions.sort((presetA, presetB) => {
+          const timeA = presetA[1].times.length;
+          const timeB = presetB[1].times.length;
+          return timeB - timeA;
+        });
+        const [, config] = blinkExpressions[0];
+        const time = config ? config.times[config.times.length - 1] : 3;
+        const loop = config ? !!config.loop : false;
+        this.stopBlink(time, loop);
+      }
       for (const [name, config] of vrmaExpression.preset.entries()) {
-        this.startEmotion(name, config);
+        this.startEmotion(name, config, !!blinkExpressionIncluded);
       }
       if (this.previousEmotions.length === 0) {
         this.previousEmotions = Array.from(vrmaExpression.preset.keys());
