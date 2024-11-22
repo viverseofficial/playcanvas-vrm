@@ -190,7 +190,12 @@ function createVRMAResource(
     ).result;
 
     const expression = new VRMAExpression(vrmAnimations[0]);
-    return { name: animationAsset.stateName, resource: animTrack, expression: expression };
+    return {
+      name: animationAsset.stateName,
+      resource: animTrack,
+      expression: expression,
+      ...(animationAsset.setting && { setting: animationAsset.setting }),
+    };
   }
   return null;
 }

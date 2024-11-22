@@ -1,6 +1,6 @@
 /**
  * name: playcanvas-vrm
- * version: v1.5.1
+ * version: v1.5.2
  */
 var __accessCheck = (obj, member, msg) => {
   if (!member.has(obj))
@@ -977,7 +977,12 @@ function createVRMAResource(pcRef, animationAsset, humanoid, version) {
       version
     ).result;
     const expression = new VRMAExpression(vrmAnimations[0]);
-    return { name: animationAsset.stateName, resource: animTrack, expression };
+    return {
+      name: animationAsset.stateName,
+      resource: animTrack,
+      expression,
+      ...animationAsset.setting && { setting: animationAsset.setting }
+    };
   }
   return null;
 }
