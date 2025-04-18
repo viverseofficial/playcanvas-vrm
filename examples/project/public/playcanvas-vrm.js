@@ -1,6 +1,6 @@
 /**
  * name: playcanvas-vrm
- * version: v1.5.2
+ * version: v1.5.3
  */
 var __accessCheck = (obj, member, msg) => {
   if (!member.has(obj))
@@ -495,13 +495,11 @@ class VRMAnimationLoader {
         } else if (path === "rotation") {
           const worldMatrix = worldMatrixMap.get(boneName);
           const parentWorldMatrix = worldMatrixMap.get(parentBoneName);
-          const worldMatrixRotation = worldMatrix.getEulerAngles();
           const worldMatrixQuat = new this.pcRef.Quat();
-          worldMatrixQuat.setFromEulerAngles(worldMatrixRotation);
+          worldMatrixQuat.setFromMat4(worldMatrix);
           worldMatrixQuat.invert();
-          const parentWorldMatrixRotation = parentWorldMatrix.getEulerAngles();
           const parentWorldMatrixQuat = new this.pcRef.Quat();
-          parentWorldMatrixQuat.setFromEulerAngles(parentWorldMatrixRotation);
+          parentWorldMatrixQuat.setFromMat4(parentWorldMatrix);
           const outputData = arrayChunk(output.data, 4).flatMap((q) => {
             let _quat = new this.pcRef.Quat(q[0], q[1], q[2], q[3]);
             _quat = _quat.mul2(parentWorldMatrixQuat, _quat).mul(worldMatrixQuat);

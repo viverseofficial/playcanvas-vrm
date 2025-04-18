@@ -247,16 +247,14 @@ export class VRMAnimationLoader {
           const parentWorldMatrix = worldMatrixMap.get(parentBoneName)!;
 
           // World Quat
-          const worldMatrixRotation: pc.Vec3 = worldMatrix.getEulerAngles();
           const worldMatrixQuat: pc.Quat = new this.pcRef.Quat();
-          worldMatrixQuat.setFromEulerAngles(worldMatrixRotation);
+          worldMatrixQuat.setFromMat4(worldMatrix);
 
           worldMatrixQuat.invert();
 
           // Parent World Quat
-          const parentWorldMatrixRotation: pc.Vec3 = parentWorldMatrix.getEulerAngles();
           const parentWorldMatrixQuat: pc.Quat = new this.pcRef.Quat();
-          parentWorldMatrixQuat.setFromEulerAngles(parentWorldMatrixRotation);
+          parentWorldMatrixQuat.setFromMat4(parentWorldMatrix);
 
           const outputData = arrayChunk(output.data, 4).flatMap((q) => {
             let _quat = new this.pcRef.Quat(q[0], q[1], q[2], q[3]);
