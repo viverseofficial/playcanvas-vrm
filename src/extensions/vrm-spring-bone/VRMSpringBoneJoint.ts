@@ -216,7 +216,7 @@ export class VRMSpringBoneJoint {
           .sub(this._prevTail)
           .mulScalar(1 - this.settings.dragForce),
       ) // Continue the decrease from previous frame
-      .add(this._v3A.copy(centerSpaceBoneAxis).mulScalar(this.settings.stiffness * dt)) // Parent bone roate affect child bone rotate
+      .add(this._v3A.copy(centerSpaceBoneAxis).mulScalar(this.settings.stiffness * dt)) // Parent bone rotate affect child bone rotate
       .add(this._v3A.copy(centerSpaceGravity).mulScalar(this.settings.gravityPower * dt)) // Power from external force
       .copy(matrixCenterToWorld.transformPoint(this._nextTail, this._v3C)); // Let tail back to world space
 
@@ -253,7 +253,7 @@ export class VRMSpringBoneJoint {
         .normalize(),
     );
 
-    const angles = applyRotation.getEulerAngles();
+    const angles = applyRotation.getEulerAngles(this._v3C);
     applyRotation.setFromEulerAngles(angles.x * strength, angles.y * strength, angles.z * strength);
 
     const rotation = this._quatB.copy(this._initialLocalRotation).mul(applyRotation);

@@ -8,6 +8,8 @@ export const importScript = (pcRef: typeof pc) => {
     springBoneManager!: VRMSpringBoneManager | null;
     activeSpringBone: boolean = true;
     isWalking: boolean = false;
+    updateInterval: number = 1 / 60;
+    timeSinceLastUpdate: number = 0;
 
     initialize() {
       const springBoneLoader = new VRMSpringBoneLoaderPlugin(pcRef, this.asset, this.entity);
@@ -33,8 +35,11 @@ export const importScript = (pcRef: typeof pc) => {
 
     update(dt: number) {
       if (!this.springBoneManager || !this.activeSpringBone) return;
+      this.timeSinceLastUpdate += dt;
+      if (this.timeSinceLastUpdate < this.updateInterval) return;
 
       this.springBoneManager.update(dt, this.isWalking);
+      this.timeSinceLastUpdate = 0;
     }
   }
 
@@ -48,5 +53,10 @@ export const importScript = (pcRef: typeof pc) => {
   VrmSpringBone.attributes.add('asset', {
     type: 'asset',
     description: 'Set the container asset loaded from vrm avatar.',
+  });
+
+  VrmSpringBone.attributes.add('updateInterval', {
+    type: 'number',
+    default: 1 / 60, // 60 FPS
   });
 };

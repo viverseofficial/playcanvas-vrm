@@ -1255,9 +1255,9 @@ class VRMExpressionManager {
     });
   }
   clearAllAppliedWeight(isAllToZero) {
-    this._expressions.forEach((expression) => {
+    for (const expression of this._expressions) {
       expression.clearAppliedWeight(isAllToZero);
-    });
+    }
   }
   update(dt) {
     for (const expression of this._expressions) {
@@ -1827,9 +1827,6 @@ class VRMSpringBoneManager {
     this.strength = 0.1;
     this.limitHeight = 0.2;
     this.limitLow = 0;
-    this._updateSpringBoneCallback = (springBone) => {
-      springBone.update(this._dt, this.strength);
-    };
   }
   get joints() {
     return this._joints;
@@ -1846,21 +1843,23 @@ class VRMSpringBoneManager {
   setInitState() {
     this._springBonesTried.clear();
     this._springBonesDone.clear();
-    const callback = (springBone) => {
-      springBone.setInitState();
-    };
     for (const springBone of this._joints) {
-      this._processSpringBone(springBone, callback);
+      this._processSpringBone(
+        springBone,
+        "init"
+        /* INIT */
+      );
     }
   }
   reset() {
     this._springBonesTried.clear();
     this._springBonesDone.clear();
-    const callback = (springBone) => {
-      springBone.reset();
-    };
     for (const springBone of this._joints) {
-      this._processSpringBone(springBone, callback);
+      this._processSpringBone(
+        springBone,
+        "reset"
+        /* RESET */
+      );
     }
   }
   update(dt, isWalking) {
@@ -1882,10 +1881,14 @@ class VRMSpringBoneManager {
       }
     }
     for (const springBone of this._joints) {
-      this._processSpringBone(springBone, this._updateSpringBoneCallback);
+      this._processSpringBone(
+        springBone,
+        "update"
+        /* UPDATE */
+      );
     }
   }
-  _processSpringBone(springBone, callback) {
+  _processSpringBone(springBone, action) {
     if (this._springBonesDone.has(springBone.id)) {
       return;
     }
@@ -1893,7 +1896,6 @@ class VRMSpringBoneManager {
       return;
     }
     this._springBonesTried.add(springBone.id);
-    this._ancestorPathCache;
     const depObjects = this._getDependencies(springBone);
     for (const depObject of depObjects) {
       let ancestorPath;
@@ -1915,13 +1917,19 @@ class VRMSpringBoneManager {
         if (objectSet) {
           for (const depSpringBone of objectSet) {
             if (!this._springBonesDone.has(depSpringBone.id)) {
-              this._processSpringBone(depSpringBone, callback);
+              this._processSpringBone(depSpringBone, action);
             }
           }
         }
       }
     }
-    callback(springBone);
+    if (action === "update") {
+      springBone.update(this._dt, this.strength);
+    } else if (action === "reset") {
+      springBone.reset();
+    } else if (action === "init") {
+      springBone.setInitState();
+    }
     this._springBonesDone.add(springBone.id);
   }
   // Return a set of objects that are dependant of given spring bone.
@@ -2128,7 +2136,7 @@ class VRMSpringBoneJoint {
       this._boneAxis,
       this._v3A.copy(this._nextTail).copy(worldSpaceInitialMatrixInv.transformPoint(this._v3A, this._v3B)).normalize()
     );
-    const angles = applyRotation.getEulerAngles();
+    const angles = applyRotation.getEulerAngles(this._v3C);
     applyRotation.setFromEulerAngles(angles.x * strength, angles.y * strength, angles.z * strength);
     const rotation = this._quatB.copy(this._initialLocalRotation).mul(applyRotation);
     this.bone.setLocalRotation(rotation);
@@ -2437,6 +2445,8 @@ const importScript$1 = (pcRef) => {
       super(...arguments);
       this.activeSpringBone = true;
       this.isWalking = false;
+      this.updateInterval = 1 / 60;
+      this.timeSinceLastUpdate = 0;
     }
     initialize() {
       const springBoneLoader = new VRMSpringBoneLoaderPlugin(pcRef, this.asset, this.entity);
@@ -2458,7 +2468,11 @@ const importScript$1 = (pcRef) => {
     update(dt) {
       if (!this.springBoneManager || !this.activeSpringBone)
         return;
+      this.timeSinceLastUpdate += dt;
+      if (this.timeSinceLastUpdate < this.updateInterval)
+        return;
       this.springBoneManager.update(dt, this.isWalking);
+      this.timeSinceLastUpdate = 0;
     }
   }
   pcRef.registerScript(VrmSpringBone2, "vrmSpringBone");
@@ -2469,6 +2483,11 @@ const importScript$1 = (pcRef) => {
   VrmSpringBone2.attributes.add("asset", {
     type: "asset",
     description: "Set the container asset loaded from vrm avatar."
+  });
+  VrmSpringBone2.attributes.add("updateInterval", {
+    type: "number",
+    default: 1 / 60
+    // 60 FPS
   });
 };
 const VrmSpringBone = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({

@@ -1,6 +1,12 @@
 import { ExtensionManagerNameType } from '../extensions';
 import { VRMSpringBoneJoint } from './VRMSpringBoneJoint';
 
+enum ACTION_TYPE {
+  INIT = 'init',
+  UPDATE = 'update',
+  RESET = 'reset',
+}
+
 export class VRMSpringBoneManager {
   public managerName: ExtensionManagerNameType;
   private _joints = new Set<VRMSpringBoneJoint>();
@@ -12,8 +18,6 @@ export class VRMSpringBoneManager {
   public limitHeight: number;
   public limitLow: number;
   private _dt: number = 0;
-
-  private _updateSpringBoneCallback: (springBone: VRMSpringBoneJoint) => void;
 
   private _springBonesTried = new Set<string>();
   private _springBonesDone = new Set<string>();
@@ -29,10 +33,6 @@ export class VRMSpringBoneManager {
     this.strength = 0.1;
     this.limitHeight = 0.2;
     this.limitLow = 0;
-
-    this._updateSpringBoneCallback = (springBone: VRMSpringBoneJoint) => {
-      springBone.update(this._dt, this.strength);
-    };
   }
 
   get joints() {
@@ -54,24 +54,18 @@ export class VRMSpringBoneManager {
   setInitState() {
     this._springBonesTried.clear();
     this._springBonesDone.clear();
-    const callback = (springBone: VRMSpringBoneJoint) => {
-      springBone.setInitState();
-    };
 
     for (const springBone of this._joints) {
-      this._processSpringBone(springBone, callback);
+      this._processSpringBone(springBone, ACTION_TYPE.INIT);
     }
   }
 
   reset() {
     this._springBonesTried.clear();
     this._springBonesDone.clear();
-    const callback = (springBone: VRMSpringBoneJoint) => {
-      springBone.reset();
-    };
 
     for (const springBone of this._joints) {
-      this._processSpringBone(springBone, callback);
+      this._processSpringBone(springBone, ACTION_TYPE.RESET);
     }
   }
 
@@ -97,14 +91,11 @@ export class VRMSpringBoneManager {
     }
 
     for (const springBone of this._joints) {
-      this._processSpringBone(springBone, this._updateSpringBoneCallback);
+      this._processSpringBone(springBone, ACTION_TYPE.UPDATE);
     }
   }
 
-  _processSpringBone(
-    springBone: VRMSpringBoneJoint,
-    callback: (springBone: VRMSpringBoneJoint) => void,
-  ) {
+  _processSpringBone(springBone: VRMSpringBoneJoint, action: ACTION_TYPE) {
     if (this._springBonesDone.has(springBone.id)) {
       return;
     }
@@ -114,7 +105,6 @@ export class VRMSpringBoneManager {
     }
 
     this._springBonesTried.add(springBone.id);
-    this._ancestorPathCache;
     const depObjects = this._getDependencies(springBone);
 
     for (const depObject of depObjects) {
@@ -140,14 +130,21 @@ export class VRMSpringBoneManager {
         if (objectSet) {
           for (const depSpringBone of objectSet) {
             if (!this._springBonesDone.has(depSpringBone.id)) {
-              this._processSpringBone(depSpringBone, callback);
+              this._processSpringBone(depSpringBone, action);
             }
           }
         }
       }
     }
 
-    callback(springBone);
+    if (action === ACTION_TYPE.UPDATE) {
+      springBone.update(this._dt, this.strength);
+    } else if (action === ACTION_TYPE.RESET) {
+      springBone.reset();
+    } else if (action === ACTION_TYPE.INIT) {
+      springBone.setInitState();
+    }
+
     this._springBonesDone.add(springBone.id);
   }
 

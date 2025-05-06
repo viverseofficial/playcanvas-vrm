@@ -156,9 +156,9 @@ export class VRMExpressionManager {
   }
 
   clearAllAppliedWeight(isAllToZero?: boolean) {
-    this._expressions.forEach((expression) => {
+    for (const expression of this._expressions) {
       expression.clearAppliedWeight(isAllToZero);
-    });
+    }
   }
 
   update(dt: number) {
