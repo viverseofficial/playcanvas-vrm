@@ -11,8 +11,10 @@ export class VRMSpringBoneJoint {
   private _pcRef: typeof pc;
   private _v3A: pc.Vec3;
   private _v3B: pc.Vec3;
+  private _v3C: pc.Vec3;
   private _nextTail: pc.Vec3;
   private _quatA: pc.Quat;
+  private _quatB: pc.Quat;
   private _matA: pc.Mat4;
   private _matB: pc.Mat4;
   private _identityMat4: pc.Mat4;
@@ -22,6 +24,8 @@ export class VRMSpringBoneJoint {
 
   public bone: pc.GraphNode;
   public child: pc.GraphNode | null;
+
+  public id = crypto.randomUUID();
 
   /**
    * Settings of the bone.
@@ -52,8 +56,10 @@ export class VRMSpringBoneJoint {
     this._pcRef = pcRef;
     this._v3A = new this._pcRef.Vec3();
     this._v3B = new this._pcRef.Vec3();
+    this._v3C = new this._pcRef.Vec3();
     this._nextTail = new this._pcRef.Vec3();
     this._quatA = new this._pcRef.Quat();
+    this._quatB = new this._pcRef.Quat();
     this._matA = new this._pcRef.Mat4();
     this._matB = new this._pcRef.Mat4();
     this._identityMat4 = new this._pcRef.Mat4();
@@ -171,9 +177,7 @@ export class VRMSpringBoneJoint {
 
   update(dt: number, strength: number) {
     if (dt <= 0) return;
-    this._worldSpacePosition.copy(
-      this.bone.getWorldTransform().getTranslation(new this._pcRef.Vec3()),
-    );
+    this._worldSpacePosition.copy(this.bone.getWorldTransform().getTranslation(this._v3A));
     let matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
     this._matrixWorldToCenterTranslation.set(0, 0, 0);
     matrixWorldToCenter.getTranslation(this._matrixWorldToCenterTranslation);
@@ -191,15 +195,15 @@ export class VRMSpringBoneJoint {
     // Get boneAxis in center space
     const centerSpaceBoneAxis = this._v3B
       .copy(this._boneAxis)
-      .copy(this._initialLocalMatrix.transformPoint(this._v3B))
-      .copy(centerSpaceParentMatrix.transformPoint(this._v3B))
+      .copy(this._initialLocalMatrix.transformPoint(this._v3B, this._v3A))
+      .copy(centerSpaceParentMatrix.transformPoint(this._v3B, this._v3A))
       .sub(this._centerSpacePosition)
       .normalize();
 
     // gravity in center space
     const centerSpaceGravity = this._v3A
       .copy(this.settings.gravityDir)
-      .copy(quatWorldToCenter.transformVector(this._v3A))
+      .copy(quatWorldToCenter.transformVector(this._v3A, this._v3C))
       .normalize();
 
     const matrixCenterToWorld = this._getMatrixCenterToWorld(this._matA);
@@ -214,7 +218,7 @@ export class VRMSpringBoneJoint {
       ) // Continue the decrease from previous frame
       .add(this._v3A.copy(centerSpaceBoneAxis).mulScalar(this.settings.stiffness * dt)) // Parent bone roate affect child bone rotate
       .add(this._v3A.copy(centerSpaceGravity).mulScalar(this.settings.gravityPower * dt)) // Power from external force
-      .copy(matrixCenterToWorld.transformPoint(this._nextTail)); // Let tail back to world space
+      .copy(matrixCenterToWorld.transformPoint(this._nextTail, this._v3C)); // Let tail back to world space
 
     // Normalize bone length
     this._nextTail
@@ -233,11 +237,10 @@ export class VRMSpringBoneJoint {
 
     this._prevTail.copy(this._currentTail);
     this._currentTail.copy(
-      this._v3A.copy(this._nextTail).copy(matrixWorldToCenter.transformPoint(this._v3A)),
+      this._v3A.copy(this._nextTail).copy(matrixWorldToCenter.transformPoint(this._v3A, this._v3B)),
     );
 
     const worldSpaceInitialMatrixInv = mat4InvertCompat(
-      this._pcRef,
       this._matA.copy(this._parentMatrixWorld).mul(this._initialLocalMatrix),
     );
 
@@ -246,14 +249,14 @@ export class VRMSpringBoneJoint {
       this._boneAxis,
       this._v3A
         .copy(this._nextTail)
-        .copy(worldSpaceInitialMatrixInv.transformPoint(this._v3A))
+        .copy(worldSpaceInitialMatrixInv.transformPoint(this._v3A, this._v3B))
         .normalize(),
     );
 
     const angles = applyRotation.getEulerAngles();
     applyRotation.setFromEulerAngles(angles.x * strength, angles.y * strength, angles.z * strength);
 
-    const rotation = this._initialLocalRotation.clone().mul(applyRotation);
+    const rotation = this._quatB.copy(this._initialLocalRotation).mul(applyRotation);
     this.bone.setLocalRotation(rotation);
   }
 
@@ -280,13 +283,19 @@ export class VRMSpringBoneJoint {
   }
 
   _collision(tail: pc.Vec3) {
-    this.colliderGroups?.forEach((colliderGroup) => {
-      colliderGroup.colliders.forEach((collider) => {
+    if (!this.colliderGroups) return;
+    for (let i = 0; i < this.colliderGroups.length; i++) {
+      const colliderGroup = this.colliderGroups[i];
+      const colliders = colliderGroup.colliders;
+
+      for (let j = 0; j < colliders.length; j++) {
+        const collider = colliders[j];
         const dist = collider.shape.calculateCollision(
           collider.getWorldTransform(),
           tail,
           this.settings.hitRadius,
           this._v3A,
+          this._v3B,
         );
 
         if (dist < 0.0) {
@@ -300,7 +309,7 @@ export class VRMSpringBoneJoint {
             .mulScalar(this._worldSpaceBoneLength)
             .add(this._worldSpacePosition);
         }
-      });
-    });
+      }
+    }
   }
 }

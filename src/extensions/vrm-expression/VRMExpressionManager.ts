@@ -11,10 +11,10 @@ import {
 
 export class VRMExpressionManager {
   public managerName: ExtensionManagerNameType;
-  public blinkExpressionNames: VRMBlinkExpressionNameType[];
-  public lookAtExpressionNames: VRMLookAtExpressionNameType[];
-  public mouthExpressionNames: VRMMouthExpressionNameType[];
-  public emotionExpressionNames: VRMEmotionExpressionNameType[];
+  public blinkExpressionNames: Set<VRMBlinkExpressionNameType>;
+  public lookAtExpressionNames: Set<VRMLookAtExpressionNameType>;
+  public mouthExpressionNames: Set<VRMMouthExpressionNameType>;
+  public emotionExpressionNames: Set<VRMEmotionExpressionNameType>;
 
   private _expressions: VRMExpression[];
   private _expressionMap: { [name: string]: VRMExpression };
@@ -25,10 +25,17 @@ export class VRMExpressionManager {
 
   constructor() {
     this.managerName = 'expression';
-    this.blinkExpressionNames = ['blink', 'blinkLeft', 'blinkRight'];
-    this.lookAtExpressionNames = ['lookLeft', 'lookRight', 'lookUp', 'lookDown'];
-    this.mouthExpressionNames = ['aa', 'ee', 'ih', 'oh', 'ou'];
-    this.emotionExpressionNames = ['neutral', 'happy', 'angry', 'sad', 'relaxed', 'surprised'];
+    this.blinkExpressionNames = new Set(['blink', 'blinkLeft', 'blinkRight']);
+    this.lookAtExpressionNames = new Set(['lookLeft', 'lookRight', 'lookUp', 'lookDown']);
+    this.mouthExpressionNames = new Set(['aa', 'ee', 'ih', 'oh', 'ou']);
+    this.emotionExpressionNames = new Set([
+      'neutral',
+      'happy',
+      'angry',
+      'sad',
+      'relaxed',
+      'surprised',
+    ]);
 
     this._expressions = [];
     this._expressionMap = {};
@@ -148,12 +155,6 @@ export class VRMExpressionManager {
     });
   }
 
-  updateBlendShape(dt: number) {
-    this._expressions.forEach((expression) => {
-      expression.updateBlendShape(dt);
-    });
-  }
-
   clearAllAppliedWeight(isAllToZero?: boolean) {
     this._expressions.forEach((expression) => {
       expression.clearAppliedWeight(isAllToZero);
@@ -161,7 +162,9 @@ export class VRMExpressionManager {
   }
 
   update(dt: number) {
-    this.updateBlendShape(dt);
+    for (const expression of this._expressions) {
+      expression.updateBlendShape(dt);
+    }
 
     const weightMultipliers = this._calculateWeightMultipliers();
     // Reset expression binds first
@@ -170,19 +173,19 @@ export class VRMExpressionManager {
     this.isBackToBlink = true;
 
     // Then apply binds
-    this._expressions.forEach((expression) => {
+    for (const expression of this._expressions) {
       let multiplier = 1.0;
       const name = expression.expressionName;
 
-      if (this.blinkExpressionNames.indexOf(name as VRMBlinkExpressionNameType) !== -1) {
+      if (this.blinkExpressionNames.has(name as VRMBlinkExpressionNameType)) {
         multiplier *= weightMultipliers.blink;
       }
 
-      if (this.lookAtExpressionNames.indexOf(name as VRMLookAtExpressionNameType) !== -1) {
+      if (this.lookAtExpressionNames.has(name as VRMLookAtExpressionNameType)) {
         multiplier *= weightMultipliers.lookAt;
       }
 
-      if (this.mouthExpressionNames.indexOf(name as VRMMouthExpressionNameType) !== -1) {
+      if (this.mouthExpressionNames.has(name as VRMMouthExpressionNameType)) {
         multiplier *= weightMultipliers.mouth;
       }
 
@@ -191,7 +194,7 @@ export class VRMExpressionManager {
       if (expression.weight !== 0) {
         this.isBackToBlink = false;
       }
-    });
+    }
   }
 
   /**

@@ -17,20 +17,3 @@ export const collectMeshInstances = (entity: pc.Entity) => {
   }
   return meshInstances;
 };
-
-export function traverseAncestorsFromRoot(
-  object: pc.GraphNode,
-  callback: (ancestor: pc.GraphNode) => void,
-) {
-  const ancestors = [];
-
-  let head = object;
-  while (head !== null) {
-    ancestors.unshift(head);
-    head = head.parent;
-  }
-
-  ancestors.forEach((ancestor) => {
-    callback(ancestor);
-  });
-}

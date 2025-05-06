@@ -1,4 +1,3 @@
-import { traverseAncestorsFromRoot } from '../../entity-utils';
 import { ExtensionManagerNameType } from '../extensions';
 import { VRMSpringBoneJoint } from './VRMSpringBoneJoint';
 
@@ -6,11 +5,19 @@ export class VRMSpringBoneManager {
   public managerName: ExtensionManagerNameType;
   private _joints = new Set<VRMSpringBoneJoint>();
   private _objectSpringBonesMap = new Map<pc.GraphNode, Set<VRMSpringBoneJoint>>();
+  private _ancestorPathCache = new Map<pc.GraphNode, pc.GraphNode[]>();
 
   public direction: number;
   public strength: number;
   public limitHeight: number;
   public limitLow: number;
+  private _dt: number = 0;
+
+  private _updateSpringBoneCallback: (springBone: VRMSpringBoneJoint) => void;
+
+  private _springBonesTried = new Set<string>();
+  private _springBonesDone = new Set<string>();
+  private _dependenciesCache = new Map<VRMSpringBoneJoint, Set<pc.GraphNode>>();
 
   constructor() {
     this.managerName = 'springBone';
@@ -22,6 +29,10 @@ export class VRMSpringBoneManager {
     this.strength = 0.1;
     this.limitHeight = 0.2;
     this.limitLow = 0;
+
+    this._updateSpringBoneCallback = (springBone: VRMSpringBoneJoint) => {
+      springBone.update(this._dt, this.strength);
+    };
   }
 
   get joints() {
@@ -41,41 +52,33 @@ export class VRMSpringBoneManager {
   }
 
   setInitState() {
-    const springBonesTried = new Set<VRMSpringBoneJoint>();
-    const springBonesDone = new Set<VRMSpringBoneJoint>();
-    const objectUpdated = new Set<pc.GraphNode>();
+    this._springBonesTried.clear();
+    this._springBonesDone.clear();
+    const callback = (springBone: VRMSpringBoneJoint) => {
+      springBone.setInitState();
+    };
 
     for (const springBone of this._joints) {
-      this._processSpringBone(
-        springBone,
-        springBonesTried,
-        springBonesDone,
-        objectUpdated,
-        (springBone: VRMSpringBoneJoint) => springBone.setInitState(),
-      );
+      this._processSpringBone(springBone, callback);
     }
   }
 
   reset() {
-    const springBonesTried = new Set<VRMSpringBoneJoint>();
-    const springBonesDone = new Set<VRMSpringBoneJoint>();
-    const objectUpdated = new Set<pc.GraphNode>();
+    this._springBonesTried.clear();
+    this._springBonesDone.clear();
+    const callback = (springBone: VRMSpringBoneJoint) => {
+      springBone.reset();
+    };
 
     for (const springBone of this._joints) {
-      this._processSpringBone(
-        springBone,
-        springBonesTried,
-        springBonesDone,
-        objectUpdated,
-        (springBone: VRMSpringBoneJoint) => springBone.reset(),
-      );
+      this._processSpringBone(springBone, callback);
     }
   }
 
   update(dt: number, isWalking?: boolean) {
-    const springBonesTried = new Set<VRMSpringBoneJoint>();
-    const springBonesDone = new Set<VRMSpringBoneJoint>();
-    const objectUpdated = new Set<pc.GraphNode>();
+    this._springBonesTried.clear();
+    this._springBonesDone.clear();
+    this._dt = dt;
 
     if (isWalking) {
       if (this.strength >= this.limitHeight) {
@@ -84,7 +87,6 @@ export class VRMSpringBoneManager {
       } else if (this.strength <= this.limitLow) {
         this.direction = 0.2;
         this.limitLow = Math.random() * 0.2;
-        // this.limitLow = Math.random() * (0.2 - 0.1) + 0.1;
       }
 
       this.strength += this.direction * dt;
@@ -95,66 +97,66 @@ export class VRMSpringBoneManager {
     }
 
     for (const springBone of this._joints) {
-      this._processSpringBone(
-        springBone,
-        springBonesTried,
-        springBonesDone,
-        objectUpdated,
-        (springBone: VRMSpringBoneJoint) => {
-          springBone.update(dt, this.strength);
-        },
-      );
+      this._processSpringBone(springBone, this._updateSpringBoneCallback);
     }
   }
 
   _processSpringBone(
     springBone: VRMSpringBoneJoint,
-    springBonesTried: Set<VRMSpringBoneJoint>,
-    springBonesDone: Set<VRMSpringBoneJoint>,
-    objectUpdated: Set<pc.GraphNode>,
     callback: (springBone: VRMSpringBoneJoint) => void,
   ) {
-    if (springBonesDone.has(springBone)) {
+    if (this._springBonesDone.has(springBone.id)) {
       return;
     }
 
-    if (springBonesTried.has(springBone)) {
-      throw new Error(
-        'VRMSpringBoneManager: Circular dependency detected while updating springbones',
-      );
+    if (this._springBonesTried.has(springBone.id)) {
+      return;
     }
-    springBonesTried.add(springBone);
+
+    this._springBonesTried.add(springBone.id);
+    this._ancestorPathCache;
     const depObjects = this._getDependencies(springBone);
 
     for (const depObject of depObjects) {
-      traverseAncestorsFromRoot(depObject, (depObjectAncestor: pc.GraphNode) => {
-        const objectSet = this._objectSpringBonesMap.get(depObjectAncestor);
+      let ancestorPath: pc.GraphNode[];
+
+      if (this._ancestorPathCache.has(depObject)) {
+        ancestorPath = this._ancestorPathCache.get(depObject)!;
+      } else {
+        ancestorPath = [];
+        let head = depObject;
+        while (head !== null) {
+          ancestorPath.push(head);
+          head = head.parent;
+        }
+        ancestorPath.reverse();
+        this._ancestorPathCache.set(depObject, ancestorPath);
+      }
+
+      for (let i = 0; i < ancestorPath.length; i++) {
+        const ancestor = ancestorPath[i];
+        const objectSet = this._objectSpringBonesMap.get(ancestor);
 
         if (objectSet) {
           for (const depSpringBone of objectSet) {
-            this._processSpringBone(
-              depSpringBone,
-              springBonesTried,
-              springBonesDone,
-              objectUpdated,
-              callback,
-            );
+            if (!this._springBonesDone.has(depSpringBone.id)) {
+              this._processSpringBone(depSpringBone, callback);
+            }
           }
-        } else if (!objectUpdated.has(depObjectAncestor)) {
-          objectUpdated.add(depObjectAncestor);
         }
-      });
+      }
     }
 
     callback(springBone);
-
-    objectUpdated.add(springBone.bone);
-
-    springBonesDone.add(springBone);
+    this._springBonesDone.add(springBone.id);
   }
 
   // Return a set of objects that are dependant of given spring bone.
   _getDependencies(springBone: VRMSpringBoneJoint) {
+    if (this._dependenciesCache.has(springBone)) {
+      return this._dependenciesCache.get(springBone)!;
+    }
+
     const set = new Set<pc.GraphNode>();
 
     const parent = springBone.bone.parent;
@@ -162,12 +164,19 @@ export class VRMSpringBoneManager {
       set.add(parent);
     }
 
-    springBone.colliderGroups?.forEach((colliderGroup) => {
-      colliderGroup.colliders.forEach((collider) => {
-        set.add(collider);
-      });
-    });
+    if (springBone.colliderGroups) {
+      for (let i = 0; i < springBone.colliderGroups.length; i++) {
+        const colliderGroup = springBone.colliderGroups[i];
+        const colliders = colliderGroup.colliders;
 
+        for (let j = 0; j < colliders.length; j++) {
+          const collider = colliders[j];
+          set.add(collider);
+        }
+      }
+    }
+
+    this._dependenciesCache.set(springBone, set);
     return set;
   }
 }

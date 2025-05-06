@@ -1109,7 +1109,7 @@ class Matrix4InverseCache {
   get inverse() {
     if (this._shouldUpdateInverse) {
       this._inverseCache.copy(this.matrix);
-      mat4InvertCompat(this._pcRef, this._inverseCache);
+      mat4InvertCompat(this._inverseCache);
       this._shouldUpdateInverse = false;
     }
     return this._inverseCache;
@@ -1118,13 +1118,8 @@ class Matrix4InverseCache {
     this.matrix.set(Array.from(this._originalElements));
   }
 }
-function mat4InvertCompat(pcRef, target) {
-  const _matA = new pcRef.Mat4();
-  if (target.invert) {
-    target.invert();
-  } else {
-    target.getInverse(_matA.copy(target));
-  }
+function mat4InvertCompat(target) {
+  target.invert();
   return target;
 }
 function setFromUnitVectors(quat, vFrom, vTo) {
@@ -1153,10 +1148,17 @@ function setFromUnitVectors(quat, vFrom, vTo) {
 class VRMExpressionManager {
   constructor() {
     this.managerName = "expression";
-    this.blinkExpressionNames = ["blink", "blinkLeft", "blinkRight"];
-    this.lookAtExpressionNames = ["lookLeft", "lookRight", "lookUp", "lookDown"];
-    this.mouthExpressionNames = ["aa", "ee", "ih", "oh", "ou"];
-    this.emotionExpressionNames = ["neutral", "happy", "angry", "sad", "relaxed", "surprised"];
+    this.blinkExpressionNames = /* @__PURE__ */ new Set(["blink", "blinkLeft", "blinkRight"]);
+    this.lookAtExpressionNames = /* @__PURE__ */ new Set(["lookLeft", "lookRight", "lookUp", "lookDown"]);
+    this.mouthExpressionNames = /* @__PURE__ */ new Set(["aa", "ee", "ih", "oh", "ou"]);
+    this.emotionExpressionNames = /* @__PURE__ */ new Set([
+      "neutral",
+      "happy",
+      "angry",
+      "sad",
+      "relaxed",
+      "surprised"
+    ]);
     this._expressions = [];
     this._expressionMap = {};
     this.talkExpressions = [];
@@ -1252,38 +1254,35 @@ class VRMExpressionManager {
         expression.stop();
     });
   }
-  updateBlendShape(dt) {
-    this._expressions.forEach((expression) => {
-      expression.updateBlendShape(dt);
-    });
-  }
   clearAllAppliedWeight(isAllToZero) {
     this._expressions.forEach((expression) => {
       expression.clearAppliedWeight(isAllToZero);
     });
   }
   update(dt) {
-    this.updateBlendShape(dt);
+    for (const expression of this._expressions) {
+      expression.updateBlendShape(dt);
+    }
     const weightMultipliers = this._calculateWeightMultipliers();
     this.clearAllAppliedWeight();
     this.isBackToBlink = true;
-    this._expressions.forEach((expression) => {
+    for (const expression of this._expressions) {
       let multiplier = 1;
       const name = expression.expressionName;
-      if (this.blinkExpressionNames.indexOf(name) !== -1) {
+      if (this.blinkExpressionNames.has(name)) {
         multiplier *= weightMultipliers.blink;
       }
-      if (this.lookAtExpressionNames.indexOf(name) !== -1) {
+      if (this.lookAtExpressionNames.has(name)) {
         multiplier *= weightMultipliers.lookAt;
       }
-      if (this.mouthExpressionNames.indexOf(name) !== -1) {
+      if (this.mouthExpressionNames.has(name)) {
         multiplier *= weightMultipliers.mouth;
       }
       expression.applyWeight({ multiplier });
       if (expression.weight !== 0) {
         this.isBackToBlink = false;
       }
-    });
+    }
   }
   /**
    * Calculate sum of override amounts to see how much we should multiply weights of certain expressions.
@@ -1403,6 +1402,16 @@ class VRMExpression {
   play() {
     this.isPausing = false;
   }
+  _findTimeIndex(time, times) {
+    if (time < times[1])
+      return 0;
+    for (let i = 1; i < times.length - 1; i++) {
+      if (times[i - 1] < time && times[i + 1] > time) {
+        return i;
+      }
+    }
+    return -1;
+  }
   updateBlendShape(dt) {
     if (!this._animatedMorph || this.isPausing)
       return;
@@ -1418,9 +1427,7 @@ class VRMExpression {
       return;
     }
     this.time += dt;
-    const timeIndex = this.time < times[1] ? 0 : times.findIndex(
-      (_, index) => times[index - 1] < this.time && times[index + 1] > this.time
-    );
+    const timeIndex = this._findTimeIndex(this.time, times);
     if (timeIndex !== -1) {
       if (this.currentTimeIndex !== timeIndex) {
         this.currentValue = values[timeIndex];
@@ -1641,17 +1648,6 @@ const collectMeshInstances = (entity) => {
   }
   return meshInstances;
 };
-function traverseAncestorsFromRoot(object, callback) {
-  const ancestors = [];
-  let head = object;
-  while (head !== null) {
-    ancestors.unshift(head);
-    head = head.parent;
-  }
-  ancestors.forEach((ancestor) => {
-    callback(ancestor);
-  });
-}
 const importScript$2 = (pcRef) => {
   class VrmExpression2 extends pcRef.ScriptType {
     constructor() {
@@ -1819,6 +1815,11 @@ class VRMSpringBoneManager {
   constructor() {
     this._joints = /* @__PURE__ */ new Set();
     this._objectSpringBonesMap = /* @__PURE__ */ new Map();
+    this._ancestorPathCache = /* @__PURE__ */ new Map();
+    this._dt = 0;
+    this._springBonesTried = /* @__PURE__ */ new Set();
+    this._springBonesDone = /* @__PURE__ */ new Set();
+    this._dependenciesCache = /* @__PURE__ */ new Map();
     this.managerName = "springBone";
     this._joints = /* @__PURE__ */ new Set();
     this._objectSpringBonesMap = /* @__PURE__ */ new Map();
@@ -1826,6 +1827,9 @@ class VRMSpringBoneManager {
     this.strength = 0.1;
     this.limitHeight = 0.2;
     this.limitLow = 0;
+    this._updateSpringBoneCallback = (springBone) => {
+      springBone.update(this._dt, this.strength);
+    };
   }
   get joints() {
     return this._joints;
@@ -1840,37 +1844,29 @@ class VRMSpringBoneManager {
     objectSet.add(joint);
   }
   setInitState() {
-    const springBonesTried = /* @__PURE__ */ new Set();
-    const springBonesDone = /* @__PURE__ */ new Set();
-    const objectUpdated = /* @__PURE__ */ new Set();
+    this._springBonesTried.clear();
+    this._springBonesDone.clear();
+    const callback = (springBone) => {
+      springBone.setInitState();
+    };
     for (const springBone of this._joints) {
-      this._processSpringBone(
-        springBone,
-        springBonesTried,
-        springBonesDone,
-        objectUpdated,
-        (springBone2) => springBone2.setInitState()
-      );
+      this._processSpringBone(springBone, callback);
     }
   }
   reset() {
-    const springBonesTried = /* @__PURE__ */ new Set();
-    const springBonesDone = /* @__PURE__ */ new Set();
-    const objectUpdated = /* @__PURE__ */ new Set();
+    this._springBonesTried.clear();
+    this._springBonesDone.clear();
+    const callback = (springBone) => {
+      springBone.reset();
+    };
     for (const springBone of this._joints) {
-      this._processSpringBone(
-        springBone,
-        springBonesTried,
-        springBonesDone,
-        objectUpdated,
-        (springBone2) => springBone2.reset()
-      );
+      this._processSpringBone(springBone, callback);
     }
   }
   update(dt, isWalking) {
-    const springBonesTried = /* @__PURE__ */ new Set();
-    const springBonesDone = /* @__PURE__ */ new Set();
-    const objectUpdated = /* @__PURE__ */ new Set();
+    this._springBonesTried.clear();
+    this._springBonesDone.clear();
+    this._dt = dt;
     if (isWalking) {
       if (this.strength >= this.limitHeight) {
         this.direction = -0.2;
@@ -1886,63 +1882,69 @@ class VRMSpringBoneManager {
       }
     }
     for (const springBone of this._joints) {
-      this._processSpringBone(
-        springBone,
-        springBonesTried,
-        springBonesDone,
-        objectUpdated,
-        (springBone2) => {
-          springBone2.update(dt, this.strength);
-        }
-      );
+      this._processSpringBone(springBone, this._updateSpringBoneCallback);
     }
   }
-  _processSpringBone(springBone, springBonesTried, springBonesDone, objectUpdated, callback) {
-    if (springBonesDone.has(springBone)) {
+  _processSpringBone(springBone, callback) {
+    if (this._springBonesDone.has(springBone.id)) {
       return;
     }
-    if (springBonesTried.has(springBone)) {
-      throw new Error(
-        "VRMSpringBoneManager: Circular dependency detected while updating springbones"
-      );
+    if (this._springBonesTried.has(springBone.id)) {
+      return;
     }
-    springBonesTried.add(springBone);
+    this._springBonesTried.add(springBone.id);
+    this._ancestorPathCache;
     const depObjects = this._getDependencies(springBone);
     for (const depObject of depObjects) {
-      traverseAncestorsFromRoot(depObject, (depObjectAncestor) => {
-        const objectSet = this._objectSpringBonesMap.get(depObjectAncestor);
+      let ancestorPath;
+      if (this._ancestorPathCache.has(depObject)) {
+        ancestorPath = this._ancestorPathCache.get(depObject);
+      } else {
+        ancestorPath = [];
+        let head = depObject;
+        while (head !== null) {
+          ancestorPath.push(head);
+          head = head.parent;
+        }
+        ancestorPath.reverse();
+        this._ancestorPathCache.set(depObject, ancestorPath);
+      }
+      for (let i = 0; i < ancestorPath.length; i++) {
+        const ancestor = ancestorPath[i];
+        const objectSet = this._objectSpringBonesMap.get(ancestor);
         if (objectSet) {
           for (const depSpringBone of objectSet) {
-            this._processSpringBone(
-              depSpringBone,
-              springBonesTried,
-              springBonesDone,
-              objectUpdated,
-              callback
-            );
+            if (!this._springBonesDone.has(depSpringBone.id)) {
+              this._processSpringBone(depSpringBone, callback);
+            }
           }
-        } else if (!objectUpdated.has(depObjectAncestor)) {
-          objectUpdated.add(depObjectAncestor);
         }
-      });
+      }
     }
     callback(springBone);
-    objectUpdated.add(springBone.bone);
-    springBonesDone.add(springBone);
+    this._springBonesDone.add(springBone.id);
   }
   // Return a set of objects that are dependant of given spring bone.
   _getDependencies(springBone) {
-    var _a;
+    if (this._dependenciesCache.has(springBone)) {
+      return this._dependenciesCache.get(springBone);
+    }
     const set = /* @__PURE__ */ new Set();
     const parent = springBone.bone.parent;
     if (parent) {
       set.add(parent);
     }
-    (_a = springBone.colliderGroups) == null ? void 0 : _a.forEach((colliderGroup) => {
-      colliderGroup.colliders.forEach((collider) => {
-        set.add(collider);
-      });
-    });
+    if (springBone.colliderGroups) {
+      for (let i = 0; i < springBone.colliderGroups.length; i++) {
+        const colliderGroup = springBone.colliderGroups[i];
+        const colliders = colliderGroup.colliders;
+        for (let j = 0; j < colliders.length; j++) {
+          const collider = colliders[j];
+          set.add(collider);
+        }
+      }
+    }
+    this._dependenciesCache.set(springBone, set);
     return set;
   }
 }
@@ -1954,8 +1956,8 @@ class VRMSpringBoneColliderShapeSphere {
   get type() {
     return "sphere";
   }
-  calculateCollision(colliderMatrix, objectPosition, objectRadius, target) {
-    target.copy(this.offset).copy(colliderMatrix.transformPoint(target));
+  calculateCollision(colliderMatrix, objectPosition, objectRadius, target, reference) {
+    target.copy(this.offset).copy(colliderMatrix.transformPoint(target, reference));
     target.mulScalar(-1).add(objectPosition);
     const radius = objectRadius + this.radius;
     const distance = target.length() - radius;
@@ -1982,9 +1984,9 @@ class VRMSpringBoneColliderShapeCapsule {
   get type() {
     return "capsule";
   }
-  calculateCollision(colliderMatrix, objectPosition, objectRadius, target) {
-    this._v3A.copy(this.offset).copy(colliderMatrix.transformPoint(this._v3A));
-    this._v3B.copy(this.tail).copy(colliderMatrix.transformPoint(this._v3B));
+  calculateCollision(colliderMatrix, objectPosition, objectRadius, target, reference) {
+    this._v3A.copy(this.offset).copy(colliderMatrix.transformPoint(this._v3A, reference));
+    this._v3B.copy(this.tail).copy(colliderMatrix.transformPoint(this._v3B, reference));
     this._v3B.sub(this._v3A);
     const lengthSqCapsule = this._v3B.lengthSq();
     target.copy(objectPosition).sub(this._v3A);
@@ -2006,13 +2008,16 @@ class VRMSpringBoneColliderShapeCapsule {
 class VRMSpringBoneJoint {
   constructor(pcRef, bone, child, settings = {}, colliderGroups = []) {
     var _a;
+    this.id = crypto.randomUUID();
     this._center = null;
     this._worldSpaceBoneLength = 0;
     this._pcRef = pcRef;
     this._v3A = new this._pcRef.Vec3();
     this._v3B = new this._pcRef.Vec3();
+    this._v3C = new this._pcRef.Vec3();
     this._nextTail = new this._pcRef.Vec3();
     this._quatA = new this._pcRef.Quat();
+    this._quatB = new this._pcRef.Quat();
     this._matA = new this._pcRef.Mat4();
     this._matB = new this._pcRef.Mat4();
     this._identityMat4 = new this._pcRef.Mat4();
@@ -2093,21 +2098,19 @@ class VRMSpringBoneJoint {
   update(dt, strength) {
     if (dt <= 0)
       return;
-    this._worldSpacePosition.copy(
-      this.bone.getWorldTransform().getTranslation(new this._pcRef.Vec3())
-    );
+    this._worldSpacePosition.copy(this.bone.getWorldTransform().getTranslation(this._v3A));
     let matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
     this._matrixWorldToCenterTranslation.set(0, 0, 0);
     matrixWorldToCenter.getTranslation(this._matrixWorldToCenterTranslation);
     this._centerSpacePosition.copy(this._worldSpacePosition).add(this._matrixWorldToCenterTranslation);
     const quatWorldToCenter = this._quatA.setFromMat4(matrixWorldToCenter);
     const centerSpaceParentMatrix = this._matB.copy(matrixWorldToCenter).mul(this._parentMatrixWorld);
-    const centerSpaceBoneAxis = this._v3B.copy(this._boneAxis).copy(this._initialLocalMatrix.transformPoint(this._v3B)).copy(centerSpaceParentMatrix.transformPoint(this._v3B)).sub(this._centerSpacePosition).normalize();
-    const centerSpaceGravity = this._v3A.copy(this.settings.gravityDir).copy(quatWorldToCenter.transformVector(this._v3A)).normalize();
+    const centerSpaceBoneAxis = this._v3B.copy(this._boneAxis).copy(this._initialLocalMatrix.transformPoint(this._v3B, this._v3A)).copy(centerSpaceParentMatrix.transformPoint(this._v3B, this._v3A)).sub(this._centerSpacePosition).normalize();
+    const centerSpaceGravity = this._v3A.copy(this.settings.gravityDir).copy(quatWorldToCenter.transformVector(this._v3A, this._v3C)).normalize();
     const matrixCenterToWorld = this._getMatrixCenterToWorld(this._matA);
     this._nextTail.copy(this._currentTail).add(
       this._v3A.copy(this._currentTail).sub(this._prevTail).mulScalar(1 - this.settings.dragForce)
-    ).add(this._v3A.copy(centerSpaceBoneAxis).mulScalar(this.settings.stiffness * dt)).add(this._v3A.copy(centerSpaceGravity).mulScalar(this.settings.gravityPower * dt)).copy(matrixCenterToWorld.transformPoint(this._nextTail));
+    ).add(this._v3A.copy(centerSpaceBoneAxis).mulScalar(this.settings.stiffness * dt)).add(this._v3A.copy(centerSpaceGravity).mulScalar(this.settings.gravityPower * dt)).copy(matrixCenterToWorld.transformPoint(this._nextTail, this._v3C));
     this._nextTail.sub(this._worldSpacePosition).normalize().mulScalar(this._worldSpaceBoneLength).add(this._worldSpacePosition);
     const compareTransform = this._v3A.copy(this._nextTail).sub(this._currentTail).mulScalar(0.2);
     this._nextTail.sub(this._v3A.set(0, compareTransform.y, 0));
@@ -2115,20 +2118,19 @@ class VRMSpringBoneJoint {
     matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
     this._prevTail.copy(this._currentTail);
     this._currentTail.copy(
-      this._v3A.copy(this._nextTail).copy(matrixWorldToCenter.transformPoint(this._v3A))
+      this._v3A.copy(this._nextTail).copy(matrixWorldToCenter.transformPoint(this._v3A, this._v3B))
     );
     const worldSpaceInitialMatrixInv = mat4InvertCompat(
-      this._pcRef,
       this._matA.copy(this._parentMatrixWorld).mul(this._initialLocalMatrix)
     );
     const applyRotation = setFromUnitVectors(
       this._quatA,
       this._boneAxis,
-      this._v3A.copy(this._nextTail).copy(worldSpaceInitialMatrixInv.transformPoint(this._v3A)).normalize()
+      this._v3A.copy(this._nextTail).copy(worldSpaceInitialMatrixInv.transformPoint(this._v3A, this._v3B)).normalize()
     );
     const angles = applyRotation.getEulerAngles();
     applyRotation.setFromEulerAngles(angles.x * strength, angles.y * strength, angles.z * strength);
-    const rotation = this._initialLocalRotation.clone().mul(applyRotation);
+    const rotation = this._quatB.copy(this._initialLocalRotation).mul(applyRotation);
     this.bone.setLocalRotation(rotation);
   }
   _getMatrixCenterToWorld(target) {
@@ -2150,21 +2152,26 @@ class VRMSpringBoneJoint {
     return target;
   }
   _collision(tail) {
-    var _a;
-    (_a = this.colliderGroups) == null ? void 0 : _a.forEach((colliderGroup) => {
-      colliderGroup.colliders.forEach((collider) => {
+    if (!this.colliderGroups)
+      return;
+    for (let i = 0; i < this.colliderGroups.length; i++) {
+      const colliderGroup = this.colliderGroups[i];
+      const colliders = colliderGroup.colliders;
+      for (let j = 0; j < colliders.length; j++) {
+        const collider = colliders[j];
         const dist = collider.shape.calculateCollision(
           collider.getWorldTransform(),
           tail,
           this.settings.hitRadius,
-          this._v3A
+          this._v3A,
+          this._v3B
         );
         if (dist < 0) {
           tail.add(this._v3A.mulScalar(-dist));
           tail.sub(this._worldSpacePosition).normalize().mulScalar(this._worldSpaceBoneLength).add(this._worldSpacePosition);
         }
-      });
-    });
+      }
+    }
   }
 }
 const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {

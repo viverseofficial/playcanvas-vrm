@@ -73,7 +73,7 @@ export class Matrix4InverseCache {
   get inverse() {
     if (this._shouldUpdateInverse) {
       this._inverseCache.copy(this.matrix);
-      mat4InvertCompat(this._pcRef, this._inverseCache);
+      mat4InvertCompat(this._inverseCache);
       this._shouldUpdateInverse = false;
     }
 
@@ -85,14 +85,8 @@ export class Matrix4InverseCache {
   }
 }
 
-export function mat4InvertCompat<T extends pc.Mat4>(pcRef: typeof pc, target: T): T {
-  const _matA = new pcRef.Mat4();
-
-  if (target.invert) {
-    target.invert();
-  } else {
-    (target as any).getInverse(_matA.copy(target));
-  }
+export function mat4InvertCompat<T extends pc.Mat4>(target: T): T {
+  target.invert();
   return target;
 }
 

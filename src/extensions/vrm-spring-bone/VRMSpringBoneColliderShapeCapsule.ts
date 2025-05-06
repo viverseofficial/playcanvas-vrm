@@ -24,9 +24,10 @@ export class VRMSpringBoneColliderShapeCapsule {
     objectPosition: pc.Vec3,
     objectRadius: number,
     target: pc.Vec3,
+    reference: pc.Vec3,
   ) {
-    this._v3A.copy(this.offset).copy(colliderMatrix.transformPoint(this._v3A)); // transformed head
-    this._v3B.copy(this.tail).copy(colliderMatrix.transformPoint(this._v3B)); // transformed tail
+    this._v3A.copy(this.offset).copy(colliderMatrix.transformPoint(this._v3A, reference)); // transformed head
+    this._v3B.copy(this.tail).copy(colliderMatrix.transformPoint(this._v3B, reference)); // transformed tail
     this._v3B.sub(this._v3A); // from head to tail
     const lengthSqCapsule = this._v3B.lengthSq();
 

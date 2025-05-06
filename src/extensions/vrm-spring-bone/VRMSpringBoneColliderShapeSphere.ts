@@ -18,8 +18,9 @@ export class VRMSpringBoneColliderShapeSphere {
     objectPosition: pc.Vec3,
     objectRadius: number,
     target: pc.Vec3,
+    reference: pc.Vec3,
   ) {
-    target.copy(this.offset).copy(colliderMatrix.transformPoint(target)); // transformed offset
+    target.copy(this.offset).copy(colliderMatrix.transformPoint(target, reference)); // transformed offset
     target.mulScalar(-1).add(objectPosition); // a vector from collider center to object position
     const radius = objectRadius + this.radius;
     const distance = target.length() - radius;

@@ -155,6 +155,18 @@ export class VRMExpression {
     this.isPausing = false;
   }
 
+  _findTimeIndex(time: number, times: number[] | Float32Array) {
+    if (time < times[1]) return 0;
+
+    for (let i = 1; i < times.length - 1; i++) {
+      if (times[i - 1] < time && times[i + 1] > time) {
+        return i;
+      }
+    }
+
+    return -1;
+  }
+
   updateBlendShape(dt: number) {
     if (!this._animatedMorph || this.isPausing) return;
 
@@ -177,12 +189,7 @@ export class VRMExpression {
     }
 
     this.time += dt;
-    const timeIndex =
-      this.time < times[1]
-        ? 0
-        : times.findIndex(
-            (_, index) => times[index - 1] < this.time && times[index + 1] > this.time,
-          );
+    const timeIndex = this._findTimeIndex(this.time, times);
 
     if (timeIndex !== -1) {
       if (this.currentTimeIndex !== timeIndex) {
