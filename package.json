@@ -1,7 +1,7 @@
 {
   "name": "playcanvas-vrm",
   "private": true,
-  "version": "1.5.3",
+  "version": "1.5.4",
   "type": "module",
   "scripts": {
     "watch": "nodemon --watch src --ext '*' --exec 'DEV_MODE=true pnpm build' --verbose",
