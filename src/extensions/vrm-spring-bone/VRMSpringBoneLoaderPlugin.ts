@@ -3,12 +3,12 @@ import { POSSIBLE_SPEC_VERSIONS } from '../vrm-map-list';
 import { fromArray } from '../../math-utils';
 import { VRMSpringBoneManager } from './VRMSpringBoneManager';
 import { VRMSpringBoneColliderShapeSphere } from './VRMSpringBoneColliderShapeSphere';
-import { createVRMSpringBoneCollider } from './VRMSpringBoneCollider';
 import { VRMSpringBoneColliderShapeCapsule } from './VRMSpringBoneColliderShapeCapsule';
 import { VRMSpringBoneJoint } from './VRMSpringBoneJoint';
 import type * as V1SpringBoneSchema from '../../types/types-vrmc-springbone-1.0';
 import type * as V0VRM from '../../types/types-vrm-0.0';
 import { VRMSpringBoneJointSettings, VRMSpringBoneColliderGroup } from './vrm-spring-bone';
+import { createVRMSpringBoneCollider } from './VRMSpringBoneCollider';
 
 export class VRMSpringBoneLoaderPlugin {
   static EXTENSION_NAME = 'VRMC_springBone';
@@ -322,8 +322,7 @@ export class VRMSpringBoneLoaderPlugin {
     { offset, radius }: { offset: pc.Vec3; radius: number },
   ) {
     const shape = new VRMSpringBoneColliderShapeSphere(this._pcRef, { offset, radius });
-    const VRMSpringBoneCollider = createVRMSpringBoneCollider(this._pcRef);
-    const collider = new VRMSpringBoneCollider(shape);
+    const collider = createVRMSpringBoneCollider(this._pcRef, shape);
     destination.addChild(collider);
 
     return collider;
@@ -338,8 +337,7 @@ export class VRMSpringBoneLoaderPlugin {
       radius,
       tail,
     });
-    const VRMSpringBoneCollider = createVRMSpringBoneCollider(this._pcRef);
-    const collider = new VRMSpringBoneCollider(shape);
+    const collider = createVRMSpringBoneCollider(this._pcRef, shape);
 
     destination.addChild(collider);
     return collider;

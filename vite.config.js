@@ -1,42 +1,47 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import mkcert from 'vite-plugin-mkcert';
-import banner from 'vite-plugin-banner'
-import pkg from './package.json'
-import { viteStaticCopy } from 'vite-plugin-static-copy'
+import banner from 'vite-plugin-banner';
+import pkg from './package.json';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
+import dts from 'vite-plugin-dts';
 
-// For npm typescript version
-// import dts from 'vite-plugin-dts';
+export default defineConfig(() => {
+  const isMinify = process.env.MINIFY_MODE === 'true';
+  const fileName = isMinify ? 'playcanvas-vrm.min' : 'playcanvas-vrm';
 
-const isDevMode = process.env.DEV_MODE === 'true'
-
-export default defineConfig({
-  server: { https: true },
-  plugins: [
-    mkcert(),
-    banner(
-      `/**\n * name: ${pkg.name}\n * version: v${pkg.version}\n */`
-    ),
-    viteStaticCopy({
-      targets: [
-        {
-          src: 'dist/playcanvas-vrm.js',
-          dest: '../examples/project/public'
-        }
-      ]
-    })
-  ],
-  build: {
-    lib: {
-      entry: resolve(__dirname, 'src/index.ts'),
-      name: 'playcanvas-vrm',
-      fileName: 'playcanvas-vrm',
-      formats: ['es'],
+  return {
+    server: { https: true },
+    assetsInclude: ['**/*.dds'],
+    plugins: [
+      !isMinify &&
+        dts({
+          entryRoot: 'src',
+          outputDir: 'dist',
+          exclude: ['examples', 'dist'],
+          rollupTypes: true,
+        }),
+      mkcert(),
+      banner(`/**\n * name: ${pkg.name}\n * version: v${pkg.version}\n */`),
+      viteStaticCopy({
+        targets: [
+          {
+            src: 'dist/playcanvas-vrm.js',
+            dest: '../examples/project/public',
+          },
+        ],
+      }),
+    ],
+    build: {
+      outDir: 'dist',
+      emptyOutDir: !isMinify,
+      minify: isMinify,
+      lib: {
+        entry: resolve(__dirname, 'src/index.ts'),
+        name: 'playcanvas-vrm',
+        fileName: () => `${fileName}.js`,
+        formats: ['es'],
+      },
     },
-    rollupOptions: {
-      external: ['playcanvas'], 
-    },
-    minify: !isDevMode,
-  },
-  assetsInclude: ['**/*.dds'],
+  };
 });

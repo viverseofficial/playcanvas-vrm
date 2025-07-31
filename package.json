@@ -1,29 +1,38 @@
 {
   "name": "playcanvas-vrm",
-  "private": true,
   "version": "1.5.4",
   "type": "module",
+  "files": ["dist"],  
+  "main": "dist/playcanvas-vrm.js",
+  "types": "dist/playcanvas-vrm.d.ts",
   "scripts": {
-    "watch": "nodemon --watch src --ext '*' --exec 'DEV_MODE=true pnpm build' --verbose",
-    "build": "tsc && vite build",
+    "watch": "nodemon --watch src --ext '*' --exec 'MINIFY_MODE=true pnpm build' --verbose",
+    "build": "tsc && pnpm run build:js && pnpm run build:min",
+    "build:js": "vite build",
+    "build:min": "MINIFY_MODE=true vite build",
     "preview": "vite preview"
   },
+  "exports": {
+    ".": {
+      "import": "./dist/playcanvas-vrm.js",
+      "types": "./dist/playcanvas-vrm.d.ts"
+    }
+  },
   "devDependencies": {
-    "@types/playcanvas": "^1.23.0",
     "@typescript-eslint/eslint-plugin": "^7.3.1",
     "@typescript-eslint/parser": "^7.3.1",
     "eslint": "^8.57.0",
     "nodemon": "^3.1.4",
     "prettier": "^3.2.5",
-    "typescript": "^5.2.2",
+    "typescript": "^5.4.2",
     "vite": "^5.1.6",
     "vite-plugin-banner": "^0.7.1",
-    "vite-plugin-dts": "^3.7.3",
+    "vite-plugin-dts": "^4.5.4",
+    "vite-plugin-glsl": "^1.3.0",
     "vite-plugin-mkcert": "^1.17.4",
     "vite-plugin-static-copy": "^1.0.6"
   },
-  "dependencies": {
-    "playcanvas": "^1.73.4",
-    "vite-plugin-glsl": "^1.3.0"
+  "peerDependencies": {
+    "playcanvas": "^1.73.4"
   }
 }

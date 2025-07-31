@@ -34,7 +34,6 @@ export class VRMMtoonLoader {
     renders.forEach((renderComponent) => {
       const render = renderComponent as pc.RenderComponent;
       const meshInstances = render.meshInstances;
-      const VRMCOutlineMaterial = createVRMCMtoonMaterial(this._pcRef);
       meshInstances.forEach((meshInstance) => {
         const material = meshInstance.material as pc.StandardMaterial;
         let shaderMaterial = outlineShaderMaterials.get(material);
@@ -62,7 +61,7 @@ export class VRMMtoonLoader {
             return;
           }
 
-          shaderMaterial = new VRMCOutlineMaterial(this.asset);
+          shaderMaterial = createVRMCMtoonMaterial(this._pcRef, this.asset);
           shaderMaterial.isOutline = true;
           shaderMaterial.copy(material);
           shaderMaterial.name = material.name + '_outline';
@@ -90,7 +89,6 @@ export class VRMMtoonLoader {
   }
 
   private _applyVRMCMtoonShader(entity: pc.Entity, gltf: GLTFSchema.IGLTF) {
-    const VRMCMtoonMaterial = createVRMCMtoonMaterial(this._pcRef);
     const shaderMaterials = new Map<pc.StandardMaterial, any>();
 
     const renders = entity.findComponents('render');
@@ -125,7 +123,7 @@ export class VRMMtoonLoader {
         }
 
         if (!shaderMaterial) {
-          shaderMaterial = new VRMCMtoonMaterial(this.asset);
+          shaderMaterial = createVRMCMtoonMaterial(this._pcRef, this.asset);
           shaderMaterials.set(material, shaderMaterial);
         }
 

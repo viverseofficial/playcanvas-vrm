@@ -17,6 +17,14 @@ export { GLTFLoader } from './helpers/GLTFLoader/GLTFLoader';
 export { RenderStates } from './helpers/RenderStates/RenderStates';
 export { addIndexToNodeTags, getVersion } from './helpers/GLTFLoader/utils/asset-utils';
 
+export type {
+  IAnimationAsset,
+  IAnimationResource,
+} from './extensions/vrm-animation/vrm-animation-interfaces';
+export { VRMHumanoid } from './extensions/vrm-humanoid/VRMHumanoid';
+export { VRMExpressionManager } from './extensions/vrm-expression/VRMExpressionManager';
+export { VRMSpringBoneManager } from './extensions/vrm-spring-bone/VRMSpringBoneManager';
+
 window.VRMLoader = {
   VrmAnimation,
   VrmExpression,

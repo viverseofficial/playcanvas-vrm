@@ -1973,14 +1973,6 @@ class VRMSpringBoneColliderShapeSphere {
     return distance;
   }
 }
-const createVRMSpringBoneCollider = (pcRef) => {
-  return class VRMSpringBoneCollider extends pcRef.Entity {
-    constructor(shape) {
-      super();
-      this.shape = shape;
-    }
-  };
-};
 class VRMSpringBoneColliderShapeCapsule {
   constructor(pcRef, params) {
     this.offset = (params == null ? void 0 : params.offset) ?? new pcRef.Vec3();
@@ -2181,6 +2173,11 @@ class VRMSpringBoneJoint {
       }
     }
   }
+}
+function createVRMSpringBoneCollider(pcRef, shape) {
+  const collider = new pcRef.Entity();
+  collider.shape = shape;
+  return collider;
 }
 const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
   constructor(pcRef, asset, entity) {
@@ -2410,8 +2407,7 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
   }
   _importSphereCollider(destination, { offset, radius }) {
     const shape = new VRMSpringBoneColliderShapeSphere(this._pcRef, { offset, radius });
-    const VRMSpringBoneCollider = createVRMSpringBoneCollider(this._pcRef);
-    const collider = new VRMSpringBoneCollider(shape);
+    const collider = createVRMSpringBoneCollider(this._pcRef, shape);
     destination.addChild(collider);
     return collider;
   }
@@ -2421,8 +2417,7 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
       radius,
       tail
     });
-    const VRMSpringBoneCollider = createVRMSpringBoneCollider(this._pcRef);
-    const collider = new VRMSpringBoneCollider(shape);
+    const collider = createVRMSpringBoneCollider(this._pcRef, shape);
     destination.addChild(collider);
     return collider;
   }
@@ -3531,481 +3526,469 @@ const shaderChunksMtoon = {
   light
 };
 const textureTransformExtensionName = "KHR_texture_transform";
-const createVRMCMtoonMaterial = (pcRef) => {
-  return class VRMCMtoonMaterial extends pcRef.StandardMaterial {
-    constructor(asset) {
-      super();
-      this.isMtoonMaterial = true;
-      this.litFactor = new pcRef.Color(1, 1, 1, 1);
-      this.alphaTest = 0;
-      this.baseColorMap = null;
-      this.mapUvTransform = new pcRef.Mat3();
-      this.normalMapUvTransform = new pcRef.Mat3();
-      this.normalScale = new pcRef.Vec2(1, 1);
-      this.emissiveMapUvTransform = new pcRef.Mat3();
-      this.shadeColorFactor = new pcRef.Color(0, 0, 0, 1);
-      this.shadeMultiplyTexture = null;
-      this.shadeMultiplyTextureUvTransform = new pcRef.Mat3();
-      this.shadingShiftFactor = 0;
-      this.shadingShiftTexture = null;
-      this.shadingShiftTextureUvTransform = new pcRef.Mat3();
-      this.shadingShiftTextureScale = 1;
-      this.shadingToonyFactor = 0.9;
-      this.giEqualizationFactor = 0;
-      this.matcapFactor = new pcRef.Color(1, 1, 1, 1);
-      this.matcapTexture = null;
-      this.matcapTextureUvTransform = new pcRef.Mat3();
-      this.parametricRimColorFactor = new pcRef.Color(0, 0, 0, 1);
-      this.rimMultiplyTexture = null;
-      this.rimMultiplyTextureUvTransform = new pcRef.Mat3();
-      this.rimLightingMixFactor = 0;
-      this.parametricRimFresnelPowerFactor = 5;
-      this.parametricRimLiftFactor = 0;
-      this.uvAnimationMaskTexture = null;
-      this.uvAnimationMaskTextureUvTransform = new pcRef.Mat3();
-      this.uvAnimationScrollXOffset = 0;
-      this.uvAnimationScrollYOffset = 0;
-      this.uvAnimationRotationPhase = 0;
-      this.isOutline = false;
-      this.outlineWidthMode = MToonMaterialOutlineWidthMode.None;
-      this.outlineWidthMultiplyTexture = null;
-      this.outlineWidthMultiplyTextureUvTransform = new pcRef.Mat3();
-      this.outlineWidthFactor = 0.02;
-      this.outlineColorFactor = new pcRef.Color(1, 0.5, 0, 1);
-      this.outlineLightingMixFactor = 0;
-      this.useLighting = false;
-      this._asset = asset;
-      this._vec3A = new pcRef.Vec3();
+function createVRMCMtoonMaterial(pcRef, asset) {
+  const material = new pcRef.StandardMaterial();
+  material.isMtoonMaterial = true;
+  material.litFactor = new pcRef.Color(1, 1, 1, 1);
+  material.alphaTest = 0;
+  material.baseColorMap = null;
+  material.mapUvTransform = new pcRef.Mat3();
+  material.normalMapUvTransform = new pcRef.Mat3();
+  material.normalScale = new pcRef.Vec2(1, 1);
+  material.emissiveMapUvTransform = new pcRef.Mat3();
+  material.shadeColorFactor = new pcRef.Color(0, 0, 0, 1);
+  material.shadeMultiplyTexture = null;
+  material.shadeMultiplyTextureUvTransform = new pcRef.Mat3();
+  material.shadingShiftFactor = 0;
+  material.shadingShiftTexture = null;
+  material.shadingShiftTextureUvTransform = new pcRef.Mat3();
+  material.shadingShiftTextureScale = 1;
+  material.shadingToonyFactor = 0.9;
+  material.giEqualizationFactor = 0;
+  material.matcapFactor = new pcRef.Color(1, 1, 1, 1);
+  material.matcapTexture = null;
+  material.matcapTextureUvTransform = new pcRef.Mat3();
+  material.parametricRimColorFactor = new pcRef.Color(0, 0, 0, 1);
+  material.rimMultiplyTexture = null;
+  material.rimMultiplyTextureUvTransform = new pcRef.Mat3();
+  material.rimLightingMixFactor = 0;
+  material.parametricRimFresnelPowerFactor = 5;
+  material.parametricRimLiftFactor = 0;
+  material.uvAnimationMaskTexture = null;
+  material.uvAnimationMaskTextureUvTransform = new pcRef.Mat3();
+  material.uvAnimationScrollXOffset = 0;
+  material.uvAnimationScrollYOffset = 0;
+  material.uvAnimationRotationPhase = 0;
+  material.isOutline = false;
+  material.outlineWidthMode = MToonMaterialOutlineWidthMode.None;
+  material.outlineWidthMultiplyTexture = null;
+  material.outlineWidthMultiplyTextureUvTransform = new pcRef.Mat3();
+  material.outlineWidthFactor = 0.02;
+  material.outlineColorFactor = new pcRef.Color(1, 0.5, 0, 1);
+  material.outlineLightingMixFactor = 0;
+  material._asset = asset;
+  material._vec3A = new pcRef.Vec3();
+  material.parse = function(gltfMaterial) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u;
+    this.litFactor = this.diffuse;
+    if (gltfMaterial.hasOwnProperty("alphaMode")) {
+      switch (gltfMaterial.alphaMode) {
+        case "MASK":
+          this.blendType = pcRef.BLEND_NONE;
+          if (gltfMaterial.hasOwnProperty("alphaCutoff") && gltfMaterial.alphaCutoff !== void 0) {
+            this.alphaTest = gltfMaterial.alphaCutoff;
+          } else {
+            this.alphaTest = 0.5;
+          }
+          break;
+        case "BLEND":
+          this.blendType = pcRef.BLEND_NORMAL;
+          this.depthWrite = false;
+          break;
+        default:
+        case "OPAQUE":
+          this.blendType = pcRef.BLEND_NONE;
+          break;
+      }
+    } else {
+      this.blendType = pcRef.BLEND_NONE;
     }
-    parse(gltfMaterial) {
-      var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u;
-      this.litFactor = this.diffuse;
-      if (gltfMaterial.hasOwnProperty("alphaMode")) {
-        switch (gltfMaterial.alphaMode) {
-          case "MASK":
-            this.blendType = pcRef.BLEND_NONE;
-            if (gltfMaterial.hasOwnProperty("alphaCutoff") && gltfMaterial.alphaCutoff !== void 0) {
-              this.alphaTest = gltfMaterial.alphaCutoff;
-            } else {
-              this.alphaTest = 0.5;
-            }
-            break;
-          case "BLEND":
-            this.blendType = pcRef.BLEND_NORMAL;
-            this.depthWrite = false;
-            break;
-          default:
-          case "OPAQUE":
-            this.blendType = pcRef.BLEND_NONE;
-            break;
-        }
-      } else {
-        this.blendType = pcRef.BLEND_NONE;
-      }
-      this.baseColorMap = this.diffuseMap || this.emissiveMap;
-      if (this.baseColorMap) {
-        updateTextureMatrix(pcRef, this.mapUvTransform, {
-          offset: [this.diffuseMapOffset.x, this.diffuseMapOffset.y],
-          rotation: this.diffuseMapRotation
-        });
-      }
-      if (this.normalMap) {
-        this.normalScale.set(this.bumpiness, this.bumpiness);
-        updateTextureMatrix(pcRef, this.normalMapUvTransform, {
-          offset: [this.normalDetailMapOffset.x, this.normalDetailMapOffset.y],
-          rotation: this.normalMapRotation
-        });
-      }
-      if (this.emissiveMap) {
-        updateTextureMatrix(pcRef, this.normalMapUvTransform, {
-          offset: [this.emissiveMapOffset.x, this.emissiveMapOffset.y],
-          rotation: this.emissiveMapRotation
-        });
-      }
-      if (gltfMaterial.emissiveFactor) {
-        const emissiveFactor = gltfMaterial.emissiveFactor;
-        this.emissive = new pcRef.Color(
-          emissiveFactor[0],
-          emissiveFactor[1],
-          emissiveFactor[2],
-          1
-        );
-      }
-      if ((_a = gltfMaterial.pbrMetallicRoughness) == null ? void 0 : _a.baseColorFactor) {
-        const baseColorFactor = gltfMaterial.pbrMetallicRoughness.baseColorFactor;
-        this.diffuse = new pcRef.Color(
-          Math.pow(baseColorFactor[0], 1 / 2.2),
-          Math.pow(baseColorFactor[1], 1 / 2.2),
-          Math.pow(baseColorFactor[2], 1 / 2.2),
-          baseColorFactor[3]
-        );
-      }
-      const extension = (_b = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _b[EXTENSION_VRMC_MATERIALS_MTOON];
-      const {
-        shadeColorFactor,
-        shadeMultiplyTexture: shadeMultiplyTextureInfo,
-        shadingShiftFactor,
-        shadingToonyFactor,
-        parametricRimColorFactor,
-        rimLightingMixFactor,
-        parametricRimFresnelPowerFactor,
-        parametricRimLiftFactor,
-        shadingShiftTexture: shadingShiftTextureInfo,
-        giEqualizationFactor,
-        rimMultiplyTexture: rimMultiplyTextureInfo,
-        matcapTexture: matcapTextureInfo,
-        matcapFactor,
-        uvAnimationMaskTexture,
-        outlineWidthFactor,
-        outlineColorFactor,
-        outlineLightingMixFactor,
-        outlineWidthMode,
-        outlineWidthMultiplyTexture: outlineWidthMultiplyTextureInfo,
-        transparentWithZWrite
-      } = extension;
-      if (giEqualizationFactor !== void 0) {
-        this.giEqualizationFactor = giEqualizationFactor;
-      }
-      if (shadeColorFactor) {
-        this.shadeColorFactor = new pcRef.Color(
-          Math.pow(shadeColorFactor[0], 1 / 2.2),
-          Math.pow(shadeColorFactor[1], 1 / 2.2),
-          Math.pow(shadeColorFactor[2], 1 / 2.2),
-          1
-        );
-      }
-      if (shadeMultiplyTextureInfo !== void 0) {
-        const texture = (_e = (_d = (_c = this._asset.resource) == null ? void 0 : _c.textures) == null ? void 0 : _d[shadeMultiplyTextureInfo.index]) == null ? void 0 : _e.resource;
-        if (texture) {
-          this.shadeMultiplyTexture = texture;
-          updateTextureMatrix(
-            pcRef,
-            this.shadeMultiplyTextureUvTransform,
-            (_f = shadeMultiplyTextureInfo.extensions) == null ? void 0 : _f[textureTransformExtensionName]
-          );
-        }
-      }
-      if (rimMultiplyTextureInfo !== void 0) {
-        const texture = (_i = (_h = (_g = this._asset.resource) == null ? void 0 : _g.textures) == null ? void 0 : _h[rimMultiplyTextureInfo.index]) == null ? void 0 : _i.resource;
-        if (texture) {
-          this.rimMultiplyTexture = texture;
-          updateTextureMatrix(
-            pcRef,
-            this.rimMultiplyTextureUvTransform,
-            (_j = rimMultiplyTextureInfo.extensions) == null ? void 0 : _j[textureTransformExtensionName]
-          );
-        }
-      }
-      if (matcapTextureInfo !== void 0) {
-        const texture = (_m = (_l = (_k = this._asset.resource) == null ? void 0 : _k.textures) == null ? void 0 : _l[matcapTextureInfo.index]) == null ? void 0 : _m.resource;
-        if (texture) {
-          this.matcapTexture = texture;
-        }
-      }
-      if (shadingShiftTextureInfo !== void 0) {
-        const texture = (_p = (_o = (_n = this._asset.resource) == null ? void 0 : _n.textures) == null ? void 0 : _o[shadingShiftTextureInfo.index]) == null ? void 0 : _p.resource;
-        if (texture) {
-          this.shadingShiftTexture = texture;
-          updateTextureMatrix(
-            pcRef,
-            this.shadingShiftTextureUvTransform,
-            (_q = shadingShiftTextureInfo.extensions) == null ? void 0 : _q[textureTransformExtensionName]
-          );
-        }
-        if (shadingShiftTextureInfo.scale !== void 0) {
-          this.shadingShiftTextureScale = shadingShiftTextureInfo.scale;
-        }
-      }
-      if (matcapFactor) {
-        this.matcapFactor = new pcRef.Color(
-          Math.pow(matcapFactor[0], 1 / 2.2),
-          Math.pow(matcapFactor[1], 1 / 2.2),
-          Math.pow(matcapFactor[2], 1 / 2.2),
-          1
-        );
-      }
-      this.shadingShiftFactor = shadingShiftFactor;
-      this.shadingToonyFactor = shadingToonyFactor;
-      if (parametricRimColorFactor) {
-        this.parametricRimColorFactor = new pcRef.Color(
-          Math.pow(parametricRimColorFactor[0], 1 / 2.2),
-          Math.pow(parametricRimColorFactor[1], 1 / 2.2),
-          Math.pow(parametricRimColorFactor[2], 1 / 2.2),
-          1
-        );
-      }
-      this.rimLightingMixFactor = rimLightingMixFactor;
-      this.parametricRimFresnelPowerFactor = parametricRimFresnelPowerFactor;
-      this.parametricRimLiftFactor = parametricRimLiftFactor;
-      if (transparentWithZWrite) {
-        this.depthWrite = true;
-      }
-      this.outlineWidthFactor = outlineWidthFactor;
-      if (outlineColorFactor) {
-        this.outlineColorFactor = new pcRef.Color(
-          Math.pow(outlineColorFactor[0], 1 / 2.2),
-          Math.pow(outlineColorFactor[1], 1 / 2.2),
-          Math.pow(outlineColorFactor[2], 1 / 2.2),
-          1
-        );
-      }
-      if (outlineWidthMode) {
-        this.outlineWidthMode = outlineWidthMode;
-      }
-      if (outlineWidthMultiplyTextureInfo !== void 0) {
-        const texture = (_t = (_s = (_r = this._asset.resource) == null ? void 0 : _r.textures) == null ? void 0 : _s[outlineWidthMultiplyTextureInfo.index]) == null ? void 0 : _t.resource;
-        if (texture) {
-          this.outlineWidthMultiplyTexture = texture;
-          updateTextureMatrix(
-            pcRef,
-            this.outlineWidthMultiplyTextureUvTransform,
-            (_u = outlineWidthMultiplyTextureInfo.extensions) == null ? void 0 : _u[textureTransformExtensionName]
-          );
-        }
-      }
-      this.outlineLightingMixFactor = outlineLightingMixFactor;
-      if (this.isOutline)
-        this.cull = pcRef.CULLFACE_FRONT;
-      this.setShaderChunks();
-      this.setShaderUniforms();
-    }
-    setShaderChunks() {
-      this.chunks.APIVersion = pcRef.CHUNKAPI_1_70;
-      const pcShaderChunks = pcRef.shaderChunks;
-      this.chunks.baseVS = pcShaderChunks.baseVS;
-      this.chunks.endVS = pcShaderChunks.endVS;
-      this.chunks.basePS = pcShaderChunks.basePS;
-      this.chunks.endPS = pcShaderChunks.endPS;
-      if (this.shadeMultiplyTexture) {
-        this.chunks.basePS += "#define USE_SHADEMULTIPLYTEXTURE\n";
-      }
-      if (this.emissiveMap) {
-        this.chunks.basePS += "#define USE_EMISSIVEMAP\n";
-      }
-      if (this.baseColorMap) {
-        this.chunks.basePS += "#define USE_MAP\n";
-      }
-      if (this.normalMap) {
-        this.chunks.basePS += "#define USE_NORMALMAP\n";
-      }
-      if (this.cull === pcRef.CULLFACE_NONE) {
-        this.chunks.basePS += "#define DOUBLE_SIDED\n";
-      }
-      if (this.matcapTexture) {
-        this.chunks.basePS += "#define USE_MATCAPTEXTURE\n";
-      }
-      const useUvInVert = this.outlineWidthMultiplyTexture !== null;
-      const useUvInFrag = this.diffuseMap !== null || this.normalMap !== null || this.emissiveMap !== null || this.shadeMultiplyTexture !== null || this.shadingShiftTexture !== null || this.rimMultiplyTexture !== null || this.uvAnimationMaskTexture !== null;
-      if (useUvInVert || useUvInFrag) {
-        this.chunks.basePS += "#define MTOON_USE_UV\n";
-      }
-      if (useUvInVert && !useUvInFrag) {
-        console.log("Adding MTOON_UVS_VERTEX_ONLY");
-        this.chunks.basePS += "#define MTOON_UVS_VERTEX_ONLY\n";
-      }
-      const USE_RIMMULTIPLYTEXTURE = this.rimMultiplyTexture;
-      if (USE_RIMMULTIPLYTEXTURE) {
-        this.chunks.basePS += "#define USE_RIMMULTIPLYTEXTURE\n";
-      }
-      const USE_UVANIMATIONMASKTEXTURE = this.uvAnimationMaskTexture !== null;
-      if (USE_UVANIMATIONMASKTEXTURE) {
-        this.chunks.basePS += "#define USE_UVANIMATIONMASKTEXTURE\n";
-      }
-      const OPAQUE = this.blendType === pcRef.BLEND_NONE;
-      if (OPAQUE) {
-        this.chunks.basePS += "#define OPAQUE\n";
-      }
-      const USE_OUTLINEWIDTHMULTIPLYTEXTURE = this.outlineWidthMultiplyTexture !== null;
-      if (USE_OUTLINEWIDTHMULTIPLYTEXTURE) {
-        this.chunks.baseVS += "#define USE_OUTLINEWIDTHMULTIPLYTEXTURE\n";
-      }
-      const OUTLINE_WIDTH_WORLD = this.outlineWidthMode === MToonMaterialOutlineWidthMode.WorldCoordinates;
-      if (OUTLINE_WIDTH_WORLD) {
-        this.chunks.baseVS += "#define OUTLINE_WIDTH_WORLD\n";
-      }
-      const OUTLINE_WIDTH_SCREEN = this.outlineWidthMode === MToonMaterialOutlineWidthMode.ScreenCoordinates;
-      if (OUTLINE_WIDTH_SCREEN) {
-        this.chunks.baseVS += "#define OUTLINE_WIDTH_SCREEN\n";
-      }
-      if (this.isOutline) {
-        this.chunks.basePS += "#define OUTLINE\n";
-        this.chunks.baseVS += "#define OUTLINE\n";
-      }
-      this.chunks.basePS += "#define NUM_DIR_LIGHTS 0\n";
-      this.chunks.basePS += "#define NUM_SPOT_LIGHTS 0\n";
-      this.chunks.basePS += "#define NUM_POINT_LIGHTS 0\n";
-      this.chunks.baseVS += shaderChunksMtoon.baseVS;
-      this.chunks.endVS += shaderChunksMtoon.endVS;
-      this.chunks.basePS += shaderChunksMtoon.basePS;
-      this.chunks.basePS += shaderChunksMtoon.light;
-      this.chunks.endPS += shaderChunksMtoon.endPS;
-    }
-    setShaderUniforms() {
-      this.setParameter("litFactor", [this.litFactor.r, this.litFactor.g, this.litFactor.b]);
-      this.setParameter("opacity", this.opacity);
-      this.setParameters("giEqualizationFactor", this.giEqualizationFactor);
-      this.setParameter("shadeColorFactor", [
-        this.shadeColorFactor.r,
-        this.shadeColorFactor.g,
-        this.shadeColorFactor.b
-      ]);
-      if (this.shadeMultiplyTexture) {
-        this.setParameter("shadeMultiplyTexture", this.shadeMultiplyTexture);
-        this.setParameter(
-          "shadeMultiplyTextureUvTransform",
-          this.shadeMultiplyTextureUvTransform.data
-        );
-      }
-      if (this.matcapTexture) {
-        this.setParameter("matcapTexture", this.matcapTexture);
-        this.setParameter("matcapTextureUvTransform", this.matcapTextureUvTransform.data);
-      }
-      this.setParameter("matcapFactor", [
-        this.matcapFactor.r,
-        this.matcapFactor.g,
-        this.matcapFactor.b
-      ]);
-      if (this.shadingShiftTexture) {
-        this.setParameter("shadingShiftTexture", this.shadingShiftTexture);
-      }
-      this.setParameter("shadingShiftTextureUvTransform", this.shadingShiftTextureUvTransform.data);
-      if (this.baseColorMap) {
-        this.setParameter("baseColorMap", this.baseColorMap);
-        this.setParameter("mapUvTransform", this.mapUvTransform.data);
-      }
-      this.setParameter("shadingShiftFactor", this.shadingShiftFactor);
-      this.setParameter("shadingToonyFactor", this.shadingToonyFactor);
-      if (this.emissive) {
-        this.setParameter("emissive", [this.emissive.r, this.emissive.g, this.emissive.b]);
-      }
-      if (this.emissiveIntensity) {
-        this.setParameter("emissiveIntensity", this.emissiveIntensity);
-      }
-      this.setParameter("parametricRimColorFactor", [
-        this.parametricRimColorFactor.r,
-        this.parametricRimColorFactor.g,
-        this.parametricRimColorFactor.b
-      ]);
-      this.setParameter("rimLightingMixFactor", this.rimLightingMixFactor);
-      this.setParameter("parametricRimFresnelPowerFactor", this.parametricRimFresnelPowerFactor);
-      this.setParameter("parametricRimLiftFactor", this.parametricRimLiftFactor);
-      if (this.normalMap) {
-        this.setParameter("normalMap", this.normalMap);
-      }
-      this.setParameter("normalMapUvTransform", this.normalMapUvTransform.data);
-      this.setParameter("emissiveMapUvTransform", this.emissiveMapUvTransform.data);
-      if (this.emissiveMap) {
-        this.setParameter("emissiveMap", this.emissiveMap);
-      }
-      this.setParameter("shadingShiftTextureScale", this.shadingShiftTextureScale);
-      if (this.matcapTexture) {
-        this.setParameter("matcapTexture", this.matcapTexture);
-      }
-      if (this.rimMultiplyTexture) {
-        this.setParameter("rimMultiplyTexture", this.rimMultiplyTexture);
-        this.setParameter("rimMultiplyTextureUvTransform", this.rimMultiplyTextureUvTransform.data);
-      }
-      if (this.outlineWidthMultiplyTexture) {
-        this.setParameter("outlineWidthMultiplyTexture", this.outlineWidthMultiplyTexture);
-        this.setParameter(
-          "outlineWidthMultiplyTextureUvTransform",
-          this.outlineWidthMultiplyTextureUvTransform.data
-        );
-      }
-      this.setParameter("outlineWidthFactor", this.outlineWidthFactor);
-      this.setParameter("outlineLightingMixFactor", this.outlineLightingMixFactor);
-      this.setParameter("outlineColorFactor", [
-        this.outlineColorFactor.r,
-        this.outlineColorFactor.g,
-        this.outlineColorFactor.b
-      ]);
-    }
-    updateLightUniforms(lightStateInfo) {
-      const { directionalLights, spotLights, pointLights, scene } = lightStateInfo;
-      this.updateIndirectLightUniforms(scene);
-      this.replaceLightNumbers(directionalLights.length, spotLights.length, pointLights.length);
-      directionalLights.forEach((info, i) => {
-        const direction = info.direction;
-        this._vec3A.copy(direction);
-        this._vec3A.mulScalar(-1);
-        this._vec3A.normalize();
-        const color = info.color;
-        this.setParameter(`directionalLights[${i}].color`, [color.r, color.g, color.b]);
-        this.setParameter(`directionalLights[${i}].direction`, [
-          this._vec3A.x,
-          this._vec3A.y,
-          this._vec3A.z
-        ]);
-      });
-      spotLights.forEach((info, i) => {
-        const position = info.position;
-        const direction = info.direction;
-        const color = info.color;
-        const distance = info.distance;
-        const decay = info.decay;
-        const coneCos = info.coneCos;
-        const penumbraCos = info.penumbraCos;
-        this.setParameter(`spotLights[${i}].position`, [position.x, position.y, position.z]);
-        this.setParameter(`spotLights[${i}].direction`, [direction.x, direction.y, direction.z]);
-        this.setParameter(`spotLights[${i}].color`, [color.r, color.g, color.b]);
-        this.setParameter(`spotLights[${i}].distance`, distance);
-        this.setParameter(`spotLights[${i}].decay`, decay);
-        this.setParameter(`spotLights[${i}].coneCos`, coneCos);
-        this.setParameter(`spotLights[${i}].penumbraCos`, penumbraCos);
-      });
-      pointLights.forEach((info, i) => {
-        const position = info.position;
-        const color = info.color;
-        const distance = info.distance;
-        const decay = info.decay;
-        this.setParameter(`pointLights[${i}].position`, [position.x, position.y, position.z]);
-        this.setParameter(`pointLights[${i}].color`, [color.r, color.g, color.b]);
-        this.setParameter(`pointLights[${i}].distance`, distance);
-        this.setParameter(`pointLights[${i}].decay`, decay);
+    this.baseColorMap = this.diffuseMap || this.emissiveMap;
+    if (this.baseColorMap) {
+      updateTextureMatrix(pcRef, this.mapUvTransform, {
+        offset: [this.diffuseMapOffset.x, this.diffuseMapOffset.y],
+        rotation: this.diffuseMapRotation
       });
     }
-    updateIndirectLightUniforms(scene) {
-      if (!scene)
-        return;
-      if (!this.envAtlas && scene.envAtlas) {
-        this.envAtlas = scene.envAtlas;
-      }
-      if (this.envAtlas) {
-        this.setParameter("ambientLightColor", [0, 0, 0]);
-      } else {
-        this.ambient.copy(scene.ambientLight);
-        this.setParameter("ambientLightColor", [this.ambient.r, this.ambient.g, this.ambient.b]);
-      }
+    if (this.normalMap) {
+      this.normalScale.set(this.bumpiness, this.bumpiness);
+      updateTextureMatrix(pcRef, this.normalMapUvTransform, {
+        offset: [this.normalDetailMapOffset.x, this.normalDetailMapOffset.y],
+        rotation: this.normalMapRotation
+      });
     }
-    replaceLightNumbers(dirNum, spotNum, pointNum) {
-      let chunk = this.chunks.basePS;
-      chunk = chunk.replace(/#define USE_DIR_LIGHTS\n/g, "").replace(/#define USE_SPOT_LIGHTS\n/g, "").replace(/#define USE_POINT_LIGHTS\n/g, "").replace(/#define USE_ENV_LIGHTS\n/g, "");
-      if (dirNum > 0) {
-        chunk = `#define USE_DIR_LIGHTS
-${chunk}`;
-        chunk = chunk.replace(/#define NUM_DIR_LIGHTS \d+/, `#define NUM_DIR_LIGHTS ${dirNum}`);
-      }
-      if (spotNum > 0) {
-        chunk = `#define USE_SPOT_LIGHTS
-${chunk}`;
-        chunk = chunk.replace(/#define NUM_SPOT_LIGHTS \d+/, `#define NUM_SPOT_LIGHTS ${spotNum}`);
-      }
-      if (pointNum > 0) {
-        chunk = `#define USE_POINT_LIGHTS
-${chunk}`;
-        chunk = chunk.replace(
-          /#define NUM_POINT_LIGHTS \d+/,
-          `#define NUM_POINT_LIGHTS ${pointNum}`
+    if (this.emissiveMap) {
+      updateTextureMatrix(pcRef, this.normalMapUvTransform, {
+        offset: [this.emissiveMapOffset.x, this.emissiveMapOffset.y],
+        rotation: this.emissiveMapRotation
+      });
+    }
+    if (gltfMaterial.emissiveFactor) {
+      const emissiveFactor = gltfMaterial.emissiveFactor;
+      this.emissive = new pcRef.Color(emissiveFactor[0], emissiveFactor[1], emissiveFactor[2], 1);
+    }
+    if ((_a = gltfMaterial.pbrMetallicRoughness) == null ? void 0 : _a.baseColorFactor) {
+      const baseColorFactor = gltfMaterial.pbrMetallicRoughness.baseColorFactor;
+      this.diffuse = new pcRef.Color(
+        Math.pow(baseColorFactor[0], 1 / 2.2),
+        Math.pow(baseColorFactor[1], 1 / 2.2),
+        Math.pow(baseColorFactor[2], 1 / 2.2),
+        baseColorFactor[3]
+      );
+    }
+    const extension = (_b = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _b[EXTENSION_VRMC_MATERIALS_MTOON];
+    const {
+      shadeColorFactor,
+      shadeMultiplyTexture: shadeMultiplyTextureInfo,
+      shadingShiftFactor,
+      shadingToonyFactor,
+      parametricRimColorFactor,
+      rimLightingMixFactor,
+      parametricRimFresnelPowerFactor,
+      parametricRimLiftFactor,
+      shadingShiftTexture: shadingShiftTextureInfo,
+      giEqualizationFactor,
+      rimMultiplyTexture: rimMultiplyTextureInfo,
+      matcapTexture: matcapTextureInfo,
+      matcapFactor,
+      uvAnimationMaskTexture,
+      outlineWidthFactor,
+      outlineColorFactor,
+      outlineLightingMixFactor,
+      outlineWidthMode,
+      outlineWidthMultiplyTexture: outlineWidthMultiplyTextureInfo,
+      transparentWithZWrite
+    } = extension;
+    if (giEqualizationFactor !== void 0) {
+      this.giEqualizationFactor = giEqualizationFactor;
+    }
+    if (shadeColorFactor) {
+      this.shadeColorFactor = new pcRef.Color(
+        Math.pow(shadeColorFactor[0], 1 / 2.2),
+        Math.pow(shadeColorFactor[1], 1 / 2.2),
+        Math.pow(shadeColorFactor[2], 1 / 2.2),
+        1
+      );
+    }
+    if (shadeMultiplyTextureInfo !== void 0) {
+      const texture = (_e = (_d = (_c = this._asset.resource) == null ? void 0 : _c.textures) == null ? void 0 : _d[shadeMultiplyTextureInfo.index]) == null ? void 0 : _e.resource;
+      if (texture) {
+        this.shadeMultiplyTexture = texture;
+        updateTextureMatrix(
+          pcRef,
+          this.shadeMultiplyTextureUvTransform,
+          (_f = shadeMultiplyTextureInfo.extensions) == null ? void 0 : _f[textureTransformExtensionName]
         );
       }
-      if (this.envAtlas) {
-        chunk = `#define USE_ENV_LIGHTS
-${chunk}`;
+    }
+    if (rimMultiplyTextureInfo !== void 0) {
+      const texture = (_i = (_h = (_g = this._asset.resource) == null ? void 0 : _g.textures) == null ? void 0 : _h[rimMultiplyTextureInfo.index]) == null ? void 0 : _i.resource;
+      if (texture) {
+        this.rimMultiplyTexture = texture;
+        updateTextureMatrix(
+          pcRef,
+          this.rimMultiplyTextureUvTransform,
+          (_j = rimMultiplyTextureInfo.extensions) == null ? void 0 : _j[textureTransformExtensionName]
+        );
       }
-      this.chunks.basePS = chunk;
+    }
+    if (matcapTextureInfo !== void 0) {
+      const texture = (_m = (_l = (_k = this._asset.resource) == null ? void 0 : _k.textures) == null ? void 0 : _l[matcapTextureInfo.index]) == null ? void 0 : _m.resource;
+      if (texture) {
+        this.matcapTexture = texture;
+      }
+    }
+    if (shadingShiftTextureInfo !== void 0) {
+      const texture = (_p = (_o = (_n = this._asset.resource) == null ? void 0 : _n.textures) == null ? void 0 : _o[shadingShiftTextureInfo.index]) == null ? void 0 : _p.resource;
+      if (texture) {
+        this.shadingShiftTexture = texture;
+        updateTextureMatrix(
+          pcRef,
+          this.shadingShiftTextureUvTransform,
+          (_q = shadingShiftTextureInfo.extensions) == null ? void 0 : _q[textureTransformExtensionName]
+        );
+      }
+      if (shadingShiftTextureInfo.scale !== void 0) {
+        this.shadingShiftTextureScale = shadingShiftTextureInfo.scale;
+      }
+    }
+    if (matcapFactor) {
+      this.matcapFactor = new pcRef.Color(
+        Math.pow(matcapFactor[0], 1 / 2.2),
+        Math.pow(matcapFactor[1], 1 / 2.2),
+        Math.pow(matcapFactor[2], 1 / 2.2),
+        1
+      );
+    }
+    this.shadingShiftFactor = shadingShiftFactor;
+    this.shadingToonyFactor = shadingToonyFactor;
+    if (parametricRimColorFactor) {
+      this.parametricRimColorFactor = new pcRef.Color(
+        Math.pow(parametricRimColorFactor[0], 1 / 2.2),
+        Math.pow(parametricRimColorFactor[1], 1 / 2.2),
+        Math.pow(parametricRimColorFactor[2], 1 / 2.2),
+        1
+      );
+    }
+    this.rimLightingMixFactor = rimLightingMixFactor;
+    this.parametricRimFresnelPowerFactor = parametricRimFresnelPowerFactor;
+    this.parametricRimLiftFactor = parametricRimLiftFactor;
+    if (transparentWithZWrite) {
+      this.depthWrite = true;
+    }
+    this.outlineWidthFactor = outlineWidthFactor;
+    if (outlineColorFactor) {
+      this.outlineColorFactor = new pcRef.Color(
+        Math.pow(outlineColorFactor[0], 1 / 2.2),
+        Math.pow(outlineColorFactor[1], 1 / 2.2),
+        Math.pow(outlineColorFactor[2], 1 / 2.2),
+        1
+      );
+    }
+    if (outlineWidthMode) {
+      this.outlineWidthMode = outlineWidthMode;
+    }
+    if (outlineWidthMultiplyTextureInfo !== void 0) {
+      const texture = (_t = (_s = (_r = this._asset.resource) == null ? void 0 : _r.textures) == null ? void 0 : _s[outlineWidthMultiplyTextureInfo.index]) == null ? void 0 : _t.resource;
+      if (texture) {
+        this.outlineWidthMultiplyTexture = texture;
+        updateTextureMatrix(
+          pcRef,
+          this.outlineWidthMultiplyTextureUvTransform,
+          (_u = outlineWidthMultiplyTextureInfo.extensions) == null ? void 0 : _u[textureTransformExtensionName]
+        );
+      }
+    }
+    this.outlineLightingMixFactor = outlineLightingMixFactor;
+    if (this.isOutline)
+      this.cull = pcRef.CULLFACE_FRONT;
+    this.setShaderChunks();
+    this.setShaderUniforms();
+  };
+  material.setShaderChunks = function() {
+    this.chunks.APIVersion = pcRef.CHUNKAPI_1_70;
+    const pcShaderChunks = pcRef.shaderChunks;
+    this.chunks.baseVS = pcShaderChunks.baseVS;
+    this.chunks.endVS = pcShaderChunks.endVS;
+    this.chunks.basePS = pcShaderChunks.basePS;
+    this.chunks.endPS = pcShaderChunks.endPS;
+    if (this.shadeMultiplyTexture) {
+      this.chunks.basePS += "#define USE_SHADEMULTIPLYTEXTURE\n";
+    }
+    if (this.emissiveMap) {
+      this.chunks.basePS += "#define USE_EMISSIVEMAP\n";
+    }
+    if (this.baseColorMap) {
+      this.chunks.basePS += "#define USE_MAP\n";
+    }
+    if (this.normalMap) {
+      this.chunks.basePS += "#define USE_NORMALMAP\n";
+    }
+    if (this.cull === pcRef.CULLFACE_NONE) {
+      this.chunks.basePS += "#define DOUBLE_SIDED\n";
+    }
+    if (this.matcapTexture) {
+      this.chunks.basePS += "#define USE_MATCAPTEXTURE\n";
+    }
+    const useUvInVert = this.outlineWidthMultiplyTexture !== null;
+    const useUvInFrag = this.diffuseMap !== null || this.normalMap !== null || this.emissiveMap !== null || this.shadeMultiplyTexture !== null || this.shadingShiftTexture !== null || this.rimMultiplyTexture !== null || this.uvAnimationMaskTexture !== null;
+    if (useUvInVert || useUvInFrag) {
+      this.chunks.basePS += "#define MTOON_USE_UV\n";
+    }
+    if (useUvInVert && !useUvInFrag) {
+      console.log("Adding MTOON_UVS_VERTEX_ONLY");
+      this.chunks.basePS += "#define MTOON_UVS_VERTEX_ONLY\n";
+    }
+    const USE_RIMMULTIPLYTEXTURE = this.rimMultiplyTexture;
+    if (USE_RIMMULTIPLYTEXTURE) {
+      this.chunks.basePS += "#define USE_RIMMULTIPLYTEXTURE\n";
+    }
+    const USE_UVANIMATIONMASKTEXTURE = this.uvAnimationMaskTexture !== null;
+    if (USE_UVANIMATIONMASKTEXTURE) {
+      this.chunks.basePS += "#define USE_UVANIMATIONMASKTEXTURE\n";
+    }
+    const OPAQUE = this.blendType === pcRef.BLEND_NONE;
+    if (OPAQUE) {
+      this.chunks.basePS += "#define OPAQUE\n";
+    }
+    const USE_OUTLINEWIDTHMULTIPLYTEXTURE = this.outlineWidthMultiplyTexture !== null;
+    if (USE_OUTLINEWIDTHMULTIPLYTEXTURE) {
+      this.chunks.baseVS += "#define USE_OUTLINEWIDTHMULTIPLYTEXTURE\n";
+    }
+    const OUTLINE_WIDTH_WORLD = this.outlineWidthMode === MToonMaterialOutlineWidthMode.WorldCoordinates;
+    if (OUTLINE_WIDTH_WORLD) {
+      this.chunks.baseVS += "#define OUTLINE_WIDTH_WORLD\n";
+    }
+    const OUTLINE_WIDTH_SCREEN = this.outlineWidthMode === MToonMaterialOutlineWidthMode.ScreenCoordinates;
+    if (OUTLINE_WIDTH_SCREEN) {
+      this.chunks.baseVS += "#define OUTLINE_WIDTH_SCREEN\n";
+    }
+    if (this.isOutline) {
+      this.chunks.basePS += "#define OUTLINE\n";
+      this.chunks.baseVS += "#define OUTLINE\n";
+    }
+    this.chunks.basePS += "#define NUM_DIR_LIGHTS 0\n";
+    this.chunks.basePS += "#define NUM_SPOT_LIGHTS 0\n";
+    this.chunks.basePS += "#define NUM_POINT_LIGHTS 0\n";
+    this.chunks.baseVS += shaderChunksMtoon.baseVS;
+    this.chunks.endVS += shaderChunksMtoon.endVS;
+    this.chunks.basePS += shaderChunksMtoon.basePS;
+    this.chunks.basePS += shaderChunksMtoon.light;
+    this.chunks.endPS += shaderChunksMtoon.endPS;
+  };
+  material.setShaderUniforms = function() {
+    this.setParameter("litFactor", [this.litFactor.r, this.litFactor.g, this.litFactor.b]);
+    this.setParameter("opacity", this.opacity);
+    this.setParameters("giEqualizationFactor", this.giEqualizationFactor);
+    this.setParameter("shadeColorFactor", [
+      this.shadeColorFactor.r,
+      this.shadeColorFactor.g,
+      this.shadeColorFactor.b
+    ]);
+    if (this.shadeMultiplyTexture) {
+      this.setParameter("shadeMultiplyTexture", this.shadeMultiplyTexture);
+      this.setParameter(
+        "shadeMultiplyTextureUvTransform",
+        this.shadeMultiplyTextureUvTransform.data
+      );
+    }
+    if (this.matcapTexture) {
+      this.setParameter("matcapTexture", this.matcapTexture);
+      this.setParameter("matcapTextureUvTransform", this.matcapTextureUvTransform.data);
+    }
+    this.setParameter("matcapFactor", [
+      this.matcapFactor.r,
+      this.matcapFactor.g,
+      this.matcapFactor.b
+    ]);
+    if (this.shadingShiftTexture) {
+      this.setParameter("shadingShiftTexture", this.shadingShiftTexture);
+    }
+    this.setParameter("shadingShiftTextureUvTransform", this.shadingShiftTextureUvTransform.data);
+    if (this.baseColorMap) {
+      this.setParameter("baseColorMap", this.baseColorMap);
+      this.setParameter("mapUvTransform", this.mapUvTransform.data);
+    }
+    this.setParameter("shadingShiftFactor", this.shadingShiftFactor);
+    this.setParameter("shadingToonyFactor", this.shadingToonyFactor);
+    if (this.emissive) {
+      this.setParameter("emissive", [this.emissive.r, this.emissive.g, this.emissive.b]);
+    }
+    if (this.emissiveIntensity) {
+      this.setParameter("emissiveIntensity", this.emissiveIntensity);
+    }
+    this.setParameter("parametricRimColorFactor", [
+      this.parametricRimColorFactor.r,
+      this.parametricRimColorFactor.g,
+      this.parametricRimColorFactor.b
+    ]);
+    this.setParameter("rimLightingMixFactor", this.rimLightingMixFactor);
+    this.setParameter("parametricRimFresnelPowerFactor", this.parametricRimFresnelPowerFactor);
+    this.setParameter("parametricRimLiftFactor", this.parametricRimLiftFactor);
+    if (this.normalMap) {
+      this.setParameter("normalMap", this.normalMap);
+    }
+    this.setParameter("normalMapUvTransform", this.normalMapUvTransform.data);
+    this.setParameter("emissiveMapUvTransform", this.emissiveMapUvTransform.data);
+    if (this.emissiveMap) {
+      this.setParameter("emissiveMap", this.emissiveMap);
+    }
+    this.setParameter("shadingShiftTextureScale", this.shadingShiftTextureScale);
+    if (this.matcapTexture) {
+      this.setParameter("matcapTexture", this.matcapTexture);
+    }
+    if (this.rimMultiplyTexture) {
+      this.setParameter("rimMultiplyTexture", this.rimMultiplyTexture);
+      this.setParameter("rimMultiplyTextureUvTransform", this.rimMultiplyTextureUvTransform.data);
+    }
+    if (this.outlineWidthMultiplyTexture) {
+      this.setParameter("outlineWidthMultiplyTexture", this.outlineWidthMultiplyTexture);
+      this.setParameter(
+        "outlineWidthMultiplyTextureUvTransform",
+        this.outlineWidthMultiplyTextureUvTransform.data
+      );
+    }
+    this.setParameter("outlineWidthFactor", this.outlineWidthFactor);
+    this.setParameter("outlineLightingMixFactor", this.outlineLightingMixFactor);
+    this.setParameter("outlineColorFactor", [
+      this.outlineColorFactor.r,
+      this.outlineColorFactor.g,
+      this.outlineColorFactor.b
+    ]);
+  };
+  material.updateLightUniforms = function(lightStateInfo) {
+    const { directionalLights, spotLights, pointLights, scene } = lightStateInfo;
+    this.updateIndirectLightUniforms(scene);
+    this.replaceLightNumbers(directionalLights.length, spotLights.length, pointLights.length);
+    directionalLights.forEach((info, i) => {
+      const direction = info.direction;
+      this._vec3A.copy(direction);
+      this._vec3A.mulScalar(-1);
+      this._vec3A.normalize();
+      const color = info.color;
+      this.setParameter(`directionalLights[${i}].color`, [color.r, color.g, color.b]);
+      this.setParameter(`directionalLights[${i}].direction`, [
+        this._vec3A.x,
+        this._vec3A.y,
+        this._vec3A.z
+      ]);
+    });
+    spotLights.forEach((info, i) => {
+      const position = info.position;
+      const direction = info.direction;
+      const color = info.color;
+      const distance = info.distance;
+      const decay = info.decay;
+      const coneCos = info.coneCos;
+      const penumbraCos = info.penumbraCos;
+      this.setParameter(`spotLights[${i}].position`, [position.x, position.y, position.z]);
+      this.setParameter(`spotLights[${i}].direction`, [direction.x, direction.y, direction.z]);
+      this.setParameter(`spotLights[${i}].color`, [color.r, color.g, color.b]);
+      this.setParameter(`spotLights[${i}].distance`, distance);
+      this.setParameter(`spotLights[${i}].decay`, decay);
+      this.setParameter(`spotLights[${i}].coneCos`, coneCos);
+      this.setParameter(`spotLights[${i}].penumbraCos`, penumbraCos);
+    });
+    pointLights.forEach((info, i) => {
+      const position = info.position;
+      const color = info.color;
+      const distance = info.distance;
+      const decay = info.decay;
+      this.setParameter(`pointLights[${i}].position`, [position.x, position.y, position.z]);
+      this.setParameter(`pointLights[${i}].color`, [color.r, color.g, color.b]);
+      this.setParameter(`pointLights[${i}].distance`, distance);
+      this.setParameter(`pointLights[${i}].decay`, decay);
+    });
+  };
+  material.updateIndirectLightUniforms = function(scene) {
+    if (!scene)
+      return;
+    if (!this.envAtlas && scene.envAtlas) {
+      this.envAtlas = scene.envAtlas;
+    }
+    if (this.envAtlas) {
+      this.setParameter("ambientLightColor", [0, 0, 0]);
+    } else {
+      this.ambient.copy(scene.ambientLight);
+      this.setParameter("ambientLightColor", [this.ambient.r, this.ambient.g, this.ambient.b]);
     }
   };
-};
+  material.replaceLightNumbers = function(dirNum, spotNum, pointNum) {
+    let chunk = this.chunks.basePS;
+    chunk = chunk.replace(/#define USE_DIR_LIGHTS\n/g, "").replace(/#define USE_SPOT_LIGHTS\n/g, "").replace(/#define USE_POINT_LIGHTS\n/g, "").replace(/#define USE_ENV_LIGHTS\n/g, "");
+    if (dirNum > 0) {
+      chunk = `#define USE_DIR_LIGHTS
+${chunk}`;
+      chunk = chunk.replace(/#define NUM_DIR_LIGHTS \d+/, `#define NUM_DIR_LIGHTS ${dirNum}`);
+    }
+    if (spotNum > 0) {
+      chunk = `#define USE_SPOT_LIGHTS
+${chunk}`;
+      chunk = chunk.replace(/#define NUM_SPOT_LIGHTS \d+/, `#define NUM_SPOT_LIGHTS ${spotNum}`);
+    }
+    if (pointNum > 0) {
+      chunk = `#define USE_POINT_LIGHTS
+${chunk}`;
+      chunk = chunk.replace(/#define NUM_POINT_LIGHTS \d+/, `#define NUM_POINT_LIGHTS ${pointNum}`);
+    }
+    if (this.envAtlas) {
+      chunk = `#define USE_ENV_LIGHTS
+${chunk}`;
+    }
+    this.chunks.basePS = chunk;
+  };
+  return material;
+}
 const extensionVRMCName = EXTENSION_VRMC_MATERIALS_MTOON;
 class VRMMtoonLoader {
   constructor(pcRef, asset) {
@@ -4029,7 +4012,6 @@ class VRMMtoonLoader {
     renders.forEach((renderComponent) => {
       const render = renderComponent;
       const meshInstances = render.meshInstances;
-      const VRMCOutlineMaterial = createVRMCMtoonMaterial(this._pcRef);
       meshInstances.forEach((meshInstance) => {
         var _a, _b, _c;
         const material = meshInstance.material;
@@ -4052,7 +4034,7 @@ class VRMMtoonLoader {
           if (extension.outlineWidthMode === MToonMaterialOutlineWidthMode.None) {
             return;
           }
-          shaderMaterial = new VRMCOutlineMaterial(this.asset);
+          shaderMaterial = createVRMCMtoonMaterial(this._pcRef, this.asset);
           shaderMaterial.isOutline = true;
           shaderMaterial.copy(material);
           shaderMaterial.name = material.name + "_outline";
@@ -4075,7 +4057,6 @@ class VRMMtoonLoader {
     return outlineShaderMaterials;
   }
   _applyVRMCMtoonShader(entity, gltf) {
-    const VRMCMtoonMaterial = createVRMCMtoonMaterial(this._pcRef);
     const shaderMaterials = /* @__PURE__ */ new Map();
     const renders = entity.findComponents("render");
     renders.forEach((renderComponent) => {
@@ -4103,7 +4084,7 @@ class VRMMtoonLoader {
           return;
         }
         if (!shaderMaterial) {
-          shaderMaterial = new VRMCMtoonMaterial(this.asset);
+          shaderMaterial = createVRMCMtoonMaterial(this._pcRef, this.asset);
           shaderMaterials.set(material, shaderMaterial);
         }
         shaderMaterial.copy(material);
@@ -4658,6 +4639,9 @@ window.GLTFLoader = GLTFLoader;
 export {
   GLTFLoader,
   RenderStates,
+  VRMExpressionManager,
+  VRMHumanoid,
+  VRMSpringBoneManager,
   VrmAnimation,
   VrmExpression,
   VrmMapList,
