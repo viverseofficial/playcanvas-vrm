@@ -121,7 +121,6 @@ const setupAvatar = async (app: pc.Application) => {
 
 const app = setupApplication();
 createMiniStats(app);
-app.scene.ambientLight.set(0.5, 0.5, 0.5);
 
 app.once('start', async () => {
   const focusEntity = new pc.Entity('Test');

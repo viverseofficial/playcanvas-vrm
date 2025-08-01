@@ -64,8 +64,11 @@ export const createLight = (app: pc.Application) => {
   lightB.setPosition(0, 2.5, 0);
 
   const colorB = new pc.Color(0, 0, 0.5);
-  const materialB = new pc.BasicMaterial();
-  materialB.color = colorB;
+  const materialB = new pc.StandardMaterial();
+  materialB.diffuse = colorB;
+  materialB.emissive = colorB;
+  materialB.useLighting = false;
+  materialB.useSkybox = false;
   materialB.update();
 
   lightB.addComponent('render', {
@@ -86,8 +89,11 @@ export const createLight = (app: pc.Application) => {
   lightC.setPosition(0, 2.5, 0);
 
   const colorC = new pc.Color(0, 0.5, 0.5);
-  const materialC = new pc.BasicMaterial();
-  materialC.color = colorC;
+  const materialC = new pc.StandardMaterial();
+  materialC.diffuse = colorC;
+  materialC.emissive = colorC;
+  materialC.useLighting = false;
+  materialC.useSkybox = false;
   materialC.update();
 
   lightC.addComponent('render', {
@@ -110,8 +116,11 @@ export const createLight = (app: pc.Application) => {
   lightD.setPosition(0, 0.5, 0);
 
   const colorD = new pc.Color(0.5, 0, 0);
-  const materialD = new pc.BasicMaterial();
-  materialD.color = colorD;
+  const materialD = new pc.StandardMaterial();
+  materialD.diffuse = colorD;
+  materialD.emissive = colorD;
+  materialD.useLighting = false;
+  materialD.useSkybox = false;
   materialD.update();
 
   lightD.addComponent('render', {
