@@ -6,7 +6,7 @@
   "main": "dist/playcanvas-vrm.js",
   "types": "dist/playcanvas-vrm.d.ts",
   "scripts": {
-    "watch": "nodemon --watch src --ext '*' --exec 'MINIFY_MODE=true pnpm build' --verbose",
+    "watch": "nodemon --watch src --ext '*' --exec 'pnpm build' --verbose",
     "build": "tsc && pnpm run build:js && pnpm run build:min",
     "build:js": "vite build",
     "build:min": "MINIFY_MODE=true vite build",

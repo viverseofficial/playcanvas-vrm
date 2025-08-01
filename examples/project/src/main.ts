@@ -35,7 +35,7 @@ const createAvatar = (url: string) => {
 
     asset.on('load', (asset) => {
       VRMLoader.addIndexToNodeTags(asset);
-      VRMLoader.VrmMtoon.convertVRMMtoonMaterials(pc, asset);
+      // VRMLoader.VrmMtoon.convertVRMMtoonMaterials(pc, asset);
 
       const renderRootEntity = asset.resource.instantiateRenderEntity();
       const rootEntity = new pc.Entity('VRM_AVATAR_ROOT');
@@ -65,11 +65,11 @@ const createAvatar = (url: string) => {
          * please add vrm-expression script after vrm-mtoon script.
          */
 
-        rootEntity.script.create('vrmMtoon', {
-          attributes: {
-            asset,
-          },
-        });
+        // rootEntity.script.create('vrmMtoon', {
+        //   attributes: {
+        //     asset,
+        //   },
+        // });
 
         rootEntity.script.create('vrmExpression', {
           attributes: {
@@ -139,7 +139,8 @@ app.once('start', async () => {
 
   VRMLoader.VrmExpression.importScript(pc);
   VRMLoader.VrmSpringBone.importScript(pc);
-  VRMLoader.VrmMtoon.importScript(pc);
+  // TODO: Wait for the lib support engine version 2.0.0+
+  // VRMLoader.VrmMtoon.importScript(pc);
   setupAvatar(app);
 });
 

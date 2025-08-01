@@ -1,6 +1,6 @@
 import * as pc from 'playcanvas';
 import VRMMaterialsV0CompatPlugin from '../extensions/vrmc-materials-mtoon/src/plugins/VRMMaterialsV0CompatPlugin';
-import { RenderStates } from '../helpers/RenderStates/RenderStates';
+import { RenderStates } from '../helpers/RenderStates';
 import { VRMMtoonLoader } from '../extensions/vrmc-materials-mtoon';
 
 export const convertVRMMtoonMaterials = (pcRef: typeof pc, asset: pc.Asset) => {

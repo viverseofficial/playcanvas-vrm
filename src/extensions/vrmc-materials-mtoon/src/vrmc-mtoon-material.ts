@@ -12,7 +12,7 @@ import {
   IPointLightInfo,
   ISpotLightInfo,
   ISceneLightInfo,
-} from '../../../helpers/RenderStates/RenderStates';
+} from '../../../helpers/RenderStates';
 
 const textureTransformExtensionName = 'KHR_texture_transform';
 
