@@ -286,7 +286,7 @@ function arrayChunk(array, every) {
   }
   return ret;
 }
-function applyMatrix4(pcRef, v3, m) {
+function applyMatrix4$1(pcRef, v3, m) {
   const e = m.data;
   const w = 1 / (e[3] * v3.x + e[7] * v3.y + e[11] * v3.z + e[15]);
   const _x = (e[0] * v3.x + e[4] * v3.y + e[8] * v3.z + e[12]) * w;
@@ -322,7 +322,8 @@ class VRMAnimationLoader {
   }
   loadVRMA(vrmaAsset) {
     var _a, _b, _c;
-    const defGltf = vrmaAsset.resource.data.gltf;
+    const resource = vrmaAsset.resource;
+    const defGltf = resource.data.gltf;
     const defExtensionsUsed = defGltf.extensionsUsed;
     if (defExtensionsUsed == null || defExtensionsUsed.indexOf("VRMC_vrm_animation") == -1) {
       console.warn("CreateVRMAnimation: Please check. It is not a vrma.");
@@ -343,13 +344,13 @@ class VRMAnimationLoader {
         "CreateVRMAnimation: Using a draft spec version: 1.0-draft. Some behaviors may be different. Consider updating the animation file."
       );
     }
-    const pcNodes = vrmaAsset.resource.data.nodes;
+    const pcNodes = resource.data.nodes;
     const nodeMap = this._createNodeMap(defGltf, defExtension);
     const worldMatrixMap = this._createBoneWorldMatrixMap(pcNodes, defExtension);
     const hipsNode = (_c = (_b = defExtension.humanoid) == null ? void 0 : _b.humanBones["hips"]) == null ? void 0 : _c.node;
     const hips = hipsNode != null ? pcNodes[hipsNode] : null;
     const restHipsPosition = hips ? hips.getPosition() : new this.pcRef.Vec3();
-    const animTracks = vrmaAsset.resource.data.animations;
+    const animTracks = resource.data.animations;
     const animations = animTracks.map((animTrack, index) => {
       const defAnimation = defGltf.animations[index];
       const animation = this._parseAnimation(animTrack, defAnimation, nodeMap, worldMatrixMap);
@@ -461,7 +462,7 @@ class VRMAnimationLoader {
             const hipsParentWorldMatrix = worldMatrixMap.get("hipsParent");
             const outputData = arrayChunk(output.data, 3).flatMap((v) => {
               let _vec3 = new this.pcRef.Vec3(v[0], v[1], v[2]);
-              _vec3 = applyMatrix4(this.pcRef, _vec3, hipsParentWorldMatrix);
+              _vec3 = applyMatrix4$1(this.pcRef, _vec3, hipsParentWorldMatrix);
               return [_vec3.x, _vec3.y, _vec3.z];
             });
             const _outputData = new Float32Array(outputData);
@@ -734,7 +735,8 @@ class VRMViverseAnimationTrack {
     const needConvertVersion = isNegativeZAxis ? "v1" : "v0";
     let nodeMotionHipsHeight = 0;
     if (this.animationAsset.asset.type === "container") {
-      const motionHipsNode = this.animationAsset.asset.resource.data.nodes.find(
+      const resource = this.animationAsset.asset.resource;
+      const motionHipsNode = resource.data.nodes.find(
         (node) => node.name === VRMRigMap.hips
       );
       if (motionHipsNode) {
@@ -853,8 +855,9 @@ function createVRMAnimResources(pcRef, animationAssets, vrmAsset, humanoid, extr
     console.error('CreateVRMAnimResources: Please provide "humanoid" or "asset and entity".');
     return;
   }
-  const isV1Used = (_a = vrmAsset.resource.data.gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
-  const isV0Used = (_b = vrmAsset.resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
+  const resource = vrmAsset.resource;
+  const isV1Used = (_a = resource.data.gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
+  const isV0Used = (_b = resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
   const version = isV1Used ? "v1" : isV0Used ? "v0" : null;
   const checkAnimType = (assetType, extensionsUsed) => {
     if (assetType == "animation") {
@@ -873,9 +876,9 @@ function createVRMAnimResources(pcRef, animationAssets, vrmAsset, humanoid, extr
     var _a2;
     const assetResource = animationAsset.asset.resource;
     const assetType = animationAsset.asset.type;
-    let resource;
+    let resource2;
     if (!assetResource) {
-      resource = null;
+      resource2 = null;
       console.warn(
         `createVRMAnimResources: loadAnimation can't find available resource from ${animationAsset.stateName} asset.`
       );
@@ -883,9 +886,9 @@ function createVRMAnimResources(pcRef, animationAssets, vrmAsset, humanoid, extr
       const extensionsUsed = (_a2 = assetResource.data) == null ? void 0 : _a2.gltf.extensionsUsed;
       const isVRMA = checkAnimType(assetType, extensionsUsed);
       if (isVRMA) {
-        resource = createVRMAResource(pcRef, animationAsset, humanoid, version);
+        resource2 = createVRMAResource(pcRef, animationAsset, humanoid, version);
       } else {
-        resource = createViverseAnimResource(
+        resource2 = createViverseAnimResource(
           pcRef,
           animationAsset,
           humanoid,
@@ -894,8 +897,8 @@ function createVRMAnimResources(pcRef, animationAssets, vrmAsset, humanoid, extr
         );
       }
     }
-    if (resource) {
-      resources.push(resource);
+    if (resource2) {
+      resources.push(resource2);
     }
   });
   return resources;
@@ -917,10 +920,10 @@ function bindVRMAExpression(entity, resource, animEntity) {
   const listenerEntity = animEntity ?? entity;
   if (listenerEntity.anim) {
     listenerEntity.anim.on(`anim-track:${resource.name}`, () => {
-      var _a, _b;
-      let upperBodyActiveState = (_a = listenerEntity.anim) == null ? void 0 : _a.baseLayer.activeState;
+      var _a, _b, _c;
+      let upperBodyActiveState = (_b = (_a = listenerEntity.anim) == null ? void 0 : _a.baseLayer) == null ? void 0 : _b.activeState;
       let transitionInterval = listenerEntity.anim.baseLayer._controller._totalTransitionTime ?? 0;
-      (_b = listenerEntity.anim) == null ? void 0 : _b.layers.forEach((layer) => {
+      (_c = listenerEntity.anim) == null ? void 0 : _c.layers.forEach((layer) => {
         if (layer.name === "upperBodyLayer") {
           upperBodyActiveState = layer._controller._activeStateName;
           transitionInterval = layer._controller._totalTransitionTime;
@@ -939,7 +942,8 @@ function createVRMAResource(pcRef, animationAsset, humanoid, version) {
   var _a, _b, _c, _d;
   const vrmaLoader = new VRMAnimationLoader(pcRef);
   const vrmAnimations = vrmaLoader.loadVRMA(animationAsset.asset);
-  let name = (_d = (_c = (_b = (_a = animationAsset.asset.resource.animations) == null ? void 0 : _a[0]) == null ? void 0 : _b.resources) == null ? void 0 : _c[0]) == null ? void 0 : _d.name;
+  const resource = animationAsset.asset.resource;
+  let name = (_d = (_c = (_b = (_a = resource.data.gltf.animations) == null ? void 0 : _a[0]) == null ? void 0 : _b.resources) == null ? void 0 : _c[0]) == null ? void 0 : _d.name;
   if (!name)
     name = "";
   if (vrmAnimations) {
@@ -963,7 +967,8 @@ function createVRMAResource(pcRef, animationAsset, humanoid, version) {
 }
 function createViverseAnimResource(pcRef, animationAsset, humanoid, version, extraSettings) {
   var _a, _b;
-  const origAnimTrack = animationAsset.asset.type === "container" ? (_b = (_a = animationAsset.asset.resource.animations) == null ? void 0 : _a[0]) == null ? void 0 : _b.resource : animationAsset.asset.resource;
+  const resource = animationAsset.asset.resource;
+  const origAnimTrack = animationAsset.asset.type === "container" ? (_b = (_a = resource.animations) == null ? void 0 : _a[0]) == null ? void 0 : _b.resource : animationAsset.asset.resource;
   if (origAnimTrack) {
     const animTrack = new VRMViverseAnimationTrack(
       pcRef,
@@ -1058,8 +1063,17 @@ function fromArray(vec3, array, offset = 0) {
   vec3.z = array[offset + 2];
   return vec3;
 }
+function applyMatrix4(vector, matrixWorld) {
+  const x = vector.x, y = vector.y, z = vector.z;
+  const e = matrixWorld.data;
+  const w = 1 / (e[3] * x + e[7] * y + e[11] * z + e[15]);
+  vector.x = (e[0] * x + e[4] * y + e[8] * z + e[12]) * w;
+  vector.y = (e[1] * x + e[5] * y + e[9] * z + e[13]) * w;
+  vector.z = (e[2] * x + e[6] * y + e[10] * z + e[14]) * w;
+  return vector;
+}
 function localToWorld(vector, matrixWorld) {
-  return vector.copy(matrixWorld.transformPoint(vector));
+  return applyMatrix4(vector, matrixWorld);
 }
 class Matrix4InverseCache {
   constructor(pcRef, matrix) {
@@ -1121,6 +1135,14 @@ function setFromUnitVectors(quat, vFrom, vTo) {
     quat.w = r;
   }
   return quat.normalize();
+}
+function transformDirection(vec3, m) {
+  const x = vec3.x, y = vec3.y, z = vec3.z;
+  const e = m.data;
+  vec3.x = e[0] * x + e[4] * y + e[8] * z;
+  vec3.y = e[1] * x + e[5] * y + e[9] * z;
+  vec3.z = e[2] * x + e[6] * y + e[10] * z;
+  return vec3.normalize();
 }
 class VRMExpressionManager {
   constructor() {
@@ -1457,7 +1479,8 @@ class VRMExpressionLoaderPlugin {
     this.meshInstances = meshInstances;
   }
   import() {
-    const gltf = this.asset.resource.data.gltf;
+    const resource = this.asset.resource;
+    const gltf = resource.data.gltf;
     const v1Result = this._v1Import(gltf);
     if (v1Result) {
       return v1Result;
@@ -1788,25 +1811,81 @@ const VrmExpression = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defin
   __proto__: null,
   importScript: importScript$1
 }, Symbol.toStringTag, { value: "Module" }));
+function lowestCommonAncestor(objects) {
+  const sharedAncestors = /* @__PURE__ */ new Map();
+  for (const object of objects) {
+    let current = object;
+    do {
+      const newValue = (sharedAncestors.get(current) ?? 0) + 1;
+      if (newValue === objects.size) {
+        return current;
+      }
+      sharedAncestors.set(current, newValue);
+      current = current.parent;
+    } while (current !== null);
+  }
+  return null;
+}
+function traverseAncestorsFromRoot(object, callback) {
+  const ancestors = [];
+  let head = object;
+  while (head !== null) {
+    ancestors.unshift(head);
+    head = head.parent;
+  }
+  ancestors.forEach((ancestor) => {
+    callback(ancestor);
+  });
+}
+function traverseChildrenUntilConditionMet(object, callback) {
+  object.children.forEach((child) => {
+    const result = callback(child);
+    if (!result) {
+      traverseChildrenUntilConditionMet(child, callback);
+    }
+  });
+}
 class VRMSpringBoneManager {
   constructor() {
-    this._joints = /* @__PURE__ */ new Set();
-    this._objectSpringBonesMap = /* @__PURE__ */ new Map();
-    this._ancestorPathCache = /* @__PURE__ */ new Map();
-    this._dt = 0;
-    this._springBonesTried = /* @__PURE__ */ new Set();
-    this._springBonesDone = /* @__PURE__ */ new Set();
-    this._dependenciesCache = /* @__PURE__ */ new Map();
     this.managerName = "springBone";
     this._joints = /* @__PURE__ */ new Set();
+    this._hasWarnedCircularDependency = false;
+    this._sortedJoints = [];
+    this._limitedStrength = 0.3;
+    this._normalStrength = 1;
+    this._ancestors = [];
     this._objectSpringBonesMap = /* @__PURE__ */ new Map();
-    this.direction = 1;
-    this.strength = 0.1;
-    this.limitHeight = 0.2;
-    this.limitLow = 0;
+    this._isSortedJointsDirty = false;
+    this._relevantChildrenUpdated = this._relevantChildrenUpdated.bind(this);
   }
   get joints() {
     return this._joints;
+  }
+  get limitedStrength() {
+    return this._limitedStrength;
+  }
+  get normalStrength() {
+    return this._normalStrength;
+  }
+  get colliderGroups() {
+    const set = /* @__PURE__ */ new Set();
+    this._joints.forEach((springBone) => {
+      springBone.colliderGroups.forEach((colliderGroup) => {
+        set.add(colliderGroup);
+      });
+    });
+    return Array.from(set);
+  }
+  _relevantChildrenUpdated(object) {
+    var _a;
+    if ((((_a = this._objectSpringBonesMap.get(object)) == null ? void 0 : _a.size) ?? 0) > 0) {
+      return true;
+    }
+    const colliderObject = object;
+    if (colliderObject.updateWorldMatrix) {
+      colliderObject.updateWorldMatrix();
+    }
+    return false;
   }
   addJoint(joint) {
     this._joints.add(joint);
@@ -1816,154 +1895,148 @@ class VRMSpringBoneManager {
       this._objectSpringBonesMap.set(joint.bone, objectSet);
     }
     objectSet.add(joint);
+    this._isSortedJointsDirty = true;
   }
   setInitState() {
-    this._springBonesTried.clear();
-    this._springBonesDone.clear();
-    for (const springBone of this._joints) {
-      this._processSpringBone(
-        springBone,
-        "init"
-        /* INIT */
-      );
+    this._sortJoints();
+    for (let i = 0; i < this._sortedJoints.length; i++) {
+      const springBone = this._sortedJoints[i];
+      springBone.setInitState();
     }
   }
   reset() {
-    this._springBonesTried.clear();
-    this._springBonesDone.clear();
-    for (const springBone of this._joints) {
-      this._processSpringBone(
-        springBone,
-        "reset"
-        /* RESET */
-      );
+    this._sortJoints();
+    for (let i = 0; i < this._sortedJoints.length; i++) {
+      const springBone = this._sortedJoints[i];
+      springBone.reset();
     }
   }
-  update(dt, isWalking) {
-    this._springBonesTried.clear();
-    this._springBonesDone.clear();
-    this._dt = dt;
-    if (isWalking) {
-      if (this.strength >= this.limitHeight) {
-        this.direction = -0.2;
-        this.limitHeight = Math.random() * (0.2 - this.limitLow) + this.limitLow;
-      } else if (this.strength <= this.limitLow) {
-        this.direction = 0.2;
-        this.limitLow = Math.random() * 0.2;
-      }
-      this.strength += this.direction * dt;
-    } else {
-      if (this.strength <= 0.5) {
-        this.strength += 0.1 * dt;
-      }
+  /**
+   * Sorts the joints ensuring they are updated in the correct order taking dependencies into account.
+   *
+   * This method updates {@link _sortedJoints} and {@link _ancestors}.
+   * Make sure to call this before using them.
+   */
+  _sortJoints() {
+    if (!this._isSortedJointsDirty) {
+      return;
     }
+    const springBoneOrder = [];
+    const springBonesTried = /* @__PURE__ */ new Set();
+    const springBonesDone = /* @__PURE__ */ new Set();
+    const ancestors = /* @__PURE__ */ new Set();
     for (const springBone of this._joints) {
-      this._processSpringBone(
+      this._insertJointSort(
         springBone,
-        "update"
-        /* UPDATE */
+        springBonesTried,
+        springBonesDone,
+        springBoneOrder,
+        ancestors
       );
     }
-  }
-  _processSpringBone(springBone, action) {
-    if (this._springBonesDone.has(springBone.id)) {
-      return;
-    }
-    if (this._springBonesTried.has(springBone.id)) {
-      return;
-    }
-    this._springBonesTried.add(springBone.id);
-    const depObjects = this._getDependencies(springBone);
-    for (const depObject of depObjects) {
-      let ancestorPath;
-      if (this._ancestorPathCache.has(depObject)) {
-        ancestorPath = this._ancestorPathCache.get(depObject);
-      } else {
-        ancestorPath = [];
-        let head = depObject;
-        while (head !== null) {
-          ancestorPath.push(head);
-          head = head.parent;
+    this._sortedJoints = springBoneOrder;
+    const lca = lowestCommonAncestor(ancestors);
+    this._ancestors = [];
+    if (lca) {
+      this._ancestors.push(lca);
+      traverseChildrenUntilConditionMet(lca, (object) => {
+        var _a;
+        if ((((_a = this._objectSpringBonesMap.get(object)) == null ? void 0 : _a.size) ?? 0) > 0) {
+          return true;
         }
-        ancestorPath.reverse();
-        this._ancestorPathCache.set(depObject, ancestorPath);
+        this._ancestors.push(object);
+        return false;
+      });
+    }
+    this._isSortedJointsDirty = false;
+  }
+  _insertJointSort(springBone, springBonesTried, springBonesDone, springBoneOrder, ancestors) {
+    if (springBonesDone.has(springBone)) {
+      return;
+    }
+    if (springBonesTried.has(springBone)) {
+      if (!this._hasWarnedCircularDependency) {
+        console.warn("VRMSpringBoneManager: Circular dependency detected");
+        this._hasWarnedCircularDependency = true;
       }
-      for (let i = 0; i < ancestorPath.length; i++) {
-        const ancestor = ancestorPath[i];
-        const objectSet = this._objectSpringBonesMap.get(ancestor);
+      return;
+    }
+    springBonesTried.add(springBone);
+    const depObjects = springBone.dependencies;
+    for (const depObject of depObjects) {
+      let encounteredSpringBone = false;
+      let ancestor = null;
+      traverseAncestorsFromRoot(depObject, (depObjectAncestor) => {
+        const objectSet = this._objectSpringBonesMap.get(depObjectAncestor);
         if (objectSet) {
           for (const depSpringBone of objectSet) {
-            if (!this._springBonesDone.has(depSpringBone.id)) {
-              this._processSpringBone(depSpringBone, action);
-            }
+            encounteredSpringBone = true;
+            this._insertJointSort(
+              depSpringBone,
+              springBonesTried,
+              springBonesDone,
+              springBoneOrder,
+              ancestors
+            );
           }
+        } else if (!encounteredSpringBone) {
+          ancestor = depObjectAncestor;
         }
+      });
+      if (ancestor) {
+        ancestors.add(ancestor);
       }
     }
-    if (action === "update") {
-      springBone.update(this._dt, this.strength);
-    } else if (action === "reset") {
-      springBone.reset();
-    } else if (action === "init") {
-      springBone.setInitState();
-    }
-    this._springBonesDone.add(springBone.id);
+    springBoneOrder.push(springBone);
+    springBonesDone.add(springBone);
   }
-  // Return a set of objects that are dependant of given spring bone.
-  _getDependencies(springBone) {
-    if (this._dependenciesCache.has(springBone)) {
-      return this._dependenciesCache.get(springBone);
+  update(delta, isLimited = false) {
+    this._sortJoints();
+    const currentStrength = isLimited ? this._limitedStrength : this._normalStrength;
+    for (let i = 0; i < this._sortedJoints.length; i++) {
+      const springBone = this._sortedJoints[i];
+      springBone.update(delta, currentStrength);
+      traverseChildrenUntilConditionMet(springBone.bone, this._relevantChildrenUpdated);
     }
-    const set = /* @__PURE__ */ new Set();
-    const parent = springBone.bone.parent;
-    if (parent) {
-      set.add(parent);
-    }
-    if (springBone.colliderGroups) {
-      for (let i = 0; i < springBone.colliderGroups.length; i++) {
-        const colliderGroup = springBone.colliderGroups[i];
-        const colliders = colliderGroup.colliders;
-        for (let j = 0; j < colliders.length; j++) {
-          const collider = colliders[j];
-          set.add(collider);
-        }
-      }
-    }
-    this._dependenciesCache.set(springBone, set);
-    return set;
   }
 }
 class VRMSpringBoneColliderShapeSphere {
   constructor(pcRef, params) {
     this.offset = (params == null ? void 0 : params.offset) ?? new pcRef.Vec3();
     this.radius = (params == null ? void 0 : params.radius) ?? 0;
+    this.inside = (params == null ? void 0 : params.inside) ?? false;
   }
   get type() {
     return "sphere";
   }
   calculateCollision(colliderMatrix, objectPosition, objectRadius, target, reference) {
-    target.copy(this.offset).copy(colliderMatrix.transformPoint(target, reference));
-    target.mulScalar(-1).add(objectPosition);
-    const radius = objectRadius + this.radius;
-    const distance = target.length() - radius;
-    target.normalize();
+    target.sub2(objectPosition, colliderMatrix.getTranslation(reference));
+    const length = target.length();
+    const distance = this.inside ? this.radius - objectRadius - length : length - objectRadius - this.radius;
+    if (distance < 0) {
+      target.mulScalar(1 / length);
+      if (this.inside) {
+        target.mulScalar(-1);
+      }
+    }
     return distance;
   }
 }
 class VRMSpringBoneColliderShapeCapsule {
-  constructor(pcRef, params) {
+  constructor(pcRef, params = {}) {
     this.offset = (params == null ? void 0 : params.offset) ?? new pcRef.Vec3();
     this.tail = (params == null ? void 0 : params.tail) ?? new pcRef.Vec3();
     this.radius = (params == null ? void 0 : params.radius) ?? 0;
     this._v3A = new pcRef.Vec3();
     this._v3B = new pcRef.Vec3();
+    this.inside = (params == null ? void 0 : params.inside) ?? false;
   }
   get type() {
     return "capsule";
   }
   calculateCollision(colliderMatrix, objectPosition, objectRadius, target, reference) {
-    this._v3A.copy(this.offset).copy(colliderMatrix.transformPoint(this._v3A, reference));
-    this._v3B.copy(this.tail).copy(colliderMatrix.transformPoint(this._v3B, reference));
+    this._v3A.copy(colliderMatrix.getTranslation(reference));
+    colliderMatrix.transformPoint(reference.sub2(this.tail, this.offset), this._v3B);
     this._v3B.sub(this._v3A);
     const lengthSqCapsule = this._v3B.lengthSq();
     target.copy(objectPosition).sub(this._v3A);
@@ -1976,9 +2049,14 @@ class VRMSpringBoneColliderShapeCapsule {
       this._v3B.mulScalar(dot / lengthSqCapsule);
       target.sub(this._v3B);
     }
-    const radius = objectRadius + this.radius;
-    const distance = target.length() - radius;
-    target.normalize();
+    const length = target.length();
+    const distance = this.inside ? this.radius - objectRadius - length : length - objectRadius - this.radius;
+    if (distance < 0) {
+      target.mulScalar(1 / length);
+      if (this.inside) {
+        target.mulScalar(-1);
+      }
+    }
     return distance;
   }
 }
@@ -1991,16 +2069,15 @@ class VRMSpringBoneJoint {
     this._pcRef = pcRef;
     this._v3A = new this._pcRef.Vec3();
     this._v3B = new this._pcRef.Vec3();
-    this._v3C = new this._pcRef.Vec3();
     this._nextTail = new this._pcRef.Vec3();
     this._quatA = new this._pcRef.Quat();
     this._quatB = new this._pcRef.Quat();
+    this._quatC = new this._pcRef.Quat();
+    this._quatD = new this._pcRef.Quat();
     this._matA = new this._pcRef.Mat4();
     this._matB = new this._pcRef.Mat4();
     this._identityMat4 = new this._pcRef.Mat4();
     this._worldSpacePosition = new this._pcRef.Vec3();
-    this._centerSpacePosition = new this._pcRef.Vec3();
-    this._matrixWorldToCenterTranslation = new this._pcRef.Vec3();
     this._worldSpaceBoneLength = 0;
     this.bone = bone;
     this.child = child;
@@ -2045,6 +2122,34 @@ class VRMSpringBoneJoint {
   get _parentMatrixWorld() {
     return this.bone.parent ? this.bone.parent.getWorldTransform() : this._identityMat4;
   }
+  /**
+   * Set of dependencies that need to be updated before this joint.
+   */
+  get dependencies() {
+    const set = /* @__PURE__ */ new Set();
+    const parent = this.bone.parent;
+    if (parent) {
+      set.add(parent);
+    }
+    for (let cg = 0; cg < this.colliderGroups.length; cg++) {
+      for (let c = 0; c < this.colliderGroups[cg].colliders.length; c++) {
+        set.add(this.colliderGroups[cg].colliders[c]);
+      }
+    }
+    return set;
+  }
+  _calcWorldSpaceBoneLength() {
+    const matrixWorld = this.bone.getWorldTransform();
+    matrixWorld.getTranslation(this._v3A);
+    if (this.child) {
+      const childMatrixWorld = this.child.getWorldTransform();
+      childMatrixWorld.getTranslation(this._v3B);
+    } else {
+      this._v3B.copy(this._initialLocalChildPosition);
+      applyMatrix4(this._v3B, matrixWorld);
+    }
+    this._worldSpaceBoneLength = this._v3A.sub(this._v3B).length();
+  }
   setInitState() {
     this._initialLocalMatrix.copy(this.bone.getLocalTransform());
     this._initialLocalRotation.copy(this.bone.getLocalRotation());
@@ -2053,60 +2158,57 @@ class VRMSpringBoneJoint {
     } else {
       this._initialLocalChildPosition.copy(this.bone.getLocalPosition()).normalize().mulScalar(0.07);
     }
+    const matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
     const worldTransform = this.bone.getWorldTransform();
     localToWorld(this._currentTail.copy(this._initialLocalChildPosition), worldTransform);
+    applyMatrix4(this._currentTail, matrixWorldToCenter);
     this._prevTail.copy(this._currentTail);
     this._boneAxis.copy(this._initialLocalChildPosition).normalize();
-    const matrixWorldTranslated = this.bone.getWorldTransform().transformPoint(new this._pcRef.Vec3());
-    this._worldSpaceBoneLength = this._v3A.copy(this._initialLocalChildPosition).copy(this.bone.getWorldTransform().transformPoint(this._v3A)).sub(matrixWorldTranslated).length();
   }
   reset() {
     this.bone.setLocalRotation(this._initialLocalRotation);
     const transform = new this._pcRef.Mat4();
     transform.mul2(this._parentMatrixWorld, this.bone.getLocalTransform());
-    const position = transform.transformPoint(new this._pcRef.Vec3());
+    const position = transform.getTranslation();
     this.bone.setPosition(position.x, position.y, position.z);
     const matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
     const worldTransform = this.bone.getWorldTransform();
     localToWorld(this._currentTail.copy(this._initialLocalChildPosition), worldTransform);
-    this._currentTail.copy(matrixWorldToCenter.transformPoint(this._currentTail));
+    applyMatrix4(this._currentTail, matrixWorldToCenter);
     this._prevTail.copy(this._currentTail);
   }
-  update(dt, strength) {
+  update(dt, strength = 1) {
     if (dt <= 0)
       return;
-    this._worldSpacePosition.copy(this.bone.getWorldTransform().getTranslation(this._v3A));
-    let matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
-    this._matrixWorldToCenterTranslation.set(0, 0, 0);
-    matrixWorldToCenter.getTranslation(this._matrixWorldToCenterTranslation);
-    this._centerSpacePosition.copy(this._worldSpacePosition).add(this._matrixWorldToCenterTranslation);
-    const quatWorldToCenter = this._quatA.setFromMat4(matrixWorldToCenter);
-    const centerSpaceParentMatrix = this._matB.copy(matrixWorldToCenter).mul(this._parentMatrixWorld);
-    const centerSpaceBoneAxis = this._v3B.copy(this._boneAxis).copy(this._initialLocalMatrix.transformPoint(this._v3B, this._v3A)).copy(centerSpaceParentMatrix.transformPoint(this._v3B, this._v3A)).sub(this._centerSpacePosition).normalize();
-    const centerSpaceGravity = this._v3A.copy(this.settings.gravityDir).copy(quatWorldToCenter.transformVector(this._v3A, this._v3C)).normalize();
-    const matrixCenterToWorld = this._getMatrixCenterToWorld(this._matA);
+    this._calcWorldSpaceBoneLength();
+    const worldSpaceBoneAxis = this._v3A.copy(this._boneAxis);
+    transformDirection(worldSpaceBoneAxis, this._initialLocalMatrix);
+    transformDirection(worldSpaceBoneAxis, this._parentMatrixWorld);
     this._nextTail.copy(this._currentTail).add(
-      this._v3A.copy(this._currentTail).sub(this._prevTail).mulScalar(1 - this.settings.dragForce)
-    ).add(this._v3A.copy(centerSpaceBoneAxis).mulScalar(this.settings.stiffness * dt)).add(this._v3A.copy(centerSpaceGravity).mulScalar(this.settings.gravityPower * dt)).copy(matrixCenterToWorld.transformPoint(this._nextTail, this._v3C));
+      this._v3B.sub2(this._currentTail, this._prevTail).mulScalar(1 - this.settings.dragForce)
+    );
+    applyMatrix4(this._nextTail, this._getMatrixCenterToWorld(this._matA));
+    this._nextTail.add(this._v3B.copy(worldSpaceBoneAxis).mulScalar(this.settings.stiffness * dt));
+    this._nextTail.add(
+      this._v3B.copy(this.settings.gravityDir).mulScalar(this.settings.gravityPower * dt)
+    );
+    const matrixWorld = this.bone.getWorldTransform();
+    matrixWorld.getTranslation(this._worldSpacePosition);
     this._nextTail.sub(this._worldSpacePosition).normalize().mulScalar(this._worldSpaceBoneLength).add(this._worldSpacePosition);
-    const compareTransform = this._v3A.copy(this._nextTail).sub(this._currentTail).mulScalar(0.2);
-    this._nextTail.sub(this._v3A.set(0, compareTransform.y, 0));
     this._collision(this._nextTail);
-    matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
     this._prevTail.copy(this._currentTail);
-    this._currentTail.copy(
-      this._v3A.copy(this._nextTail).copy(matrixWorldToCenter.transformPoint(this._v3A, this._v3B))
-    );
-    const worldSpaceInitialMatrixInv = mat4InvertCompat(
-      this._matA.copy(this._parentMatrixWorld).mul(this._initialLocalMatrix)
-    );
-    const applyRotation = setFromUnitVectors(
-      this._quatA,
-      this._boneAxis,
-      this._v3A.copy(this._nextTail).copy(worldSpaceInitialMatrixInv.transformPoint(this._v3A, this._v3B)).normalize()
-    );
-    const angles = applyRotation.getEulerAngles(this._v3C);
-    applyRotation.setFromEulerAngles(angles.x * strength, angles.y * strength, angles.z * strength);
+    this._currentTail.copy(this._nextTail);
+    applyMatrix4(this._currentTail, this._getMatrixWorldToCenter(this._matB));
+    const worldSpaceInitialMatrixInv = this._matA.copy(this._parentMatrixWorld).mul(this._initialLocalMatrix).invert();
+    const to = this._v3A.copy(this._nextTail);
+    applyMatrix4(to, worldSpaceInitialMatrixInv);
+    to.normalize();
+    const applyRotation = setFromUnitVectors(this._quatA, this._boneAxis, to);
+    if (strength !== 1) {
+      const identityQuat = this._quatC.set(0, 0, 0, 1);
+      const tempQuat = this._quatD.copy(applyRotation);
+      applyRotation.slerp(identityQuat, tempQuat, strength);
+    }
     const rotation = this._quatB.copy(this._initialLocalRotation).mul(applyRotation);
     this.bone.setLocalRotation(rotation);
   }
@@ -2137,7 +2239,7 @@ class VRMSpringBoneJoint {
       for (let j = 0; j < colliders.length; j++) {
         const collider = colliders[j];
         const dist = collider.shape.calculateCollision(
-          collider.getWorldTransform(),
+          collider.colliderMatrix,
           tail,
           this.settings.hitRadius,
           this._v3A,
@@ -2145,7 +2247,9 @@ class VRMSpringBoneJoint {
         );
         if (dist < 0) {
           tail.add(this._v3A.mulScalar(-dist));
-          tail.sub(this._worldSpacePosition).normalize().mulScalar(this._worldSpaceBoneLength).add(this._worldSpacePosition);
+          tail.sub(this._worldSpacePosition);
+          const length = tail.length();
+          tail.mulScalar(this._worldSpaceBoneLength / length).add(this._worldSpacePosition);
         }
       }
     }
@@ -2154,7 +2258,21 @@ class VRMSpringBoneJoint {
 function createVRMSpringBoneCollider(pcRef, shape) {
   const collider = new pcRef.Entity();
   collider.shape = shape;
+  collider.colliderMatrix = new pcRef.Mat4();
+  collider.updateWorldMatrix = function() {
+    const matrixWorld = this.getWorldTransform();
+    updateColliderMatrix(this.colliderMatrix, matrixWorld, this.shape.offset);
+  };
   return collider;
+}
+function updateColliderMatrix(colliderMatrix, matrixWorld, offset) {
+  const me = matrixWorld.data;
+  colliderMatrix.copy(matrixWorld);
+  if (offset) {
+    colliderMatrix.data[12] = me[0] * offset.x + me[4] * offset.y + me[8] * offset.z + me[12];
+    colliderMatrix.data[13] = me[1] * offset.x + me[5] * offset.y + me[9] * offset.z + me[13];
+    colliderMatrix.data[14] = me[2] * offset.x + me[6] * offset.y + me[10] * offset.z + me[14];
+  }
 }
 const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
   constructor(pcRef, asset, entity) {
@@ -2163,8 +2281,9 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
     this._pcRef = pcRef;
   }
   import() {
-    const gltf = this.asset.resource.data.gltf;
-    const data = this.asset.resource.data;
+    const resource = this.asset.resource;
+    const gltf = resource.data.gltf;
+    const data = resource.data;
     const v1Result = this._v1Import(gltf, data);
     if (v1Result) {
       return v1Result;
@@ -2416,26 +2535,26 @@ const importScript = (pcRef) => {
     constructor() {
       super(...arguments);
       this.activeSpringBone = true;
-      this.isWalking = false;
+      this.isLimitedStrength = false;
       this.updateInterval = 1 / 60;
       this.timeSinceLastUpdate = 0;
     }
     initialize() {
       const springBoneLoader = new VRMSpringBoneLoaderPlugin(pcRef, this.asset, this.entity);
       this.springBoneManager = springBoneLoader.import();
-      this.isWalking = false;
+      this.isLimitedStrength = false;
       this.entity.on("toggle-spring-bone", this.toggleSpringBone, this);
-      this.entity.on("toggle-is-walking", this.toggleIsWalking, this);
+      this.entity.on("toggle-strength-limit", this.toggleStrengthLimit, this);
       this.on("destroy", () => {
         this.entity.off("toggle-spring-bone", this.toggleSpringBone, this);
-        this.entity.on("toggle-is-walking", this.toggleIsWalking, this);
+        this.entity.off("toggle-strength-limit", this.toggleStrengthLimit, this);
       });
     }
     toggleSpringBone(isActive) {
       this.activeSpringBone = isActive;
     }
-    toggleIsWalking(isWalking) {
-      this.isWalking = isWalking;
+    toggleStrengthLimit(isLimited) {
+      this.isLimitedStrength = isLimited;
     }
     update(dt) {
       if (!this.springBoneManager || !this.activeSpringBone)
@@ -2443,7 +2562,7 @@ const importScript = (pcRef) => {
       this.timeSinceLastUpdate += dt;
       if (this.timeSinceLastUpdate < this.updateInterval)
         return;
-      this.springBoneManager.update(dt, this.isWalking);
+      this.springBoneManager.update(dt, this.isLimitedStrength);
       this.timeSinceLastUpdate = 0;
     }
   }
@@ -2662,7 +2781,8 @@ function createVRMHumanBones(schemaHumanoid, glbAsset, entity) {
       if (boneName == null || index == null) {
         return;
       }
-      const node = glbAsset.resource.data.nodes[index];
+      const resource = glbAsset.resource;
+      const node = resource.data.nodes[index];
       if (node == null) {
         console.warn(
           `A glTF node bound to the humanoid bone ${boneName} (index = ${index}) does not exist`
@@ -2685,7 +2805,8 @@ function createVRMCHumanBones(schemaHumanoid, glbAsset, entity) {
     for (const property in schemaHumanoid.humanBones) {
       let boneName = property;
       const index = schemaHumanoid.humanBones[property].node;
-      const node = glbAsset.resource.data.nodes[index];
+      const resource = glbAsset.resource;
+      const node = resource.data.nodes[index];
       if (existsPreviousThumbName) {
         const thumbBoneName = thumbBoneNameMap[boneName];
         if (thumbBoneName != null) {
@@ -2708,15 +2829,16 @@ function createVRMCHumanBones(schemaHumanoid, glbAsset, entity) {
 }
 function createFormattedVRMHumanoid(pcRef, vrmAsset, renderEntity, options) {
   var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j;
-  const VRM = (_b = (_a = vrmAsset.resource.data.gltf) == null ? void 0 : _a.extensions) == null ? void 0 : _b.VRM;
-  const VRMC_vrm = (_d = (_c = vrmAsset.resource.data.gltf) == null ? void 0 : _c.extensions) == null ? void 0 : _d.VRMC_vrm;
+  const resource = vrmAsset.resource;
+  const VRM = (_b = (_a = resource.data.gltf) == null ? void 0 : _a.extensions) == null ? void 0 : _b.VRM;
+  const VRMC_vrm = (_d = (_c = resource.data.gltf) == null ? void 0 : _c.extensions) == null ? void 0 : _d.VRMC_vrm;
   if (!VRM && !VRMC_vrm) {
     console.warn("CreateFormattedVRMHumanoid: Please check. It is not a vrm avatar.");
     return null;
   }
   let humanBones = null;
   if (VRM) {
-    const schemaHumanoid = (_g = (_f = (_e = vrmAsset.resource.data.gltf) == null ? void 0 : _e.extensions) == null ? void 0 : _f.VRM) == null ? void 0 : _g.humanoid;
+    const schemaHumanoid = (_g = (_f = (_e = resource.data.gltf) == null ? void 0 : _e.extensions) == null ? void 0 : _f.VRM) == null ? void 0 : _g.humanoid;
     humanBones = createVRMHumanBones(schemaHumanoid, vrmAsset, renderEntity);
   } else if (VRMC_vrm) {
     const specVersion = VRMC_vrm.specVersion;
@@ -2724,7 +2846,7 @@ function createFormattedVRMHumanoid(pcRef, vrmAsset, renderEntity, options) {
       console.warn(`Unknown VRMC_vrm specVersion "${specVersion}"`);
       return null;
     }
-    const schemaHumanoid = (_j = (_i = (_h = vrmAsset.resource.data.gltf) == null ? void 0 : _h.extensions) == null ? void 0 : _i.VRMC_vrm) == null ? void 0 : _j.humanoid;
+    const schemaHumanoid = (_j = (_i = (_h = resource.data.gltf) == null ? void 0 : _h.extensions) == null ? void 0 : _i.VRMC_vrm) == null ? void 0 : _j.humanoid;
     humanBones = createVRMCHumanBones(schemaHumanoid, vrmAsset, renderEntity);
   }
   if (humanBones) {
@@ -2742,11 +2864,12 @@ const addIndexToNodeTags = (asset) => {
     console.error("addIndexToNodeTags Error: asset.resource is not available");
     return;
   }
-  if (!(asset.resource.data && asset.resource.data.gltf)) {
+  const resource = asset.resource;
+  if (!(resource.data && resource.data.gltf)) {
     console.error("addIndexToNodeTags Error: asset.resource.data.gltf is not available");
     return;
   }
-  const assetData = asset.resource.data;
+  const assetData = resource.data;
   const nodes = assetData.nodes;
   nodes.forEach((node, index) => {
     node.tags.add(`node_${index}`);
@@ -2754,8 +2877,9 @@ const addIndexToNodeTags = (asset) => {
 };
 const getVersion = (asset) => {
   var _a, _b;
-  const isV1Used = (_a = asset.resource.data.gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
-  const isV0Used = (_b = asset.resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
+  const resource = asset.resource;
+  const isV1Used = (_a = resource.data.gltf.extensions) == null ? void 0 : _a.VRMC_vrm;
+  const isV0Used = (_b = resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
   return isV1Used ? "v1" : isV0Used ? "v0" : null;
 };
 class RenderStates {

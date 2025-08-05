@@ -20,5 +20,6 @@
 
     "types": ["vite-plugin-glsl/ext"]
   },
-  "include": ["src", "examples", "example.ts"]
+  "include": ["src", "examples", "example.ts"],
+  "exclude": ["src/extensions/vrmc-materials-mtoon", "src/scripts/vrm-mtoon.ts"] // Skip for now
 }

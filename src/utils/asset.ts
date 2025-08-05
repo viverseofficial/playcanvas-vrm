@@ -4,12 +4,13 @@ export const addIndexToNodeTags = (asset: pc.Asset) => {
     return;
   }
 
-  if (!(asset.resource.data && asset.resource.data.gltf)) {
+  const resource = asset.resource as { data: { gltf: any; nodes: pc.GraphNode[] } };
+  if (!(resource.data && resource.data.gltf)) {
     console.error('addIndexToNodeTags Error: asset.resource.data.gltf is not available');
     return;
   }
 
-  const assetData = asset.resource.data;
+  const assetData = resource.data;
   const nodes = assetData.nodes;
 
   nodes.forEach((node: pc.GraphNode, index: number) => {
@@ -18,7 +19,8 @@ export const addIndexToNodeTags = (asset: pc.Asset) => {
 };
 
 export const getVersion = (asset: pc.Asset) => {
-  const isV1Used = asset.resource.data.gltf.extensions?.VRMC_vrm;
-  const isV0Used = asset.resource.data.gltf.extensions?.VRM;
+  const resource = asset.resource as { data: { gltf: any } };
+  const isV1Used = resource.data.gltf.extensions?.VRMC_vrm;
+  const isV0Used = resource.data.gltf.extensions?.VRM;
   return isV1Used ? 'v1' : isV0Used ? 'v0' : null;
 };

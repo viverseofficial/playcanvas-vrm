@@ -188,7 +188,8 @@ export const setSkyBox = (app: pc.Application) => {
   );
 
   cubemapAsset.ready((asset) => {
-    app.scene.setSkybox(asset.resources);
+    const textures = asset.resources as pc.Texture[];
+    app.scene.setSkybox(textures);
     app.scene.skyboxMip = 1;
   });
 

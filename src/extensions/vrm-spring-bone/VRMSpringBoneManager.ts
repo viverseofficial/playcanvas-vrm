@@ -1,179 +1,219 @@
+import { lowestCommonAncestor } from '../../utils/lowestCommonAncestor';
+import { traverseAncestorsFromRoot } from '../../utils/traverseAncestorsFromRoot';
+import { traverseChildrenUntilConditionMet } from '../../utils/traverseChildrenUntilConditionMet';
 import { ExtensionManagerNameType } from '../extensions';
+import { VRMSpringBoneColliderGroup } from './vrm-spring-bone';
 import { VRMSpringBoneJoint } from './VRMSpringBoneJoint';
 
-enum ACTION_TYPE {
-  INIT = 'init',
-  UPDATE = 'update',
-  RESET = 'reset',
+interface IColliderNode extends pc.Entity {
+  updateWorldMatrix(): void;
 }
 
 export class VRMSpringBoneManager {
-  public managerName: ExtensionManagerNameType;
+  public managerName: ExtensionManagerNameType = 'springBone';
   private _joints = new Set<VRMSpringBoneJoint>();
+  private _hasWarnedCircularDependency = false;
+  private _sortedJoints: Array<VRMSpringBoneJoint> = [];
+
+  // Strength control properties
+  private _limitedStrength: number = 0.3; // Strength when limited
+  private _normalStrength: number = 1.0;  // Normal strength
+
+  /**
+   * An ordered list of ancestors of all the SpringBone joints. Before the
+   * SpringBone joints can be updated, the world matrices of these ancestors
+   * must be calculated. The first element is the lowest common ancestor, for
+   * which not only its world matrix but its ancestors' world matrices are
+   * updated as well.
+   */
+  private _ancestors: pc.GraphNode[] = [];
+
   private _objectSpringBonesMap = new Map<pc.GraphNode, Set<VRMSpringBoneJoint>>();
-  private _ancestorPathCache = new Map<pc.GraphNode, pc.GraphNode[]>();
-
-  public direction: number;
-  public strength: number;
-  public limitHeight: number;
-  public limitLow: number;
-  private _dt: number = 0;
-
-  private _springBonesTried = new Set<string>();
-  private _springBonesDone = new Set<string>();
-  private _dependenciesCache = new Map<VRMSpringBoneJoint, Set<pc.GraphNode>>();
+  private _isSortedJointsDirty = false;
 
   constructor() {
-    this.managerName = 'springBone';
-    this._joints = new Set();
-    this._objectSpringBonesMap = new Map();
-
-    // Walking rotation strength (0 - 0.2)
-    this.direction = 1;
-    this.strength = 0.1;
-    this.limitHeight = 0.2;
-    this.limitLow = 0;
+    this._relevantChildrenUpdated = this._relevantChildrenUpdated.bind(this);
   }
 
   get joints() {
     return this._joints;
   }
 
-  addJoint(joint: VRMSpringBoneJoint) {
-    this._joints.add(joint);
-    let objectSet = this._objectSpringBonesMap.get(joint.bone);
+  get limitedStrength() {
+    return this._limitedStrength;
+  }
 
+  get normalStrength() {
+    return this._normalStrength;
+  }
+
+  public get colliderGroups(): VRMSpringBoneColliderGroup[] {
+    const set = new Set<VRMSpringBoneColliderGroup>();
+    this._joints.forEach((springBone) => {
+      springBone.colliderGroups.forEach((colliderGroup) => {
+        set.add(colliderGroup);
+      });
+    });
+    return Array.from(set);
+  }
+
+  private _relevantChildrenUpdated(object: pc.GraphNode): boolean {
+    // if the object has attached springbone, halt the traversal
+    if ((this._objectSpringBonesMap.get(object)?.size ?? 0) > 0) {
+      return true;
+    }
+
+    // otherwise update its world matrix
+    const colliderObject = object as IColliderNode;
+    if (colliderObject.updateWorldMatrix) {
+      colliderObject.updateWorldMatrix();
+    }
+    return false;
+  }
+
+  addJoint(joint: VRMSpringBoneJoint): void {
+    this._joints.add(joint);
+
+    let objectSet = this._objectSpringBonesMap.get(joint.bone);
     if (objectSet == null) {
-      objectSet = new Set();
+      objectSet = new Set<VRMSpringBoneJoint>();
       this._objectSpringBonesMap.set(joint.bone, objectSet);
     }
-
     objectSet.add(joint);
+
+    this._isSortedJointsDirty = true;
   }
 
-  setInitState() {
-    this._springBonesTried.clear();
-    this._springBonesDone.clear();
+  public setInitState(): void {
+    this._sortJoints();
 
-    for (const springBone of this._joints) {
-      this._processSpringBone(springBone, ACTION_TYPE.INIT);
+    for (let i = 0; i < this._sortedJoints.length; i++) {
+      const springBone = this._sortedJoints[i];
+      springBone.setInitState();
     }
   }
 
-  reset() {
-    this._springBonesTried.clear();
-    this._springBonesDone.clear();
+  public reset(): void {
+    this._sortJoints();
 
-    for (const springBone of this._joints) {
-      this._processSpringBone(springBone, ACTION_TYPE.RESET);
+    for (let i = 0; i < this._sortedJoints.length; i++) {
+      const springBone = this._sortedJoints[i];
+      springBone.reset();
     }
   }
 
-  update(dt: number, isWalking?: boolean) {
-    this._springBonesTried.clear();
-    this._springBonesDone.clear();
-    this._dt = dt;
-
-    if (isWalking) {
-      if (this.strength >= this.limitHeight) {
-        this.direction = -0.2;
-        this.limitHeight = Math.random() * (0.2 - this.limitLow) + this.limitLow;
-      } else if (this.strength <= this.limitLow) {
-        this.direction = 0.2;
-        this.limitLow = Math.random() * 0.2;
-      }
-
-      this.strength += this.direction * dt;
-    } else {
-      if (this.strength <= 0.5) {
-        this.strength += 0.1 * dt;
-      }
-    }
-
-    for (const springBone of this._joints) {
-      this._processSpringBone(springBone, ACTION_TYPE.UPDATE);
-    }
-  }
-
-  _processSpringBone(springBone: VRMSpringBoneJoint, action: ACTION_TYPE) {
-    if (this._springBonesDone.has(springBone.id)) {
+  /**
+   * Sorts the joints ensuring they are updated in the correct order taking dependencies into account.
+   *
+   * This method updates {@link _sortedJoints} and {@link _ancestors}.
+   * Make sure to call this before using them.
+   */
+  private _sortJoints() {
+    if (!this._isSortedJointsDirty) {
       return;
     }
 
-    if (this._springBonesTried.has(springBone.id)) {
-      return;
+    const springBoneOrder: Array<VRMSpringBoneJoint> = [];
+    const springBonesTried = new Set<VRMSpringBoneJoint>();
+    const springBonesDone = new Set<VRMSpringBoneJoint>();
+    const ancestors = new Set<pc.GraphNode>();
+
+    for (const springBone of this._joints) {
+      this._insertJointSort(
+        springBone,
+        springBonesTried,
+        springBonesDone,
+        springBoneOrder,
+        ancestors,
+      );
     }
+    this._sortedJoints = springBoneOrder;
 
-    this._springBonesTried.add(springBone.id);
-    const depObjects = this._getDependencies(springBone);
-
-    for (const depObject of depObjects) {
-      let ancestorPath: pc.GraphNode[];
-
-      if (this._ancestorPathCache.has(depObject)) {
-        ancestorPath = this._ancestorPathCache.get(depObject)!;
-      } else {
-        ancestorPath = [];
-        let head = depObject;
-        while (head !== null) {
-          ancestorPath.push(head);
-          head = head.parent;
+    const lca = lowestCommonAncestor(ancestors);
+    this._ancestors = [];
+    if (lca) {
+      this._ancestors.push(lca);
+      traverseChildrenUntilConditionMet(lca, (object: pc.GraphNode) => {
+        // if the object has attached springbone, halt the traversal
+        if ((this._objectSpringBonesMap.get(object)?.size ?? 0) > 0) {
+          return true;
         }
-        ancestorPath.reverse();
-        this._ancestorPathCache.set(depObject, ancestorPath);
-      }
+        this._ancestors.push(object);
+        return false;
+      });
+    }
 
-      for (let i = 0; i < ancestorPath.length; i++) {
-        const ancestor = ancestorPath[i];
-        const objectSet = this._objectSpringBonesMap.get(ancestor);
+    this._isSortedJointsDirty = false;
+  }
+
+  private _insertJointSort(
+    springBone: VRMSpringBoneJoint,
+    springBonesTried: Set<VRMSpringBoneJoint>,
+    springBonesDone: Set<VRMSpringBoneJoint>,
+    springBoneOrder: Array<VRMSpringBoneJoint>,
+    ancestors: Set<pc.GraphNode>,
+  ) {
+    if (springBonesDone.has(springBone)) {
+      return;
+    }
+
+    if (springBonesTried.has(springBone)) {
+      if (!this._hasWarnedCircularDependency) {
+        console.warn('VRMSpringBoneManager: Circular dependency detected');
+        this._hasWarnedCircularDependency = true;
+      }
+      return;
+    }
+
+    springBonesTried.add(springBone);
+
+    const depObjects = springBone.dependencies;
+    for (const depObject of depObjects) {
+      let encounteredSpringBone = false;
+      let ancestor: pc.GraphNode | null = null;
+      traverseAncestorsFromRoot(depObject, (depObjectAncestor) => {
+        const objectSet = this._objectSpringBonesMap.get(depObjectAncestor);
 
         if (objectSet) {
           for (const depSpringBone of objectSet) {
-            if (!this._springBonesDone.has(depSpringBone.id)) {
-              this._processSpringBone(depSpringBone, action);
-            }
+            encounteredSpringBone = true;
+            this._insertJointSort(
+              depSpringBone,
+              springBonesTried,
+              springBonesDone,
+              springBoneOrder,
+              ancestors,
+            );
           }
+        } else if (!encounteredSpringBone) {
+          // This object is an ancestor of a spring bone, but is NOT a sparse node in between spring bones.
+          ancestor = depObjectAncestor;
         }
+      });
+      if (ancestor) {
+        ancestors.add(ancestor);
       }
     }
 
-    if (action === ACTION_TYPE.UPDATE) {
-      springBone.update(this._dt, this.strength);
-    } else if (action === ACTION_TYPE.RESET) {
-      springBone.reset();
-    } else if (action === ACTION_TYPE.INIT) {
-      springBone.setInitState();
-    }
+    springBoneOrder.push(springBone);
 
-    this._springBonesDone.add(springBone.id);
+    springBonesDone.add(springBone);
   }
 
-  // Return a set of objects that are dependant of given spring bone.
-  _getDependencies(springBone: VRMSpringBoneJoint) {
-    if (this._dependenciesCache.has(springBone)) {
-      return this._dependenciesCache.get(springBone)!;
+  public update(delta: number, isLimited: boolean = false): void {
+    this._sortJoints();
+
+    // Choose strength based on limitation state - simple and direct
+    const currentStrength = isLimited ? this._limitedStrength : this._normalStrength;
+
+    for (let i = 0; i < this._sortedJoints.length; i++) {
+      // update the springbone
+      const springBone = this._sortedJoints[i];
+      springBone.update(delta, currentStrength);
+
+      // update children world matrices
+      // it is required when the spring bone chain is sparse
+      traverseChildrenUntilConditionMet(springBone.bone, this._relevantChildrenUpdated);
     }
-
-    const set = new Set<pc.GraphNode>();
-
-    const parent = springBone.bone.parent;
-    if (parent) {
-      set.add(parent);
-    }
-
-    if (springBone.colliderGroups) {
-      for (let i = 0; i < springBone.colliderGroups.length; i++) {
-        const colliderGroup = springBone.colliderGroups[i];
-        const colliders = colliderGroup.colliders;
-
-        for (let j = 0; j < colliders.length; j++) {
-          const collider = colliders[j];
-          set.add(collider);
-        }
-      }
-    }
-
-    this._dependenciesCache.set(springBone, set);
-    return set;
   }
 }

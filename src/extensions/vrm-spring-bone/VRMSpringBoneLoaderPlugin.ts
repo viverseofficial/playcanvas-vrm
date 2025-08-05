@@ -23,8 +23,9 @@ export class VRMSpringBoneLoaderPlugin {
   }
 
   import() {
-    const gltf = this.asset.resource.data.gltf;
-    const data = this.asset.resource.data;
+    const resource = this.asset.resource as { data: { gltf: unknown } };
+    const gltf = resource.data.gltf;
+    const data = resource.data;
 
     const v1Result = this._v1Import(gltf, data);
     if (v1Result) {

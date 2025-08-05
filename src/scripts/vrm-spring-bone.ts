@@ -7,21 +7,21 @@ export const importScript = (pcRef: typeof pc) => {
     asset!: pc.Asset;
     springBoneManager!: VRMSpringBoneManager | null;
     activeSpringBone: boolean = true;
-    isWalking: boolean = false;
+    isLimitedStrength: boolean = false;
     updateInterval: number = 1 / 60;
     timeSinceLastUpdate: number = 0;
 
     initialize() {
       const springBoneLoader = new VRMSpringBoneLoaderPlugin(pcRef, this.asset, this.entity);
       this.springBoneManager = springBoneLoader.import();
-      this.isWalking = false;
+      this.isLimitedStrength = false;
 
       this.entity.on('toggle-spring-bone', this.toggleSpringBone, this);
-      this.entity.on('toggle-is-walking', this.toggleIsWalking, this);
+      this.entity.on('toggle-strength-limit', this.toggleStrengthLimit, this);
 
       this.on('destroy', () => {
         this.entity.off('toggle-spring-bone', this.toggleSpringBone, this);
-        this.entity.on('toggle-is-walking', this.toggleIsWalking, this);
+        this.entity.off('toggle-strength-limit', this.toggleStrengthLimit, this);
       });
     }
 
@@ -29,8 +29,8 @@ export const importScript = (pcRef: typeof pc) => {
       this.activeSpringBone = isActive;
     }
 
-    toggleIsWalking(isWalking: boolean) {
-      this.isWalking = isWalking;
+    toggleStrengthLimit(isLimited: boolean) {
+      this.isLimitedStrength = isLimited;
     }
 
     update(dt: number) {
@@ -38,7 +38,7 @@ export const importScript = (pcRef: typeof pc) => {
       this.timeSinceLastUpdate += dt;
       if (this.timeSinceLastUpdate < this.updateInterval) return;
 
-      this.springBoneManager.update(dt, this.isWalking);
+      this.springBoneManager.update(dt, this.isLimitedStrength);
       this.timeSinceLastUpdate = 0;
     }
   }

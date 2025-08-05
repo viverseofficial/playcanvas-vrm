@@ -59,7 +59,8 @@ export class VRMViverseAnimationTrack {
     // Try to get the animation hips node from asset
     let nodeMotionHipsHeight = 0;
     if (this.animationAsset.asset.type === 'container') {
-      const motionHipsNode = this.animationAsset.asset.resource.data.nodes.find(
+      const resource = this.animationAsset.asset.resource as { data: { nodes: pc.GraphNode[] } };
+      const motionHipsNode = resource.data.nodes.find(
         (node: pc.GraphNode) => node.name === VRMRigMap.hips,
       );
       if (motionHipsNode) {

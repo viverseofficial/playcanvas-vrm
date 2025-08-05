@@ -18,7 +18,8 @@ function createVRMHumanBones(schemaHumanoid: any, glbAsset: pc.Asset, entity: pc
         return;
       }
 
-      const node = glbAsset.resource.data.nodes[index];
+      const resource = glbAsset.resource as { data: { nodes: pc.GraphNode[] } };
+      const node = resource.data.nodes[index];
 
       // if the specified node does not exist, emit a warning
       if (node == null) {
@@ -55,7 +56,8 @@ export function createVRMCHumanBones(schemaHumanoid: any, glbAsset: pc.Asset, en
     for (const property in schemaHumanoid.humanBones) {
       let boneName = property as VRMHumanBoneName;
       const index = schemaHumanoid.humanBones[property].node;
-      const node = glbAsset.resource.data.nodes[index];
+      const resource = glbAsset.resource as { data: { nodes: pc.GraphNode[] } };
+      const node = resource.data.nodes[index];
 
       // compat: 1.0-beta previous thumb bone names
       if (existsPreviousThumbName) {
@@ -90,8 +92,9 @@ export function createFormattedVRMHumanoid(
   renderEntity: pc.Entity,
   options?: { autoUpdateHumanBones?: boolean },
 ) {
-  const VRM = vrmAsset.resource.data.gltf?.extensions?.VRM;
-  const VRMC_vrm = vrmAsset.resource.data.gltf?.extensions?.VRMC_vrm;
+  const resource = vrmAsset.resource as { data: { gltf: any } };
+  const VRM = resource.data.gltf?.extensions?.VRM;
+  const VRMC_vrm = resource.data.gltf?.extensions?.VRMC_vrm;
 
   if (!VRM && !VRMC_vrm) {
     console.warn('CreateFormattedVRMHumanoid: Please check. It is not a vrm avatar.');
@@ -102,7 +105,7 @@ export function createFormattedVRMHumanoid(
 
   if (VRM) {
     // v0Import
-    const schemaHumanoid = vrmAsset.resource.data.gltf?.extensions?.VRM?.humanoid;
+    const schemaHumanoid = resource.data.gltf?.extensions?.VRM?.humanoid;
     humanBones = createVRMHumanBones(schemaHumanoid, vrmAsset, renderEntity);
   } else if (VRMC_vrm) {
     // v1Import
@@ -112,7 +115,7 @@ export function createFormattedVRMHumanoid(
       return null;
     }
 
-    const schemaHumanoid = vrmAsset.resource.data.gltf?.extensions?.VRMC_vrm?.humanoid;
+    const schemaHumanoid = resource.data.gltf?.extensions?.VRMC_vrm?.humanoid;
     humanBones = createVRMCHumanBones(schemaHumanoid, vrmAsset, renderEntity);
   }
 

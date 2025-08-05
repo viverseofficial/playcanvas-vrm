@@ -55,8 +55,9 @@ export function createVRMAnimResources(
   }
 
   // Check vrm (model) version
-  const isV1Used = vrmAsset.resource.data.gltf.extensions?.VRMC_vrm;
-  const isV0Used = vrmAsset.resource.data.gltf.extensions?.VRM;
+  const resource = vrmAsset.resource as { data: { gltf: any } };
+  const isV1Used = resource.data.gltf.extensions?.VRMC_vrm;
+  const isV0Used = resource.data.gltf.extensions?.VRM;
   const version = isV1Used ? 'v1' : isV0Used ? 'v0' : null;
 
   const checkAnimType = (assetType: string, extensionsUsed: any) => {
@@ -79,7 +80,7 @@ export function createVRMAnimResources(
   const resources: IAnimationResource[] = [];
 
   animationAssets.forEach((animationAsset) => {
-    const assetResource = animationAsset.asset.resource;
+    const assetResource = animationAsset.asset.resource as { data: { gltf: any } };
     const assetType = animationAsset.asset.type;
 
     let resource: IAnimationResource | null;
@@ -140,7 +141,7 @@ export function bindVRMAExpression(
   if (listenerEntity.anim) {
     listenerEntity.anim.on(`anim-track:${resource.name}`, () => {
       // intialize active state and transition interval with baseLayer
-      let upperBodyActiveState = listenerEntity.anim?.baseLayer.activeState;
+      let upperBodyActiveState = listenerEntity.anim?.baseLayer?.activeState;
       let transitionInterval =
         (listenerEntity.anim as any).baseLayer._controller._totalTransitionTime ?? 0.0;
 
@@ -175,8 +176,9 @@ function createVRMAResource(
 ): IAnimationResource | null {
   const vrmaLoader = new VRMAnimationLoader(pcRef);
   const vrmAnimations: VRMAnimation[] | undefined = vrmaLoader.loadVRMA(animationAsset.asset);
-  let name: string | undefined =
-    animationAsset.asset.resource.animations?.[0]?.resources?.[0]?.name;
+  const resource = animationAsset.asset.resource as { data: { gltf: any } };
+
+  let name: string | undefined = resource.data.gltf.animations?.[0]?.resources?.[0]?.name;
   if (!name) name = '';
 
   if (vrmAnimations) {
@@ -207,10 +209,12 @@ function createViverseAnimResource(
   version: 'v0' | 'v1' | null,
   extraSettings: IAnimExtraSettings,
 ): IAnimationResource | null {
+  const resource = animationAsset.asset.resource as { animations: pc.Asset[]; type: string };
+
   const origAnimTrack =
     animationAsset.asset.type === 'container'
-      ? animationAsset.asset.resource.animations?.[0]?.resource
-      : animationAsset.asset.resource;
+      ? (resource.animations?.[0]?.resource as pc.AnimTrack)
+      : (animationAsset.asset.resource as pc.AnimTrack);
 
   if (origAnimTrack) {
     const animTrack = new VRMViverseAnimationTrack(

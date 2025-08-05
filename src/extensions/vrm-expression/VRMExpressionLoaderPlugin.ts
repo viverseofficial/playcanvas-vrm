@@ -17,7 +17,8 @@ export class VRMExpressionLoaderPlugin {
   }
 
   import() {
-    const gltf = this.asset.resource.data.gltf;
+    const resource = this.asset.resource as { data: { gltf: any } };
+    const gltf = resource.data.gltf;
 
     const v1Result = this._v1Import(gltf);
     if (v1Result) {

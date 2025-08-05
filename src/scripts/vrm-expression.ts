@@ -3,7 +3,7 @@ import { Timer } from '../timer-extension';
 import { getRandom } from '../math-utils';
 import { VRMExpressionManager } from '../extensions/vrm-expression/VRMExpressionManager';
 import { VRMExpressionLoaderPlugin } from '../extensions/vrm-expression/VRMExpressionLoaderPlugin';
-import { collectMeshInstances } from '../entity-utils';
+import { collectMeshInstances } from '../utils/entity';
 import { IAnimatedMorphConfig } from '../extensions/vrm-expression/vrm-expression';
 import { VRMExpressionPresetName } from '../extensions/vrm-map-list';
 

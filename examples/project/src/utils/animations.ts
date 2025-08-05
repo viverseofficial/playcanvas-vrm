@@ -158,7 +158,7 @@ export const createWindowTestAnimation = (
         VRMLoader.VrmAnimation.bindVRMAExpression(rootEntity, resource, animatedEntity);
       });
     }
-    if (animatedEntity.anim) {
+    if (animatedEntity.anim && animatedEntity.anim.baseLayer) {
       animatedEntity.anim.baseLayer.transition(type);
     }
   };

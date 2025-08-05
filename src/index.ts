@@ -3,7 +3,7 @@ import * as VrmExpression from './scripts/vrm-expression';
 import * as VrmSpringBone from './scripts/vrm-spring-bone';
 import * as VrmMapList from './extensions/vrm-map-list';
 import { createFormattedVRMHumanoid } from './extensions/vrm-humanoid/vrm-humanoid-utils';
-import { addIndexToNodeTags, getVersion } from './utils/vrm-asset-utils';
+import { addIndexToNodeTags, getVersion } from './utils/asset';
 
 export * as VrmAnimation from './scripts/vrm-animation';
 export * as VrmExpression from './scripts/vrm-expression';
@@ -11,7 +11,7 @@ export * as VrmSpringBone from './scripts/vrm-spring-bone';
 export * as VrmMapList from './extensions/vrm-map-list';
 export { createFormattedVRMHumanoid } from './extensions/vrm-humanoid/vrm-humanoid-utils';
 export { RenderStates } from './helpers/RenderStates';
-export { addIndexToNodeTags, getVersion } from './utils/vrm-asset-utils';
+export { addIndexToNodeTags, getVersion } from './utils/asset';
 
 export type {
   IAnimationAsset,

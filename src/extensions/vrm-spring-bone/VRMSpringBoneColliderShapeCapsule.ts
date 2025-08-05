@@ -6,13 +6,18 @@ export class VRMSpringBoneColliderShapeCapsule {
   public radius: number;
   private _v3A: pc.Vec3;
   private _v3B: pc.Vec3;
+  public inside: boolean;
 
-  constructor(pcRef: typeof pc, params: { radius?: number; offset?: pc.Vec3; tail?: pc.Vec3 }) {
+  constructor(
+    pcRef: typeof pc,
+    params: { radius?: number; offset?: pc.Vec3; tail?: pc.Vec3; inside?: boolean } = {},
+  ) {
     this.offset = params?.offset ?? new pcRef.Vec3();
     this.tail = params?.tail ?? new pcRef.Vec3();
     this.radius = params?.radius ?? 0.0;
     this._v3A = new pcRef.Vec3();
     this._v3B = new pcRef.Vec3();
+    this.inside = params?.inside ?? false;
   }
 
   get type() {
@@ -26,8 +31,9 @@ export class VRMSpringBoneColliderShapeCapsule {
     target: pc.Vec3,
     reference: pc.Vec3,
   ) {
-    this._v3A.copy(this.offset).copy(colliderMatrix.transformPoint(this._v3A, reference)); // transformed head
-    this._v3B.copy(this.tail).copy(colliderMatrix.transformPoint(this._v3B, reference)); // transformed tail
+    this._v3A.copy(colliderMatrix.getTranslation(reference)); // transformed head
+    colliderMatrix.transformPoint(reference.sub2(this.tail, this.offset), this._v3B); // transformed tail
+
     this._v3B.sub(this._v3A); // from head to tail
     const lengthSqCapsule = this._v3B.lengthSq();
 
@@ -46,9 +52,18 @@ export class VRMSpringBoneColliderShapeCapsule {
       target.sub(this._v3B); // from the shaft point to object
     }
 
-    const radius = objectRadius + this.radius;
-    const distance = target.length() - radius;
-    target.normalize();
+    const length = target.length();
+    const distance = this.inside
+      ? this.radius - objectRadius - length
+      : length - objectRadius - this.radius;
+
+    if (distance < 0) {
+      target.mulScalar(1 / length); // convert the delta to the direction
+      if (this.inside) {
+        target.mulScalar(-1); // if inside, reverse the direction
+      }
+    }
+
     return distance;
   }
 }

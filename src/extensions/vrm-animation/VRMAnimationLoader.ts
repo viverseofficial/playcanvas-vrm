@@ -31,7 +31,10 @@ export class VRMAnimationLoader {
 
   loadVRMA(vrmaAsset: pc.Asset): VRMAnimation[] | undefined {
     // get gltf properties from the asset
-    const defGltf = vrmaAsset.resource.data.gltf as GLTFSchema.IGLTF;
+    const resource = vrmaAsset.resource as {
+      data: { gltf: GLTFSchema.IGLTF; nodes: pc.GraphNode[]; animations: pc.AnimTrack[] };
+    };
+    const defGltf = resource.data.gltf;
 
     // make sure the asset is a valid .vrma file
     const defExtensionsUsed = defGltf.extensionsUsed;
@@ -59,7 +62,8 @@ export class VRMAnimationLoader {
     }
 
     // get Playcanvas nodes
-    const pcNodes = vrmaAsset.resource.data.nodes as pc.GraphNode[];
+
+    const pcNodes = resource.data.nodes;
 
     const nodeMap = this._createNodeMap(defGltf, defExtension);
     const worldMatrixMap = this._createBoneWorldMatrixMap(pcNodes, defExtension); //await
@@ -70,7 +74,7 @@ export class VRMAnimationLoader {
     const restHipsPosition = hips ? hips.getPosition() : new this.pcRef.Vec3();
 
     // get Playcanvas animation
-    const animTracks: pc.AnimTrack[] = vrmaAsset.resource.data.animations;
+    const animTracks: pc.AnimTrack[] = resource.data.animations;
     const animations: VRMAnimation[] = animTracks.map((animTrack: pc.AnimTrack, index: number) => {
       const defAnimation = defGltf.animations![index];
 
