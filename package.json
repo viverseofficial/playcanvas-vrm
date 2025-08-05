@@ -1,9 +1,8 @@
 {
-  "name": "playcanvas-vrm",
+  "name": "@viverse/playcanvas-vrm",
   "version": "1.6.0",
   "description": "PlayCanvas VRM library for loading and manipulating VRM models",
   "license": "UNLICENSED",
-  "private": true,
   "type": "module",
   "files": ["dist"],  
   "main": "dist/playcanvas-vrm.js",
@@ -20,6 +19,9 @@
       "import": "./dist/playcanvas-vrm.js",
       "types": "./dist/playcanvas-vrm.d.ts"
     }
+  },
+  "publishConfig": {
+    "registry": "https://vr-ops-internal-npm-registry.vrprod.viveport.com/"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^7.3.1",
