@@ -140,7 +140,9 @@ export function bindVRMAExpression(
 
   if (listenerEntity.anim) {
     listenerEntity.anim.on(`anim-track:${resource.name}`, () => {
-      // intialize active state and transition interval with baseLayer
+      entity.fire('vrma-expression:clear-all');
+
+      // initialize active state and transition interval with baseLayer
       let upperBodyActiveState = listenerEntity.anim?.baseLayer?.activeState;
       let transitionInterval =
         (listenerEntity.anim as any).baseLayer._controller._totalTransitionTime ?? 0.0;

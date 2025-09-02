@@ -1,5 +1,5 @@
 /**
- * name: playcanvas-vrm
+ * name: @viverse/playcanvas-vrm
  * version: v1.6.0
  */
 const VRMHumanBoneList = [
@@ -921,6 +921,7 @@ function bindVRMAExpression(entity, resource, animEntity) {
   if (listenerEntity.anim) {
     listenerEntity.anim.on(`anim-track:${resource.name}`, () => {
       var _a, _b, _c;
+      entity.fire(`vrma-expression:clear-all`);
       let upperBodyActiveState = (_b = (_a = listenerEntity.anim) == null ? void 0 : _a.baseLayer) == null ? void 0 : _b.activeState;
       let transitionInterval = listenerEntity.anim.baseLayer._controller._totalTransitionTime ?? 0;
       (_c = listenerEntity.anim) == null ? void 0 : _c.layers.forEach((layer) => {
@@ -1223,6 +1224,11 @@ class VRMExpressionManager {
       const expression = this.getExpression(name);
       if (expression)
         expression.stop();
+    });
+  }
+  stopAllEmotions() {
+    this._expressions.forEach((expression) => {
+      expression.stop();
     });
   }
   getNextTalking() {
@@ -1667,11 +1673,12 @@ const importScript$1 = (pcRef) => {
       this.entity.on("vrm-expression:start-emotion", this.startEmotion, this);
       this.entity.on("audio:is-talking-change", this.onIsTalkingChange, this);
       this.entity.on(`vrma-expression:start`, this.startVRMAExpression, this);
+      this.entity.on(`vrma-expression:clear-all`, this.clearAllExpression, this);
       this.on("destroy", () => {
         this.entity.off("vrm-expression:start-emotion", this.startEmotion, this);
         this.entity.off("audio:is-talking-change", this.onIsTalkingChange, this);
         this.entity.off(`vrma-expression:start`, this.startVRMAExpression, this);
-        this.entity.off(`vrm-expression:reset`, this.resetExpression, this);
+        this.entity.off(`vrma-expression:clear-all`, this.clearAllExpression, this);
       });
     }
     // Specific Expression Animation
@@ -1798,6 +1805,11 @@ const importScript$1 = (pcRef) => {
         } else {
           reset();
         }
+      }
+    }
+    clearAllExpression() {
+      if (this.expressionManager) {
+        this.expressionManager.stopAllEmotions();
       }
     }
   }

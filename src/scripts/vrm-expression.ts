@@ -35,12 +35,14 @@ export const importScript = (pcRef: typeof pc) => {
 
       // vrma
       this.entity.on(`vrma-expression:start`, this.startVRMAExpression, this);
+      this.entity.on(`vrma-expression:clear-all`, this.clearAllExpression, this);
 
       this.on('destroy', () => {
         this.entity.off('vrm-expression:start-emotion', this.startEmotion, this);
         this.entity.off('audio:is-talking-change', this.onIsTalkingChange, this);
         this.entity.off(`vrma-expression:start`, this.startVRMAExpression, this);
         this.entity.off(`vrm-expression:reset`, this.resetExpression, this);
+        this.entity.off(`vrma-expression:clear-all`, this.clearAllExpression, this);
       });
     }
 
@@ -200,6 +202,12 @@ export const importScript = (pcRef: typeof pc) => {
         } else {
           reset();
         }
+      }
+    }
+
+    private clearAllExpression(){
+      if (this.expressionManager) {
+        this.expressionManager.stopAllEmotions();
       }
     }
   }

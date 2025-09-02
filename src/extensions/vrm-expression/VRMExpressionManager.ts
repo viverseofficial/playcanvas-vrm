@@ -118,6 +118,12 @@ export class VRMExpressionManager {
     });
   }
 
+  stopAllEmotions() {
+    this._expressions.forEach((expression) => {
+      expression.stop();
+    });
+  }
+
   getNextTalking(): VRMExpression | null {
     if (this.talkExpressions.length === 0) return null;
 
