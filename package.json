@@ -12,7 +12,11 @@
     "build": "tsc && pnpm run build:js && pnpm run build:min",
     "build:js": "vite build",
     "build:min": "MINIFY_MODE=true vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+
+    "release:patch": "npm version patch -m \"chore(release): %s\"",
+    "release:minor": "npm version minor -m \"chore(release): %s\"",
+    "release:major": "npm version major -m \"chore(release): %s\""
   },
   "exports": {
     ".": {
