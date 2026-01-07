@@ -13,7 +13,7 @@
     "build:js": "vite build",
     "build:min": "MINIFY_MODE=true vite build",
     "preview": "vite preview",
-
+    "prepare": "npm run build",
     "release:patch": "npm version patch -m \"chore(release): %s\"",
     "release:minor": "npm version minor -m \"chore(release): %s\"",
     "release:major": "npm version major -m \"chore(release): %s\""
