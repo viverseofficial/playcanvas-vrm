@@ -1,3 +1,5 @@
+import * as pc from 'playcanvas';
+
 export interface VRMSpringBoneJointSettings {
   /**
    * Radius of the bone, will be used for collision.
@@ -6,7 +8,7 @@ export interface VRMSpringBoneJointSettings {
 
   stiffness: number;
   gravityPower: number;
-  gravityDir: THREE.Vector3;
+  gravityDir: pc.Vec3;
   dragForce: number;
 }
 
@@ -17,7 +19,7 @@ export interface VRMSpringBoneColliderGroup {
   /**
    * The colliders of the collider group.
    */
-  colliders: VRMSpringBoneCollider[];
+  colliders: any[];
 
   /**
    * The name of the collider.
