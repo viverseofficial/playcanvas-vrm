@@ -1,4 +1,5 @@
-import { VRMHumanBones, VRMHumanBoneName } from './vrm-humanoid';
+import { VRMHumanBones, VRMHumanBoneName, VRMHumanBone } from './vrm-humanoid';
+import * as pc from 'playcanvas';
 
 export class VRMRig {
   public humanBones: Partial<VRMHumanBones>;
@@ -11,11 +12,11 @@ export class VRMRig {
    *
    * @param name Name of the bone you want
    */
-  getBone(name: VRMHumanBoneName) {
+  getBone(name: VRMHumanBoneName): VRMHumanBone | undefined {
     return this.humanBones[name] ?? undefined;
   }
 
-  getBoneNode(name: VRMHumanBoneName) {
+  getBoneNode(name: VRMHumanBoneName): pc.GraphNode | null {
     return this.humanBones[name]?.node ?? null;
   }
 }

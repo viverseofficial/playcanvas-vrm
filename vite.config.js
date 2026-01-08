@@ -16,10 +16,11 @@ export default defineConfig(() => {
     plugins: [
       !isMinify &&
         dts({
-          entryRoot: 'src',
-          outputDir: 'dist',
-          exclude: ['examples', 'dist'],
-          rollupTypes: true,
+          entryRoot: './src',
+          outDir: './dist',
+          exclude: ['examples', 'dist', 'node_modules'],
+          rollupTypes: false,
+          copyDtsFiles: true,
         }),
       mkcert(),
       banner(`/**\n * name: ${pkg.name}\n * version: v${pkg.version}\n */`),
