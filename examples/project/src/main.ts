@@ -35,7 +35,7 @@ const createAvatar = (url: string) => {
 
     asset.on('load', (asset) => {
       VRMLoader.addIndexToNodeTags(asset);
-      // VRMLoader.VrmMtoon.convertVRMMtoonMaterials(pc, asset);
+      VRMLoader.VrmMtoon.convertVRMMtoonMaterials(pc, asset);
 
       const renderRootEntity = asset.resource.instantiateRenderEntity();
       const rootEntity = new pc.Entity('VRM_AVATAR_ROOT');
@@ -64,12 +64,11 @@ const createAvatar = (url: string) => {
          * If you are using vrm-mtoon script,
          * please add vrm-expression script after vrm-mtoon script.
          */
-
-        // rootEntity.script.create('vrmMtoon', {
-        //   attributes: {
-        //     asset,
-        //   },
-        // });
+        rootEntity.script.create('vrmMtoon', {
+          attributes: {
+            asset,
+          },
+        });
 
         rootEntity.script.create('vrmExpression', {
           attributes: {
@@ -123,13 +122,13 @@ const app = setupApplication();
 createMiniStats(app);
 
 app.once('start', async () => {
-  const focusEntity = new pc.Entity('Test');
-  focusEntity.setPosition(0, 1.8, 0);
+  const focusEntity = new pc.Entity('FocusEntity');
+  focusEntity.setPosition(0, 1, 0);
   app.root.addChild(focusEntity);
   focusEntity.addComponent('render', {
     type: 'box',
   });
-  if (focusEntity.render) focusEntity.render.enabled = false;
+  focusEntity.render!.enabled = false;
 
   createLight(app);
   createCamera(app, focusEntity);
@@ -138,8 +137,7 @@ app.once('start', async () => {
 
   VRMLoader.VrmExpression.importScript(pc);
   VRMLoader.VrmSpringBone.importScript(pc);
-  // TODO: Wait for the lib support engine version 2.0.0+
-  // VRMLoader.VrmMtoon.importScript(pc);
+  VRMLoader.VrmMtoon.importScript(pc);
   setupAvatar(app);
 });
 

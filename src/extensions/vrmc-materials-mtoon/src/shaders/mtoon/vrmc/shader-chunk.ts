@@ -1,13 +1,13 @@
-import baseVS from './vert/base.glsl';
-import endVS from './vert/end.glsl';
-import basePS from './frag/base.glsl';
-import endPS from './frag/end.glsl';
-import light from './includes/light.glsl';
+import litUserDeclarationVS from './vert/litUserDeclarationVS.glsl';
+import litUserMainEndVS from './vert/litUserMainEndVS.glsl';
+import litUserDeclarationPS from './frag/litUserDeclarationPS.glsl';
+import lightPS from './includes/light.glsl';
+import litUserMainEndPS from './frag/litUserMainEndPS.glsl';
 
 export const shaderChunksMtoon = {
-  baseVS,
-  endVS,
-  basePS,
-  endPS,
-  light,
+  litUserDeclarationVS,
+  litUserMainEndVS,
+  litUserDeclarationPS: litUserDeclarationPS,
+  litUserCodePS: lightPS,
+  litUserMainEndPS,
 };

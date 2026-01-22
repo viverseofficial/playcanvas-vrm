@@ -19,9 +19,9 @@ export const createScene = (app: pc.Application) => {
   });
 };
 
-export const createCamera = (app: pc.Application, focusEntity?: pc.Entity) => {
+export const createCamera = async (app: pc.Application, focusEntity?: pc.Entity) => {
   // @ts-ignore
-  import('./orbit-camera');
+  await import('./orbit-camera');
 
   // Create a camera with an orbit camera script
   const camera = new pc.Entity();

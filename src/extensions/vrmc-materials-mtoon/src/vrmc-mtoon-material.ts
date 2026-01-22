@@ -13,15 +13,13 @@ import {
   ISpotLightInfo,
   ISceneLightInfo,
 } from '../../../helpers/RenderStates';
+import { GltfAssetResource } from './VRMMtoonLoader';
 
 const textureTransformExtensionName = 'KHR_texture_transform';
 
 export type VRMCMtoonMaterialType = pc.StandardMaterial & {
   isMtoonMaterial: boolean;
 
-  litFactor: pc.Color;
-  alphaTest: number;
-  baseColorMap: pc.Texture | null;
   mapUvTransform: pc.Mat3;
   normalMapUvTransform: pc.Mat3;
   normalScale: pc.Vec2;
@@ -60,11 +58,14 @@ export type VRMCMtoonMaterialType = pc.StandardMaterial & {
 
   _asset: pc.Asset;
   _vec3A: pc.Vec3;
+  _currentDirLights: number;
+  _currentSpotLights: number;
+  _currentPointLights: number;
 
-  parse(gltfMaterial: any): void;
+  parse(gltfMaterial: any, gltf: any): void;
   setShaderChunks(): void;
   setShaderUniforms(): void;
-  updateLightUniforms(lightStateInfo: ILightStateInfo): void;
+  updateLightState(lightStateInfo: ILightStateInfo): void;
   updateIndirectLightUniforms(scene?: ISceneLightInfo): void;
   replaceLightNumbers(dirNum: number, spotNum: number, pointNum: number): void;
 };
@@ -75,9 +76,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
   // Custom properties
   material.isMtoonMaterial = true;
 
-  material.litFactor = new pcRef.Color(1.0, 1.0, 1.0, 1.0);
-  material.alphaTest = 0;
-  material.baseColorMap = null;
   material.mapUvTransform = new pcRef.Mat3();
   material.normalMapUvTransform = new pcRef.Mat3();
   material.normalScale = new pcRef.Vec2(1, 1);
@@ -116,43 +114,31 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
 
   material._asset = asset;
   material._vec3A = new pcRef.Vec3();
+  material._currentDirLights = 0;
+  material._currentSpotLights = 0;
+  material._currentPointLights = 0;
 
   // Methods
-  material.parse = function (gltfMaterial: any) {
-    // StandardMaterial parameters
-    this.litFactor = this.diffuse;
-
-    if (gltfMaterial.hasOwnProperty('alphaMode')) {
-      switch (gltfMaterial.alphaMode) {
-        case 'MASK':
-          this.blendType = pcRef.BLEND_NONE;
-          if (
-            gltfMaterial.hasOwnProperty('alphaCutoff') &&
-            gltfMaterial.alphaCutoff !== undefined
-          ) {
-            this.alphaTest = gltfMaterial.alphaCutoff;
-          } else {
-            this.alphaTest = 0.5;
-          }
-          break;
-        case 'BLEND':
-          this.blendType = pcRef.BLEND_NORMAL;
-
-          // note: by default don't write depth on semitransparent materials
-          this.depthWrite = false;
-          break;
-        default:
-        case 'OPAQUE':
-          this.blendType = pcRef.BLEND_NONE;
-          break;
-      }
-    } else {
-      this.blendType = pcRef.BLEND_NONE;
+  material.parse = function (gltfMaterial: any, gltf: any) {
+    // Check if KHR_materials_unlit was applied by glb-parser
+    // If so, restore diffuse from emissive as extensionUnlit moved it there
+    // Note: Playcanvas dose not have beforeRoot timing to remove this extension like three.js,
+    // only way is to restore here as a workaround.
+    const hasUnlitExtension =
+      gltfMaterial?.extensions?.KHR_materials_unlit !== undefined ||
+      gltf.extensionsUsed?.includes('KHR_materials_unlit');
+    if (hasUnlitExtension && this.emissiveMap && !this.diffuseMap) {
+      // Restore diffuse map from emissive
+      this.diffuseMap = this.emissiveMap;
+      this.diffuseMapUv = this.emissiveMapUv;
+      this.diffuseMapTiling.copy(this.emissiveMapTiling);
+      this.diffuseMapOffset.copy(this.emissiveMapOffset);
+      this.diffuseMapRotation = this.emissiveMapRotation;
+      this.diffuseMapChannel = this.emissiveMapChannel;
+      this.diffuse.copy(this.emissive);
     }
 
-    this.baseColorMap = this.diffuseMap || this.emissiveMap;
-
-    if (this.baseColorMap) {
+    if (this.diffuseMap) {
       updateTextureMatrix(pcRef, this.mapUvTransform, {
         offset: [this.diffuseMapOffset.x, this.diffuseMapOffset.y],
         rotation: this.diffuseMapRotation,
@@ -168,25 +154,10 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     }
 
     if (this.emissiveMap) {
-      updateTextureMatrix(pcRef, this.normalMapUvTransform, {
+      updateTextureMatrix(pcRef, this.emissiveMapUvTransform, {
         offset: [this.emissiveMapOffset.x, this.emissiveMapOffset.y],
         rotation: this.emissiveMapRotation,
       });
-    }
-
-    if (gltfMaterial.emissiveFactor) {
-      const emissiveFactor = gltfMaterial.emissiveFactor;
-      this.emissive = new pcRef.Color(emissiveFactor[0], emissiveFactor[1], emissiveFactor[2], 1.0);
-    }
-
-    if (gltfMaterial.pbrMetallicRoughness?.baseColorFactor) {
-      const baseColorFactor = gltfMaterial.pbrMetallicRoughness.baseColorFactor;
-      this.diffuse = new pcRef.Color(
-        Math.pow(baseColorFactor[0], 1 / 2.2),
-        Math.pow(baseColorFactor[1], 1 / 2.2),
-        Math.pow(baseColorFactor[2], 1 / 2.2),
-        baseColorFactor[3],
-      );
     }
 
     // Extension parameters
@@ -225,15 +196,16 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
 
     if (shadeColorFactor) {
       this.shadeColorFactor = new pcRef.Color(
-        Math.pow(shadeColorFactor[0], 1 / 2.2),
-        Math.pow(shadeColorFactor[1], 1 / 2.2),
-        Math.pow(shadeColorFactor[2], 1 / 2.2),
+        shadeColorFactor[0],
+        shadeColorFactor[1],
+        shadeColorFactor[2],
         1.0,
       );
     }
 
     if (shadeMultiplyTextureInfo !== undefined) {
-      const texture = this._asset.resource?.textures?.[shadeMultiplyTextureInfo.index]?.resource;
+      const resource = this._asset.resource as GltfAssetResource;
+      const texture = resource?.textures?.[shadeMultiplyTextureInfo.index]?.resource;
       if (texture) {
         this.shadeMultiplyTexture = texture;
         updateTextureMatrix(
@@ -245,7 +217,8 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     }
 
     if (rimMultiplyTextureInfo !== undefined) {
-      const texture = this._asset.resource?.textures?.[rimMultiplyTextureInfo.index]?.resource;
+      const resource = this._asset.resource as GltfAssetResource;
+      const texture = resource?.textures?.[rimMultiplyTextureInfo.index]?.resource;
 
       if (texture) {
         this.rimMultiplyTexture = texture;
@@ -258,14 +231,16 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     }
 
     if (matcapTextureInfo !== undefined) {
-      const texture = this._asset.resource?.textures?.[matcapTextureInfo.index]?.resource;
+      const resource = this._asset.resource as GltfAssetResource;
+      const texture = resource?.textures?.[matcapTextureInfo.index]?.resource;
       if (texture) {
         this.matcapTexture = texture;
       }
     }
 
     if (shadingShiftTextureInfo !== undefined) {
-      const texture = this._asset.resource?.textures?.[shadingShiftTextureInfo.index]?.resource;
+      const resource = this._asset.resource as GltfAssetResource;
+      const texture = resource?.textures?.[shadingShiftTextureInfo.index]?.resource;
       if (texture) {
         this.shadingShiftTexture = texture;
         updateTextureMatrix(
@@ -281,12 +256,7 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     }
 
     if (matcapFactor) {
-      this.matcapFactor = new pcRef.Color(
-        Math.pow(matcapFactor[0], 1 / 2.2),
-        Math.pow(matcapFactor[1], 1 / 2.2),
-        Math.pow(matcapFactor[2], 1 / 2.2),
-        1.0,
-      );
+      this.matcapFactor = new pcRef.Color(matcapFactor[0], matcapFactor[1], matcapFactor[2], 1.0);
     }
 
     this.shadingShiftFactor = shadingShiftFactor;
@@ -294,9 +264,9 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
 
     if (parametricRimColorFactor) {
       this.parametricRimColorFactor = new pcRef.Color(
-        Math.pow(parametricRimColorFactor[0], 1 / 2.2),
-        Math.pow(parametricRimColorFactor[1], 1 / 2.2),
-        Math.pow(parametricRimColorFactor[2], 1 / 2.2),
+        parametricRimColorFactor[0],
+        parametricRimColorFactor[1],
+        parametricRimColorFactor[2],
         1.0,
       );
     }
@@ -310,12 +280,15 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     }
 
     // Outline
-    this.outlineWidthFactor = outlineWidthFactor;
+    if (outlineWidthFactor !== undefined) {
+      this.outlineWidthFactor = outlineWidthFactor;
+    }
+
     if (outlineColorFactor) {
       this.outlineColorFactor = new pcRef.Color(
-        Math.pow(outlineColorFactor[0], 1 / 2.2),
-        Math.pow(outlineColorFactor[1], 1 / 2.2),
-        Math.pow(outlineColorFactor[2], 1 / 2.2),
+        outlineColorFactor[0],
+        outlineColorFactor[1],
+        outlineColorFactor[2],
         1.0,
       );
     }
@@ -325,8 +298,8 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     }
 
     if (outlineWidthMultiplyTextureInfo !== undefined) {
-      const texture =
-        this._asset.resource?.textures?.[outlineWidthMultiplyTextureInfo.index]?.resource;
+      const resource = this._asset.resource as GltfAssetResource;
+      const texture = resource?.textures?.[outlineWidthMultiplyTextureInfo.index]?.resource;
 
       if (texture) {
         this.outlineWidthMultiplyTexture = texture;
@@ -337,7 +310,10 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
         );
       }
     }
-    this.outlineLightingMixFactor = outlineLightingMixFactor;
+
+    if (outlineLightingMixFactor !== undefined) {
+      this.outlineLightingMixFactor = outlineLightingMixFactor;
+    }
 
     if (this.isOutline) this.cull = pcRef.CULLFACE_FRONT;
 
@@ -345,37 +321,29 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     this.setShaderUniforms();
   };
 
-  material.setShaderChunks = function () {
-    this.chunks.APIVersion = pcRef.CHUNKAPI_1_70;
-    const pcShaderChunks = pcRef.shaderChunks as any;
-
-    this.chunks.baseVS = pcShaderChunks.baseVS;
-    this.chunks.endVS = pcShaderChunks.endVS;
-    this.chunks.basePS = pcShaderChunks.basePS;
-    this.chunks.endPS = pcShaderChunks.endPS;
-
+  material.onUpdateShader = function (options: pc.StandardMaterialOptions) {
     if (this.shadeMultiplyTexture) {
-      this.chunks.basePS += '#define USE_SHADEMULTIPLYTEXTURE\n';
+      options.defines.set('USE_SHADEMULTIPLYTEXTURE', '');
     }
 
     if (this.emissiveMap) {
-      this.chunks.basePS += '#define USE_EMISSIVEMAP\n';
+      options.defines.set('USE_EMISSIVEMAP', '');
     }
 
-    if (this.baseColorMap) {
-      this.chunks.basePS += '#define USE_MAP\n';
+    if (this.diffuseMap) {
+      options.defines.set('USE_MAP', '');
     }
 
     if (this.normalMap) {
-      this.chunks.basePS += '#define USE_NORMALMAP\n';
+      options.defines.set('USE_NORMALMAP', '');
     }
 
     if (this.cull === pcRef.CULLFACE_NONE) {
-      this.chunks.basePS += '#define DOUBLE_SIDED\n';
+      options.defines.set('DOUBLE_SIDED', '');
     }
 
     if (this.matcapTexture) {
-      this.chunks.basePS += '#define USE_MATCAPTEXTURE\n';
+      options.defines.set('USE_MATCAPTEXTURE', '');
     }
 
     const useUvInVert = this.outlineWidthMultiplyTexture !== null;
@@ -389,64 +357,79 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       this.uvAnimationMaskTexture !== null;
 
     if (useUvInVert || useUvInFrag) {
-      this.chunks.basePS += '#define MTOON_USE_UV\n';
+      options.defines.set('MTOON_USE_UV', '');
     }
 
     if (useUvInVert && !useUvInFrag) {
-      console.log('Adding MTOON_UVS_VERTEX_ONLY');
-      this.chunks.basePS += '#define MTOON_UVS_VERTEX_ONLY\n';
+      options.defines.set('MTOON_UVS_VERTEX_ONLY', '');
     }
 
     const USE_RIMMULTIPLYTEXTURE = this.rimMultiplyTexture;
     if (USE_RIMMULTIPLYTEXTURE) {
-      this.chunks.basePS += '#define USE_RIMMULTIPLYTEXTURE\n';
+      options.defines.set('USE_RIMMULTIPLYTEXTURE', '');
     }
 
     const USE_UVANIMATIONMASKTEXTURE = this.uvAnimationMaskTexture !== null;
     if (USE_UVANIMATIONMASKTEXTURE) {
-      this.chunks.basePS += '#define USE_UVANIMATIONMASKTEXTURE\n';
+      options.defines.set('USE_UVANIMATIONMASKTEXTURE', '');
     }
 
     const OPAQUE = this.blendType === pcRef.BLEND_NONE;
     if (OPAQUE) {
-      this.chunks.basePS += '#define OPAQUE\n';
+      options.defines.set('OPAQUE', '');
     }
 
     const USE_OUTLINEWIDTHMULTIPLYTEXTURE = this.outlineWidthMultiplyTexture !== null;
     if (USE_OUTLINEWIDTHMULTIPLYTEXTURE) {
-      this.chunks.baseVS += '#define USE_OUTLINEWIDTHMULTIPLYTEXTURE\n';
+      options.defines.set('USE_OUTLINEWIDTHMULTIPLYTEXTURE', '');
     }
 
     const OUTLINE_WIDTH_WORLD =
       this.outlineWidthMode === MToonMaterialOutlineWidthMode.WorldCoordinates;
     if (OUTLINE_WIDTH_WORLD) {
-      this.chunks.baseVS += '#define OUTLINE_WIDTH_WORLD\n';
+      options.defines.set('OUTLINE_WIDTH_WORLD', '');
     }
 
     const OUTLINE_WIDTH_SCREEN =
       this.outlineWidthMode === MToonMaterialOutlineWidthMode.ScreenCoordinates;
     if (OUTLINE_WIDTH_SCREEN) {
-      this.chunks.baseVS += '#define OUTLINE_WIDTH_SCREEN\n';
+      options.defines.set('OUTLINE_WIDTH_SCREEN', '');
     }
 
     if (this.isOutline) {
-      this.chunks.basePS += '#define OUTLINE\n';
-      this.chunks.baseVS += '#define OUTLINE\n';
+      options.defines.set('OUTLINE', '');
     }
 
-    this.chunks.basePS += '#define NUM_DIR_LIGHTS 0\n';
-    this.chunks.basePS += '#define NUM_SPOT_LIGHTS 0\n';
-    this.chunks.basePS += '#define NUM_POINT_LIGHTS 0\n';
+    // Set light counts as compile-time constants
+    options.defines.set('NUM_DIR_LIGHTS', this._currentDirLights.toString());
+    options.defines.set('NUM_SPOT_LIGHTS', this._currentSpotLights.toString());
+    options.defines.set('NUM_POINT_LIGHTS', this._currentPointLights.toString());
 
-    this.chunks.baseVS += shaderChunksMtoon.baseVS;
-    this.chunks.endVS += shaderChunksMtoon.endVS;
-    this.chunks.basePS += shaderChunksMtoon.basePS;
-    this.chunks.basePS += shaderChunksMtoon.light;
-    this.chunks.endPS += shaderChunksMtoon.endPS;
+    // Set USE_*_LIGHTS flags to avoid zero-sized arrays
+    if (this._currentDirLights > 0) {
+      options.defines.set('USE_DIR_LIGHTS', '');
+    }
+    if (this._currentSpotLights > 0) {
+      options.defines.set('USE_SPOT_LIGHTS', '');
+    }
+    if (this._currentPointLights > 0) {
+      options.defines.set('USE_POINT_LIGHTS', '');
+    }
+
+    return options;
+  };
+
+  material.setShaderChunks = function () {
+    const glsl = pc.SHADERLANGUAGE_GLSL;
+    this.getShaderChunks(glsl).set('litUserDeclarationVS', shaderChunksMtoon.litUserDeclarationVS);
+    this.getShaderChunks(glsl).set('litUserMainEndVS', shaderChunksMtoon.litUserMainEndVS);
+    this.getShaderChunks(glsl).set('litUserDeclarationPS', shaderChunksMtoon.litUserDeclarationPS);
+    this.getShaderChunks(glsl).set('litUserCodePS', shaderChunksMtoon.litUserCodePS);
+    this.getShaderChunks(glsl).set('litUserMainEndPS', shaderChunksMtoon.litUserMainEndPS);
   };
 
   material.setShaderUniforms = function () {
-    this.setParameter('litFactor', [this.litFactor.r, this.litFactor.g, this.litFactor.b]);
+    this.setParameter('litFactor', [this.diffuse.r, this.diffuse.g, this.diffuse.b]);
     this.setParameter('opacity', this.opacity);
     this.setParameters('giEqualizationFactor', this.giEqualizationFactor);
     this.setParameter('shadeColorFactor', [
@@ -462,72 +445,56 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
         this.shadeMultiplyTextureUvTransform.data,
       );
     }
-
     if (this.matcapTexture) {
       this.setParameter('matcapTexture', this.matcapTexture);
       this.setParameter('matcapTextureUvTransform', this.matcapTextureUvTransform.data);
     }
-
     this.setParameter('matcapFactor', [
       this.matcapFactor.r,
       this.matcapFactor.g,
       this.matcapFactor.b,
     ]);
-
     if (this.shadingShiftTexture) {
       this.setParameter('shadingShiftTexture', this.shadingShiftTexture);
     }
-
     this.setParameter('shadingShiftTextureUvTransform', this.shadingShiftTextureUvTransform.data);
-
-    if (this.baseColorMap) {
-      this.setParameter('baseColorMap', this.baseColorMap);
+    if (this.diffuseMap) {
+      this.setParameter('diffuseMap', this.diffuseMap);
       this.setParameter('mapUvTransform', this.mapUvTransform.data);
     }
-
     this.setParameter('shadingShiftFactor', this.shadingShiftFactor);
     this.setParameter('shadingToonyFactor', this.shadingToonyFactor);
-
     if (this.emissive) {
       this.setParameter('emissive', [this.emissive.r, this.emissive.g, this.emissive.b]);
     }
-
     if (this.emissiveIntensity) {
       this.setParameter('emissiveIntensity', this.emissiveIntensity);
     }
-
     this.setParameter('parametricRimColorFactor', [
       this.parametricRimColorFactor.r,
       this.parametricRimColorFactor.g,
       this.parametricRimColorFactor.b,
     ]);
-
     this.setParameter('rimLightingMixFactor', this.rimLightingMixFactor);
     this.setParameter('parametricRimFresnelPowerFactor', this.parametricRimFresnelPowerFactor);
     this.setParameter('parametricRimLiftFactor', this.parametricRimLiftFactor);
-
     if (this.normalMap) {
       this.setParameter('normalMap', this.normalMap);
+      this.setParameter('normalScale', [this.normalScale.x, this.normalScale.y]);
     }
-
     this.setParameter('normalMapUvTransform', this.normalMapUvTransform.data);
     this.setParameter('emissiveMapUvTransform', this.emissiveMapUvTransform.data);
-
     if (this.emissiveMap) {
       this.setParameter('emissiveMap', this.emissiveMap);
     }
-
     this.setParameter('shadingShiftTextureScale', this.shadingShiftTextureScale);
-
     if (this.matcapTexture) {
       this.setParameter('matcapTexture', this.matcapTexture);
     }
-
     if (this.rimMultiplyTexture) {
       this.setParameter('rimMultiplyTexture', this.rimMultiplyTexture);
       this.setParameter('rimMultiplyTextureUvTransform', this.rimMultiplyTextureUvTransform.data);
     }
-
     if (this.outlineWidthMultiplyTexture) {
       this.setParameter('outlineWidthMultiplyTexture', this.outlineWidthMultiplyTexture);
       this.setParameter(
@@ -535,7 +502,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
         this.outlineWidthMultiplyTextureUvTransform.data,
       );
     }
-
     this.setParameter('outlineWidthFactor', this.outlineWidthFactor);
     this.setParameter('outlineLightingMixFactor', this.outlineLightingMixFactor);
     this.setParameter('outlineColorFactor', [
@@ -543,22 +509,23 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       this.outlineColorFactor.g,
       this.outlineColorFactor.b,
     ]);
+
+    this.setParameter('uvAnimationScrollXOffset', this.uvAnimationScrollXOffset);
+    this.setParameter('uvAnimationScrollYOffset', this.uvAnimationScrollYOffset);
+    this.setParameter('uvAnimationRotationPhase', this.uvAnimationRotationPhase);
   };
 
-  material.updateLightUniforms = function (lightStateInfo: ILightStateInfo) {
+  material.updateLightState = function (lightStateInfo: ILightStateInfo) {
     const { directionalLights, spotLights, pointLights, scene } = lightStateInfo;
-
     this.updateIndirectLightUniforms(scene);
-    this.replaceLightNumbers(directionalLights.length, spotLights.length, pointLights.length);
 
+    // Update light data
     directionalLights.forEach((info: IDirectionalLightInfo, i: number) => {
       const direction = info.direction;
       this._vec3A.copy(direction);
       this._vec3A.mulScalar(-1);
       this._vec3A.normalize();
-
       const color = info.color;
-
       this.setParameter(`directionalLights[${i}].color`, [color.r, color.g, color.b]);
       this.setParameter(`directionalLights[${i}].direction`, [
         this._vec3A.x,
@@ -566,7 +533,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
         this._vec3A.z,
       ]);
     });
-
     spotLights.forEach((info: ISpotLightInfo, i: number) => {
       const position = info.position;
       const direction = info.direction;
@@ -583,7 +549,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       this.setParameter(`spotLights[${i}].coneCos`, coneCos);
       this.setParameter(`spotLights[${i}].penumbraCos`, penumbraCos);
     });
-
     pointLights.forEach((info: IPointLightInfo, i: number) => {
       const position = info.position;
       const color = info.color;
@@ -594,6 +559,23 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       this.setParameter(`pointLights[${i}].distance`, distance);
       this.setParameter(`pointLights[${i}].decay`, decay);
     });
+
+    // Check if light counts have changed
+    const dirNum = directionalLights.length;
+    const spotNum = spotLights.length;
+    const pointNum = pointLights.length;
+
+    const lightsChanged =
+      dirNum !== this._currentDirLights ||
+      spotNum !== this._currentSpotLights ||
+      pointNum !== this._currentPointLights;
+
+    if (lightsChanged) {
+      this._currentDirLights = dirNum;
+      this._currentSpotLights = spotNum;
+      this._currentPointLights = pointNum;
+      this.update(); // Recompile shader to update NUM_LIGHTS defines
+    }
   };
 
   material.updateIndirectLightUniforms = function (scene?: ISceneLightInfo) {
@@ -609,37 +591,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       this.ambient.copy(scene.ambientLight);
       this.setParameter('ambientLightColor', [this.ambient.r, this.ambient.g, this.ambient.b]);
     }
-  };
-
-  material.replaceLightNumbers = function (dirNum: number, spotNum: number, pointNum: number) {
-    let chunk = this.chunks.basePS;
-
-    chunk = chunk
-      .replace(/#define USE_DIR_LIGHTS\n/g, '')
-      .replace(/#define USE_SPOT_LIGHTS\n/g, '')
-      .replace(/#define USE_POINT_LIGHTS\n/g, '')
-      .replace(/#define USE_ENV_LIGHTS\n/g, '');
-
-    if (dirNum > 0) {
-      chunk = `#define USE_DIR_LIGHTS\n${chunk}`;
-      chunk = chunk.replace(/#define NUM_DIR_LIGHTS \d+/, `#define NUM_DIR_LIGHTS ${dirNum}`);
-    }
-
-    if (spotNum > 0) {
-      chunk = `#define USE_SPOT_LIGHTS\n${chunk}`;
-      chunk = chunk.replace(/#define NUM_SPOT_LIGHTS \d+/, `#define NUM_SPOT_LIGHTS ${spotNum}`);
-    }
-
-    if (pointNum > 0) {
-      chunk = `#define USE_POINT_LIGHTS\n${chunk}`;
-      chunk = chunk.replace(/#define NUM_POINT_LIGHTS \d+/, `#define NUM_POINT_LIGHTS ${pointNum}`);
-    }
-
-    if (this.envAtlas) {
-      chunk = `#define USE_ENV_LIGHTS\n${chunk}`;
-    }
-
-    this.chunks.basePS = chunk;
   };
 
   return material;

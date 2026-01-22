@@ -3,6 +3,7 @@ import { VRM as V0VRM, Material as V0Material } from '../../../../types/types-vr
 import * as V1MToonSchema from '../../../../types/types-vrmc-materials-mtoon-1.0';
 import { GLTF as GLTFSchema } from '../../../../types/gltf';
 import { gammaEOTF } from '../utils';
+import { GltfAssetResource } from '../VRMMtoonLoader';
 
 class VRMMaterialsV0CompatPlugin {
   private _pcRef: typeof pc;
@@ -27,7 +28,13 @@ class VRMMaterialsV0CompatPlugin {
   }
 
   public parseMaterials() {
-    const gltf: GLTFSchema.IGLTF = this.asset.resource?.data?.gltf;
+    const resource = this.asset.resource as GltfAssetResource | undefined;
+    const gltf: GLTFSchema.IGLTF | undefined = resource?.data?.gltf;
+
+    if (!gltf) {
+      console.error('VRMMaterialsV0CompatPlugin: gltf data is undefined');
+      return;
+    }
 
     // early abort if it doesn't use V0VRM
     const v0VRMExtension = gltf?.extensions?.['VRM'] as V0VRM | undefined;
