@@ -60,6 +60,7 @@ export const createLight = (app: pc.Application) => {
   const lightB = new pc.Entity('light');
   lightB.addComponent('light', {
     type: 'spot',
+    intensity: 2,
   });
   lightB.setPosition(0, 2.5, 0);
 

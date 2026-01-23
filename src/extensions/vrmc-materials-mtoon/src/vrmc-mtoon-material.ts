@@ -47,6 +47,7 @@ export type VRMCMtoonMaterialType = pc.StandardMaterial & {
   uvAnimationScrollXOffset: number;
   uvAnimationScrollYOffset: number;
   uvAnimationRotationPhase: number;
+  v0CompatShade: boolean;
 
   isOutline: boolean;
   outlineWidthMode: MToonMaterialOutlineWidthModeType;
@@ -103,6 +104,7 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
   material.uvAnimationScrollXOffset = 0.0;
   material.uvAnimationScrollYOffset = 0.0;
   material.uvAnimationRotationPhase = 0.0;
+  material.v0CompatShade = false;
 
   material.isOutline = false;
   material.outlineWidthMode = MToonMaterialOutlineWidthMode.None;
@@ -127,7 +129,7 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     const hasUnlitExtension =
       gltfMaterial?.extensions?.KHR_materials_unlit !== undefined ||
       gltf.extensionsUsed?.includes('KHR_materials_unlit');
-    if (hasUnlitExtension && this.emissiveMap && !this.diffuseMap) {
+    if (hasUnlitExtension) {
       // Restore diffuse map from emissive
       this.diffuseMap = this.emissiveMap;
       this.diffuseMapUv = this.emissiveMapUv;
@@ -136,6 +138,23 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       this.diffuseMapRotation = this.emissiveMapRotation;
       this.diffuseMapChannel = this.emissiveMapChannel;
       this.diffuse.copy(this.emissive);
+
+      if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
+        const pbrData = gltfMaterial.pbrMetallicRoughness;
+
+        if (pbrData.hasOwnProperty('baseColorFactor')) {
+          const [r, g, b, a] = pbrData.baseColorFactor;
+          material.diffuse.set(r, g, b).gamma();
+          material.opacity = a;
+        }
+      }
+
+      if (gltfMaterial.hasOwnProperty('emissiveFactor')) {
+        // playcanvas will throw warning when emissive is black(0,0,0) and has emissive map
+        // workaround: set very small value to warn nothing
+        const [r, g, b] = gltfMaterial.emissiveFactor.map((v: number) => Math.max(0.0001, v));
+        material.emissive.set(r, g, b).gamma();
+      }
     }
 
     if (this.diffuseMap) {
@@ -184,7 +203,12 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       outlineWidthMode,
       outlineWidthMultiplyTexture: outlineWidthMultiplyTextureInfo,
       transparentWithZWrite,
+      v0CompatShade,
     } = extension;
+
+    if (v0CompatShade !== undefined) {
+      this.v0CompatShade = v0CompatShade;
+    }
 
     if (uvAnimationMaskTexture) {
       // TODO: uvAnimationMaskTexture;
@@ -346,6 +370,10 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       options.defines.set('USE_MATCAPTEXTURE', '');
     }
 
+    if (this.v0CompatShade) {
+      options.defines.set('V0_COMPAT_SHADE', '');
+    }
+
     const useUvInVert = this.outlineWidthMultiplyTexture !== null;
     const useUvInFrag =
       this.diffuseMap !== null ||
@@ -398,6 +426,10 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
 
     if (this.isOutline) {
       options.defines.set('OUTLINE', '');
+    }
+
+    if (this.envAtlas) {
+      options.defines.set('USE_ENV_LIGHTS', '');
     }
 
     // Set light counts as compile-time constants

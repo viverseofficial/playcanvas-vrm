@@ -2959,9 +2959,14 @@ class RenderStates {
         return this.defaultInfoSetting.directionalLight;
       }
       const component = light._node.light;
+      const color = new this._pcRef.Color(
+        component.color.r * component.intensity,
+        component.color.g * component.intensity,
+        component.color.b * component.intensity
+      );
       return {
         direction: light._direction,
-        color: component.color
+        color
       };
     });
     info.spotLights = spotLights.map((light) => {
@@ -2969,10 +2974,15 @@ class RenderStates {
         return this.defaultInfoSetting.spotLight;
       }
       const component = light._node.light;
+      const color = new this._pcRef.Color(
+        component.color.r * component.intensity,
+        component.color.g * component.intensity,
+        component.color.b * component.intensity
+      );
       return {
         position: light._node.getPosition(),
         direction: light._node.forward,
-        color: component.color,
+        color,
         distance: component.range,
         decay: light.falloffMode === this._pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2,
         coneCos: Math.cos(component.innerConeAngle),
@@ -2984,9 +2994,14 @@ class RenderStates {
         return this.defaultInfoSetting.pointLight;
       }
       const component = light._node.light;
+      const color = new this._pcRef.Color(
+        component.color.r * component.intensity,
+        component.color.g * component.intensity,
+        component.color.b * component.intensity
+      );
       return {
         position: light._node.getPosition(),
-        color: component.color,
+        color,
         distance: component.range,
         decay: light.falloffMode === this._pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2
       };
@@ -3219,10 +3234,7 @@ const litUserMainEndVS = (
     vUv0 = vertex_texCoord0;
 
     vec4 worldPosition = vec4(vPositionW, 1.0);
-    vViewDirection = view_position - worldPosition.xyz;
-    vViewDirection = normalize(vViewDirection);
-
-    // Pass the view position to the fragment shader
+    vViewDirection = normalize(view_position - worldPosition.xyz);
     vViewPosition = -worldPosition.xyz;
 
     vec3 objectNormal = vertex_normal;
@@ -3390,6 +3402,12 @@ const litUserDeclarationPS = (
             in vec3 lightColor
     ) {
         vec3 col = lightColor * BRDF_Lambert( mix( material.shadeColor, material.diffuseColor, shading ) );
+        
+        // The "comment out if you want to PBR absolutely" line
+        #ifdef V0_COMPAT_SHADE
+            col = min( col, material.diffuseColor );
+        #endif
+        
         return col;
     }
 
@@ -3439,7 +3457,7 @@ const litUserDeclarationPS = (
     };
 
 
-    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight ) {
+    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight, const in float shrinkNum ) {
         float dotNL = clamp( dot( geometry.normal, directLight.direction ), -1.0, 1.0 );
         vec3 irradiance = directLight.color;
 
@@ -3450,8 +3468,10 @@ const litUserDeclarationPS = (
 
         float shading = getShading( dotNL, shadow, material.shadingShift );
 
+        // Note: Shrink the light intensity to prevent the color from becoming too bright
+        float shrink = 1.0 / shrinkNum;
         // toon shaded diffuse
-        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color );
+        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color ) * shrink;
     }
 
     void RE_IndirectDiffuse_MToon( const in vec3 irradiance, const in GeometricContext geometry, const in MToonMaterial material, inout ReflectedLight reflectedLight ) {
@@ -3516,11 +3536,12 @@ const lightPS = (
     }
 
 	vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
-		vec3 irradiance = ambientLightColor;
-		return irradiance;
+		// Boost by 2 to match the effect in playcanvas
+		return 2.0 * ambientLightColor;
 	}
 	vec3 getIBLIrradiance( const in vec3 envMapColor ) {
-		return 3.141592653589793 * envMapColor.rgb;
+        // Boost by 2 to match the effect in playcanvas
+		return 2.0 * envMapColor.rgb;
 	}
 
     // Point Lights
@@ -3542,6 +3563,7 @@ const lightPS = (
         float lightDistance = length( lVector );
         light.color = pointLight.color;
         light.color *= getDistanceAttenuation( lightDistance, pointLight.distance, pointLight.decay );
+
         light.visible = ( light.color != vec3( 0.0 ) );
     }
     #endif
@@ -3572,6 +3594,7 @@ const lightPS = (
             float lightDistance = length( lVector );
             light.color = spotLight.color * spotAttenuation;
             light.color *= getDistanceAttenuation( lightDistance, spotLight.distance, spotLight.decay );
+
             light.visible = ( light.color != vec3( 0.0 ) );
         } else {
             light.color = vec3( 0.0 );
@@ -3593,6 +3616,7 @@ const lightPS = (
 
     void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
         light.color = directionalLight.color;
+
         light.direction = directionalLight.direction;
         light.visible = true;
     }
@@ -3666,8 +3690,6 @@ const litUserMainEndPS = (
     #endif
 
 
-
-
     // -- MToon: lighting --------------------------------------------------------
     MToonMaterial material;
     material.diffuseColor = diffuseColor.rgb;
@@ -3683,6 +3705,7 @@ const litUserMainEndPS = (
         vec2 shadingShiftTextureUv = ( shadingShiftTextureUvTransform * vec3( uv, 1 ) ).xy;
         material.shadingShift += texture2D( shadingShiftTexture, shadingShiftTextureUv ).r * shadingShiftTextureScale;
     #endif    
+
 
     GeometricContext geometry;
     geometry.position = - vViewPosition;
@@ -3700,7 +3723,7 @@ const litUserMainEndPS = (
         for ( int i = 0; i < NUM_POINT_LIGHTS; i++ ) {
             pointLight = pointLights[i];
             getPointLightInfo( pointLight, geometry, directLight );
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
         }
     }
     #endif
@@ -3712,7 +3735,7 @@ const litUserMainEndPS = (
         for ( int i = 0; i < NUM_SPOT_LIGHTS; i++ ) {
             spotLight = spotLights[i];
             getSpotLightInfo( spotLight, geometry, directLight );
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
         }
     }
     #endif
@@ -3724,7 +3747,7 @@ const litUserMainEndPS = (
         for ( int i = 0; i < NUM_DIR_LIGHTS; i++ ) {
             directionalLight = directionalLights[i];
             getDirectionalLightInfo( directionalLight, directLight );  
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight, float(NUM_DIR_LIGHTS) );
         }
     }
     #endif 
@@ -3741,23 +3764,23 @@ const litUserMainEndPS = (
         vec2 envuv = mapUv(toSphericalUv(dir), vec4(128.0, 256.0 + 128.0, 64.0, 32.0) / atlasSize);
         vec4 raw = texture2D(texture_envAtlas, envuv);
         vec3 linear = decodeLinear(raw);
-
-        float shrinkEnvLightRatio = (NUM_DIR_LIGHTS > 0) ? 0.25 : 0.75;
-
-        irradiance += getIBLIrradiance(linear) * shrinkEnvLightRatio;
+        irradiance += getIBLIrradiance(linear);
 	#endif
 
 
     // From three.js #include <lights_fragment_end>
     RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );
-    
+
+    float directDiffuseIntensity = 2.0; // Boost the effect of direct light
+    reflectedLight.directDiffuse *= directDiffuseIntensity;
     vec3 col = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
+    col = min( col, material.diffuseColor * 1.2 ); // Slightly boost the cap to allow brighter lighting
+ 
 
     // -- MToon: rim lighting -----------------------------------------
     vec3 viewDir = normalize( vViewDirection );
 
-    reflectedLight.directSpecular /= 3.14159265359;
-    vec3 rimMix = mix( vec3( 1.0 ), reflectedLight.directSpecular, 1.0 );
+    vec3 rimMix = mix( vec3( 1.0 ), reflectedLight.directSpecular, rimLightingMixFactor );
     vec3 rim = parametricRimColorFactor * pow( saturate( 1.0 - dot( viewDir, normal ) + parametricRimLiftFactor ), parametricRimFresnelPowerFactor );
 
     #ifdef USE_MATCAPTEXTURE
@@ -3782,7 +3805,6 @@ const litUserMainEndPS = (
 
     // -- MToon: Emission --------------------------------------------------------
     col += totalEmissiveRadiance;
-
 
     // -- MToon: Outline --------------------------------------------------------
     #ifdef OUTLINE
@@ -3835,6 +3857,7 @@ function createVRMCMtoonMaterial(pcRef, asset) {
   material.uvAnimationScrollXOffset = 0;
   material.uvAnimationScrollYOffset = 0;
   material.uvAnimationRotationPhase = 0;
+  material.v0CompatShade = false;
   material.isOutline = false;
   material.outlineWidthMode = MToonMaterialOutlineWidthMode.None;
   material.outlineWidthMultiplyTexture = null;
@@ -3850,7 +3873,7 @@ function createVRMCMtoonMaterial(pcRef, asset) {
   material.parse = function(gltfMaterial, gltf) {
     var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q;
     const hasUnlitExtension = ((_a = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _a.KHR_materials_unlit) !== void 0 || ((_b = gltf.extensionsUsed) == null ? void 0 : _b.includes("KHR_materials_unlit"));
-    if (hasUnlitExtension && this.emissiveMap && !this.diffuseMap) {
+    if (hasUnlitExtension) {
       this.diffuseMap = this.emissiveMap;
       this.diffuseMapUv = this.emissiveMapUv;
       this.diffuseMapTiling.copy(this.emissiveMapTiling);
@@ -3858,6 +3881,18 @@ function createVRMCMtoonMaterial(pcRef, asset) {
       this.diffuseMapRotation = this.emissiveMapRotation;
       this.diffuseMapChannel = this.emissiveMapChannel;
       this.diffuse.copy(this.emissive);
+      if (gltfMaterial.hasOwnProperty("pbrMetallicRoughness")) {
+        const pbrData = gltfMaterial.pbrMetallicRoughness;
+        if (pbrData.hasOwnProperty("baseColorFactor")) {
+          const [r, g, b, a] = pbrData.baseColorFactor;
+          material.diffuse.set(r, g, b).gamma();
+          material.opacity = a;
+        }
+      }
+      if (gltfMaterial.hasOwnProperty("emissiveFactor")) {
+        const [r, g, b] = gltfMaterial.emissiveFactor.map((v) => Math.max(1e-4, v));
+        material.emissive.set(r, g, b).gamma();
+      }
     }
     if (this.diffuseMap) {
       updateTextureMatrix(pcRef, this.mapUvTransform, {
@@ -3899,8 +3934,12 @@ function createVRMCMtoonMaterial(pcRef, asset) {
       outlineLightingMixFactor,
       outlineWidthMode,
       outlineWidthMultiplyTexture: outlineWidthMultiplyTextureInfo,
-      transparentWithZWrite
+      transparentWithZWrite,
+      v0CompatShade
     } = extension;
+    if (v0CompatShade !== void 0) {
+      this.v0CompatShade = v0CompatShade;
+    }
     if (giEqualizationFactor !== void 0) {
       this.giEqualizationFactor = giEqualizationFactor;
     }
@@ -4030,6 +4069,9 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     if (this.matcapTexture) {
       options.defines.set("USE_MATCAPTEXTURE", "");
     }
+    if (this.v0CompatShade) {
+      options.defines.set("V0_COMPAT_SHADE", "");
+    }
     const useUvInVert = this.outlineWidthMultiplyTexture !== null;
     const useUvInFrag = this.diffuseMap !== null || this.normalMap !== null || this.emissiveMap !== null || this.shadeMultiplyTexture !== null || this.shadingShiftTexture !== null || this.rimMultiplyTexture !== null || this.uvAnimationMaskTexture !== null;
     if (useUvInVert || useUvInFrag) {
@@ -4064,6 +4106,9 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     }
     if (this.isOutline) {
       options.defines.set("OUTLINE", "");
+    }
+    if (this.envAtlas) {
+      options.defines.set("USE_ENV_LIGHTS", "");
     }
     options.defines.set("NUM_DIR_LIGHTS", this._currentDirLights.toString());
     options.defines.set("NUM_SPOT_LIGHTS", this._currentSpotLights.toString());

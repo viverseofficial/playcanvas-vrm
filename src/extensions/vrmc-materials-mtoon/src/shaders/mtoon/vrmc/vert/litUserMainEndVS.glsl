@@ -2,10 +2,7 @@ export default /* glsl */ `
     vUv0 = vertex_texCoord0;
 
     vec4 worldPosition = vec4(vPositionW, 1.0);
-    vViewDirection = view_position - worldPosition.xyz;
-    vViewDirection = normalize(vViewDirection);
-
-    // Pass the view position to the fragment shader
+    vViewDirection = normalize(view_position - worldPosition.xyz);
     vViewPosition = -worldPosition.xyz;
 
     vec3 objectNormal = vertex_normal;
