@@ -198,20 +198,6 @@ See the `examples/` directory for complete examples:
 
 **Solution**: This has been addressed in the codebase. If you encounter this issue, the library automatically creates an empty translation track for the hips joint.
 
-## Publishing
-
-This package is published to the internal VIVERSE npm registry:
-
-```bash
-# Patch release (1.6.0 -> 1.6.1)
-pnpm release:patch
-
-# Minor release (1.6.0 -> 1.7.0)
-pnpm release:minor
-
-# Major release (1.6.0 -> 2.0.0)
-pnpm release:major
-```
 
 ## Credits
 
