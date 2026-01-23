@@ -63,8 +63,6 @@ export default /* glsl */ `
     #endif
 
 
-
-
     // -- MToon: lighting --------------------------------------------------------
     MToonMaterial material;
     material.diffuseColor = diffuseColor.rgb;
@@ -80,6 +78,7 @@ export default /* glsl */ `
         vec2 shadingShiftTextureUv = ( shadingShiftTextureUvTransform * vec3( uv, 1 ) ).xy;
         material.shadingShift += texture2D( shadingShiftTexture, shadingShiftTextureUv ).r * shadingShiftTextureScale;
     #endif    
+
 
     GeometricContext geometry;
     geometry.position = - vViewPosition;
@@ -97,7 +96,7 @@ export default /* glsl */ `
         for ( int i = 0; i < NUM_POINT_LIGHTS; i++ ) {
             pointLight = pointLights[i];
             getPointLightInfo( pointLight, geometry, directLight );
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
         }
     }
     #endif
@@ -109,7 +108,7 @@ export default /* glsl */ `
         for ( int i = 0; i < NUM_SPOT_LIGHTS; i++ ) {
             spotLight = spotLights[i];
             getSpotLightInfo( spotLight, geometry, directLight );
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
         }
     }
     #endif
@@ -121,7 +120,7 @@ export default /* glsl */ `
         for ( int i = 0; i < NUM_DIR_LIGHTS; i++ ) {
             directionalLight = directionalLights[i];
             getDirectionalLightInfo( directionalLight, directLight );  
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight, float(NUM_DIR_LIGHTS) );
         }
     }
     #endif 
@@ -138,23 +137,23 @@ export default /* glsl */ `
         vec2 envuv = mapUv(toSphericalUv(dir), vec4(128.0, 256.0 + 128.0, 64.0, 32.0) / atlasSize);
         vec4 raw = texture2D(texture_envAtlas, envuv);
         vec3 linear = decodeLinear(raw);
-
-        float shrinkEnvLightRatio = (NUM_DIR_LIGHTS > 0) ? 0.25 : 0.75;
-
-        irradiance += getIBLIrradiance(linear) * shrinkEnvLightRatio;
+        irradiance += getIBLIrradiance(linear);
 	#endif
 
 
     // From three.js #include <lights_fragment_end>
     RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );
-    
+
+    float directDiffuseIntensity = 2.0; // Boost the effect of direct light
+    reflectedLight.directDiffuse *= directDiffuseIntensity;
     vec3 col = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
+    col = min( col, material.diffuseColor * 1.2 ); // Slightly boost the cap to allow brighter lighting
+ 
 
     // -- MToon: rim lighting -----------------------------------------
     vec3 viewDir = normalize( vViewDirection );
 
-    reflectedLight.directSpecular /= 3.14159265359;
-    vec3 rimMix = mix( vec3( 1.0 ), reflectedLight.directSpecular, 1.0 );
+    vec3 rimMix = mix( vec3( 1.0 ), reflectedLight.directSpecular, rimLightingMixFactor );
     vec3 rim = parametricRimColorFactor * pow( saturate( 1.0 - dot( viewDir, normal ) + parametricRimLiftFactor ), parametricRimFresnelPowerFactor );
 
     #ifdef USE_MATCAPTEXTURE
@@ -179,7 +178,6 @@ export default /* glsl */ `
 
     // -- MToon: Emission --------------------------------------------------------
     col += totalEmissiveRadiance;
-
 
     // -- MToon: Outline --------------------------------------------------------
     #ifdef OUTLINE

@@ -107,6 +107,12 @@ export default /* glsl */ `
             in vec3 lightColor
     ) {
         vec3 col = lightColor * BRDF_Lambert( mix( material.shadeColor, material.diffuseColor, shading ) );
+        
+        // The "comment out if you want to PBR absolutely" line
+        #ifdef V0_COMPAT_SHADE
+            col = min( col, material.diffuseColor );
+        #endif
+        
         return col;
     }
 
@@ -156,7 +162,7 @@ export default /* glsl */ `
     };
 
 
-    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight ) {
+    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight, const in float shrinkNum ) {
         float dotNL = clamp( dot( geometry.normal, directLight.direction ), -1.0, 1.0 );
         vec3 irradiance = directLight.color;
 
@@ -167,8 +173,10 @@ export default /* glsl */ `
 
         float shading = getShading( dotNL, shadow, material.shadingShift );
 
+        // Note: Shrink the light intensity to prevent the color from becoming too bright
+        float shrink = 1.0 / shrinkNum;
         // toon shaded diffuse
-        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color );
+        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color ) * shrink;
     }
 
     void RE_IndirectDiffuse_MToon( const in vec3 irradiance, const in GeometricContext geometry, const in MToonMaterial material, inout ReflectedLight reflectedLight ) {

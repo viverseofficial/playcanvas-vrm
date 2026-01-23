@@ -17,11 +17,12 @@ export default /* glsl */ `
     }
 
 	vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
-		vec3 irradiance = ambientLightColor;
-		return irradiance;
+		// Boost by 2 to match the effect in playcanvas
+		return 2.0 * ambientLightColor;
 	}
 	vec3 getIBLIrradiance( const in vec3 envMapColor ) {
-		return 3.141592653589793 * envMapColor.rgb;
+        // Boost by 2 to match the effect in playcanvas
+		return 2.0 * envMapColor.rgb;
 	}
 
     // Point Lights
@@ -43,6 +44,7 @@ export default /* glsl */ `
         float lightDistance = length( lVector );
         light.color = pointLight.color;
         light.color *= getDistanceAttenuation( lightDistance, pointLight.distance, pointLight.decay );
+
         light.visible = ( light.color != vec3( 0.0 ) );
     }
     #endif
@@ -73,6 +75,7 @@ export default /* glsl */ `
             float lightDistance = length( lVector );
             light.color = spotLight.color * spotAttenuation;
             light.color *= getDistanceAttenuation( lightDistance, spotLight.distance, spotLight.decay );
+
             light.visible = ( light.color != vec3( 0.0 ) );
         } else {
             light.color = vec3( 0.0 );
@@ -94,6 +97,7 @@ export default /* glsl */ `
 
     void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
         light.color = directionalLight.color;
+
         light.direction = directionalLight.direction;
         light.visible = true;
     }
