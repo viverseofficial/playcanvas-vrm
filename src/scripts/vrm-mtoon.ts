@@ -38,12 +38,13 @@ export const importScript = (pcRef: typeof pc) => {
       });
     }
 
-    update() {
+    update(dt: number) {
       const lightStateInfo = this.renderStates.lightStateInfo;
       if (!lightStateInfo) return;
 
       this.shaderMaterials.forEach((material) => {
         material.updateLightState?.(lightStateInfo);
+        material.updateUvAnimation?.(dt);
       });
     }
   }

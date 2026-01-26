@@ -1,23 +1,13 @@
 export default /* glsl */ `
     vec2 uv = vec2(0.5, 0.5);
-
-    #ifdef MTOON_USE_UV
-        #ifndef MTOON_UVS_VERTEX_ONLY
-            uv = vUv0;
-
-            float uvAnimMask = 1.0;
-            #ifdef USE_UVANIMATIONMASKTEXTURE
-                // TODO: Wait until an avatar containing this information is found before proceeding with the implementation.
-            #endif
-
-            uv = uv + vec2( uvAnimationScrollXOffset, uvAnimationScrollYOffset ) * uvAnimMask;
-            float uvRotCos = cos( uvAnimationRotationPhase * uvAnimMask );
-            float uvRotSin = sin( uvAnimationRotationPhase * uvAnimMask );
-            uv = mat2( uvRotCos, -uvRotSin, uvRotSin, uvRotCos ) * ( uv - 0.5 ) + 0.5;
-        #endif
+    #ifdef VARYING_VUV0
+        uv = vUv0;
+        uv = applyUvAnimation(uv);
     #endif
 
-    vec4 diffuseColor = vec4( litFactor, opacity );
+
+    float finalOpacity = gl_FragColor.a; // result from "outputAlphaPS"
+    vec4 diffuseColor = vec4( litFactor, finalOpacity );
     ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
     vec3 totalEmissiveRadiance = emissive * emissiveIntensity;
 
@@ -188,6 +178,6 @@ export default /* glsl */ `
         diffuseColor.a = 1.0;
     #endif
 
-    
-    gl_FragColor = vec4( col, diffuseColor.a ) ;
+    gl_FragColor = vec4( col, diffuseColor.a );
+    return;
 `
