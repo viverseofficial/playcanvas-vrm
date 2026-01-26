@@ -3,6 +3,7 @@ import litUserMainEndVS from './vert/litUserMainEndVS.glsl';
 import litUserDeclarationPS from './frag/litUserDeclarationPS.glsl';
 import lightPS from './includes/light.glsl';
 import litUserMainEndPS from './frag/litUserMainEndPS.glsl';
+import opacityPS from './frag/opacityPS.glsl';
 
 export const shaderChunksMtoon = {
   litUserDeclarationVS,
@@ -10,4 +11,5 @@ export const shaderChunksMtoon = {
   litUserDeclarationPS: litUserDeclarationPS,
   litUserCodePS: lightPS,
   litUserMainEndPS,
+  opacityPS,
 };

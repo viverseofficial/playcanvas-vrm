@@ -1,6 +1,4 @@
 export default /* glsl */ `
-    vUv0 = vertex_texCoord0;
-
     vec4 worldPosition = vec4(vPositionW, 1.0);
     vViewDirection = normalize(view_position - worldPosition.xyz);
     vViewPosition = -worldPosition.xyz;
@@ -17,8 +15,10 @@ export default /* glsl */ `
         float outlineTex = 1.0;
         
         #ifdef USE_OUTLINEWIDTHMULTIPLYTEXTURE
-            vec2 outlineWidthMultiplyTextureUv = ( outlineWidthMultiplyTextureUvTransform * vec3( vUv0, 1 ) ).xy;
-            outlineTex = texture2D( outlineWidthMultiplyTexture, outlineWidthMultiplyTextureUv ).g;
+            #ifdef UV0
+                vec2 outlineWidthMultiplyTextureUv = ( outlineWidthMultiplyTextureUvTransform * vec3( vUv0, 1 ) ).xy;
+                outlineTex = texture2D( outlineWidthMultiplyTexture, outlineWidthMultiplyTextureUv ).g;
+            #endif
         #endif
 
         #ifdef OUTLINE_WIDTH_WORLD

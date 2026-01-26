@@ -2608,9 +2608,13 @@ const updateTextureMatrix = (pcRef, mat3, textureTransform) => {
   const repeat = new pcRef.Vec2(1, 1);
   const center = new pcRef.Vec2(0.5, 0.5);
   let rotation = 0;
+  if (textureTransform.scale) {
+    repeat.x = textureTransform.scale[0];
+    repeat.y = textureTransform.scale[1];
+  }
   if (textureTransform.offset) {
     offset.x = textureTransform.offset[0];
-    offset.y = textureTransform.offset[1];
+    offset.y = 1 - repeat.y - textureTransform.offset[1];
   }
   if (textureTransform.rotation) {
     rotation = textureTransform.rotation;
@@ -3231,8 +3235,6 @@ uniform vec3 view_position;
 const litUserMainEndVS = (
   /* glsl */
   `
-    vUv0 = vertex_texCoord0;
-
     vec4 worldPosition = vec4(vPositionW, 1.0);
     vViewDirection = normalize(view_position - worldPosition.xyz);
     vViewPosition = -worldPosition.xyz;
@@ -3249,8 +3251,10 @@ const litUserMainEndVS = (
         float outlineTex = 1.0;
         
         #ifdef USE_OUTLINEWIDTHMULTIPLYTEXTURE
-            vec2 outlineWidthMultiplyTextureUv = ( outlineWidthMultiplyTextureUvTransform * vec3( vUv0, 1 ) ).xy;
-            outlineTex = texture2D( outlineWidthMultiplyTexture, outlineWidthMultiplyTextureUv ).g;
+            #ifdef UV0
+                vec2 outlineWidthMultiplyTextureUv = ( outlineWidthMultiplyTextureUvTransform * vec3( vUv0, 1 ) ).xy;
+                outlineTex = texture2D( outlineWidthMultiplyTexture, outlineWidthMultiplyTextureUv ).g;
+            #endif
         #endif
 
         #ifdef OUTLINE_WIDTH_WORLD
@@ -3297,7 +3301,6 @@ const litUserDeclarationPS = (
     #define RECIPROCAL_PI 0.3183098861837907
 
     uniform vec3 litFactor;
-    uniform float opacity;
     uniform vec3 shadeColorFactor;
     uniform vec3 ambientLightColor;
 
@@ -3339,9 +3342,8 @@ const litUserDeclarationPS = (
     uniform float outlineLightingMixFactor;
 
     #ifdef USE_UVANIMATIONMASKTEXTURE
-        // TODO:  Wait until an avatar containing this information is found before proceeding with the implementation.
-        // uniform sampler2D uvAnimationMaskTexture;
-        // uniform mat3 uvAnimationMaskTextureUvTransform;
+        uniform sampler2D uvAnimationMaskTexture;
+        uniform mat3 uvAnimationMaskTextureUvTransform;
     #endif
 
     uniform float uvAnimationScrollXOffset;
@@ -3513,6 +3515,23 @@ const litUserDeclarationPS = (
 
     varying vec3 vNormal;
     varying vec3 vViewDirection;
+
+    // Apply UV Animation to a given UV coordinate
+    vec2 applyUvAnimation(vec2 uv) {
+        #ifdef USE_UVANIMATIONMASKTEXTURE
+            vec2 uvAnimationMaskTextureUv = ( uvAnimationMaskTextureUvTransform * vec3( uv, 1 ) ).xy;
+            float uvAnimMask = texture2D( uvAnimationMaskTexture, uvAnimationMaskTextureUv ).b;
+        #else
+            float uvAnimMask = 1.0;
+        #endif
+
+        float uvRotCos = cos( uvAnimationRotationPhase * uvAnimMask );
+        float uvRotSin = sin( uvAnimationRotationPhase * uvAnimMask );
+        uv = mat2( uvRotCos, -uvRotSin, uvRotSin, uvRotCos ) * ( uv - 0.5 ) + 0.5;
+        uv = uv + vec2( uvAnimationScrollXOffset, uvAnimationScrollYOffset ) * uvAnimMask;
+        
+        return uv;
+    }
 `
 );
 const lightPS = (
@@ -3627,24 +3646,14 @@ const litUserMainEndPS = (
   /* glsl */
   `
     vec2 uv = vec2(0.5, 0.5);
-
-    #ifdef MTOON_USE_UV
-        #ifndef MTOON_UVS_VERTEX_ONLY
-            uv = vUv0;
-
-            float uvAnimMask = 1.0;
-            #ifdef USE_UVANIMATIONMASKTEXTURE
-                // TODO: Wait until an avatar containing this information is found before proceeding with the implementation.
-            #endif
-
-            uv = uv + vec2( uvAnimationScrollXOffset, uvAnimationScrollYOffset ) * uvAnimMask;
-            float uvRotCos = cos( uvAnimationRotationPhase * uvAnimMask );
-            float uvRotSin = sin( uvAnimationRotationPhase * uvAnimMask );
-            uv = mat2( uvRotCos, -uvRotSin, uvRotSin, uvRotCos ) * ( uv - 0.5 ) + 0.5;
-        #endif
+    #ifdef VARYING_VUV0
+        uv = vUv0;
+        uv = applyUvAnimation(uv);
     #endif
 
-    vec4 diffuseColor = vec4( litFactor, opacity );
+
+    float finalOpacity = gl_FragColor.a; // result from "outputAlphaPS"
+    vec4 diffuseColor = vec4( litFactor, finalOpacity );
     ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
     vec3 totalEmissiveRadiance = emissive * emissiveIntensity;
 
@@ -3815,8 +3824,29 @@ const litUserMainEndPS = (
         diffuseColor.a = 1.0;
     #endif
 
-    
-    gl_FragColor = vec4( col, diffuseColor.a ) ;
+    gl_FragColor = vec4( col, diffuseColor.a );
+    return;
+`
+);
+const opacityPS = (
+  /* glsl */
+  `
+uniform float material_opacity;
+
+void getOpacity() {
+    dAlpha = material_opacity;
+
+    #ifdef STD_OPACITY_TEXTURE
+    vec2 opacityUv = {STD_OPACITY_TEXTURE_UV};
+    opacityUv = applyUvAnimation(opacityUv);
+
+    dAlpha *= texture2DBias({STD_OPACITY_TEXTURE_NAME}, opacityUv, textureBias).{STD_OPACITY_TEXTURE_CHANNEL};
+    #endif
+
+    #ifdef STD_OPACITY_VERTEX
+    dAlpha *= clamp(vVertexColor.{STD_OPACITY_VERTEX_CHANNEL}, 0.0, 1.0);
+    #endif
+}
 `
 );
 const shaderChunksMtoon = {
@@ -3824,7 +3854,8 @@ const shaderChunksMtoon = {
   litUserMainEndVS,
   litUserDeclarationPS,
   litUserCodePS: lightPS,
-  litUserMainEndPS
+  litUserMainEndPS,
+  opacityPS
 };
 const textureTransformExtensionName = "KHR_texture_transform";
 function createVRMCMtoonMaterial(pcRef, asset) {
@@ -3857,6 +3888,9 @@ function createVRMCMtoonMaterial(pcRef, asset) {
   material.uvAnimationScrollXOffset = 0;
   material.uvAnimationScrollYOffset = 0;
   material.uvAnimationRotationPhase = 0;
+  material.uvAnimationScrollXSpeed = 0;
+  material.uvAnimationScrollYSpeed = 0;
+  material.uvAnimationRotationSpeed = 0;
   material.v0CompatShade = false;
   material.isOutline = false;
   material.outlineWidthMode = MToonMaterialOutlineWidthMode.None;
@@ -3894,25 +3928,6 @@ function createVRMCMtoonMaterial(pcRef, asset) {
         material.emissive.set(r, g, b).gamma();
       }
     }
-    if (this.diffuseMap) {
-      updateTextureMatrix(pcRef, this.mapUvTransform, {
-        offset: [this.diffuseMapOffset.x, this.diffuseMapOffset.y],
-        rotation: this.diffuseMapRotation
-      });
-    }
-    if (this.normalMap) {
-      this.normalScale.set(this.bumpiness, this.bumpiness);
-      updateTextureMatrix(pcRef, this.normalMapUvTransform, {
-        offset: [this.normalDetailMapOffset.x, this.normalDetailMapOffset.y],
-        rotation: this.normalMapRotation
-      });
-    }
-    if (this.emissiveMap) {
-      updateTextureMatrix(pcRef, this.emissiveMapUvTransform, {
-        offset: [this.emissiveMapOffset.x, this.emissiveMapOffset.y],
-        rotation: this.emissiveMapRotation
-      });
-    }
     const extension = (_c = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _c[EXTENSION_VRMC_MATERIALS_MTOON];
     const {
       shadeColorFactor,
@@ -3928,17 +3943,29 @@ function createVRMCMtoonMaterial(pcRef, asset) {
       rimMultiplyTexture: rimMultiplyTextureInfo,
       matcapTexture: matcapTextureInfo,
       matcapFactor,
-      uvAnimationMaskTexture,
       outlineWidthFactor,
       outlineColorFactor,
       outlineLightingMixFactor,
       outlineWidthMode,
       outlineWidthMultiplyTexture: outlineWidthMultiplyTextureInfo,
       transparentWithZWrite,
-      v0CompatShade
+      v0CompatShade,
+      uvAnimationMaskTexture,
+      uvAnimationScrollXSpeedFactor,
+      uvAnimationScrollYSpeedFactor,
+      uvAnimationRotationSpeedFactor
     } = extension;
     if (v0CompatShade !== void 0) {
       this.v0CompatShade = v0CompatShade;
+    }
+    if (uvAnimationScrollXSpeedFactor !== void 0) {
+      this.uvAnimationScrollXSpeed = uvAnimationScrollXSpeedFactor;
+    }
+    if (uvAnimationScrollYSpeedFactor !== void 0) {
+      this.uvAnimationScrollYSpeed = uvAnimationScrollYSpeedFactor;
+    }
+    if (uvAnimationRotationSpeedFactor !== void 0) {
+      this.uvAnimationRotationSpeed = uvAnimationRotationSpeedFactor;
     }
     if (giEqualizationFactor !== void 0) {
       this.giEqualizationFactor = giEqualizationFactor;
@@ -4047,8 +4074,8 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     }
     if (this.isOutline)
       this.cull = pcRef.CULLFACE_FRONT;
-    this.setShaderChunks();
-    this.setShaderUniforms();
+    this._setShaderChunks();
+    this._setShaderUniforms();
   };
   material.onUpdateShader = function(options) {
     if (this.shadeMultiplyTexture) {
@@ -4071,14 +4098,6 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     }
     if (this.v0CompatShade) {
       options.defines.set("V0_COMPAT_SHADE", "");
-    }
-    const useUvInVert = this.outlineWidthMultiplyTexture !== null;
-    const useUvInFrag = this.diffuseMap !== null || this.normalMap !== null || this.emissiveMap !== null || this.shadeMultiplyTexture !== null || this.shadingShiftTexture !== null || this.rimMultiplyTexture !== null || this.uvAnimationMaskTexture !== null;
-    if (useUvInVert || useUvInFrag) {
-      options.defines.set("MTOON_USE_UV", "");
-    }
-    if (useUvInVert && !useUvInFrag) {
-      options.defines.set("MTOON_UVS_VERTEX_ONLY", "");
     }
     const USE_RIMMULTIPLYTEXTURE = this.rimMultiplyTexture;
     if (USE_RIMMULTIPLYTEXTURE) {
@@ -4124,17 +4143,18 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     }
     return options;
   };
-  material.setShaderChunks = function() {
+  material._setShaderChunks = function() {
+    this.shaderChunksVersion = "2.8";
     const glsl = SHADERLANGUAGE_GLSL;
     this.getShaderChunks(glsl).set("litUserDeclarationVS", shaderChunksMtoon.litUserDeclarationVS);
     this.getShaderChunks(glsl).set("litUserMainEndVS", shaderChunksMtoon.litUserMainEndVS);
     this.getShaderChunks(glsl).set("litUserDeclarationPS", shaderChunksMtoon.litUserDeclarationPS);
     this.getShaderChunks(glsl).set("litUserCodePS", shaderChunksMtoon.litUserCodePS);
     this.getShaderChunks(glsl).set("litUserMainEndPS", shaderChunksMtoon.litUserMainEndPS);
+    this.getShaderChunks(glsl).set("opacityPS", shaderChunksMtoon.opacityPS);
   };
-  material.setShaderUniforms = function() {
+  material._setShaderUniforms = function() {
     this.setParameter("litFactor", [this.diffuse.r, this.diffuse.g, this.diffuse.b]);
-    this.setParameter("opacity", this.opacity);
     this.setParameters("giEqualizationFactor", this.giEqualizationFactor);
     this.setParameter("shadeColorFactor", [
       this.shadeColorFactor.r,
@@ -4218,7 +4238,7 @@ function createVRMCMtoonMaterial(pcRef, asset) {
   };
   material.updateLightState = function(lightStateInfo) {
     const { directionalLights, spotLights, pointLights, scene } = lightStateInfo;
-    this.updateIndirectLightUniforms(scene);
+    this._updateIndirectLightUniforms(scene);
     directionalLights.forEach((info, i) => {
       const direction = info.direction;
       this._vec3A.copy(direction);
@@ -4269,7 +4289,7 @@ function createVRMCMtoonMaterial(pcRef, asset) {
       this.update();
     }
   };
-  material.updateIndirectLightUniforms = function(scene) {
+  material._updateIndirectLightUniforms = function(scene) {
     if (!scene)
       return;
     if (!this.envAtlas && scene.envAtlas) {
@@ -4281,6 +4301,14 @@ function createVRMCMtoonMaterial(pcRef, asset) {
       this.ambient.copy(scene.ambientLight);
       this.setParameter("ambientLightColor", [this.ambient.r, this.ambient.g, this.ambient.b]);
     }
+  };
+  material.updateUvAnimation = function(deltaTime) {
+    this.uvAnimationScrollXOffset += this.uvAnimationScrollXSpeed * deltaTime;
+    this.setParameter("uvAnimationScrollXOffset", this.uvAnimationScrollXOffset);
+    this.uvAnimationScrollYOffset += this.uvAnimationScrollYSpeed * deltaTime;
+    this.setParameter("uvAnimationScrollYOffset", this.uvAnimationScrollYOffset);
+    this.uvAnimationRotationPhase += this.uvAnimationRotationSpeed * deltaTime;
+    this.setParameter("uvAnimationRotationPhase", this.uvAnimationRotationPhase);
   };
   return material;
 }
@@ -4416,13 +4444,14 @@ const importScript = (pcRef) => {
         this.shaderMaterials = [];
       });
     }
-    update() {
+    update(dt) {
       const lightStateInfo = this.renderStates.lightStateInfo;
       if (!lightStateInfo)
         return;
       this.shaderMaterials.forEach((material) => {
-        var _a;
+        var _a, _b;
         (_a = material.updateLightState) == null ? void 0 : _a.call(material, lightStateInfo);
+        (_b = material.updateUvAnimation) == null ? void 0 : _b.call(material, dt);
       });
     }
   }

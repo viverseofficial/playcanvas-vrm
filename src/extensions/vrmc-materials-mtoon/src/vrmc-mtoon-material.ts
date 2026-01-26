@@ -47,6 +47,9 @@ export type VRMCMtoonMaterialType = pc.StandardMaterial & {
   uvAnimationScrollXOffset: number;
   uvAnimationScrollYOffset: number;
   uvAnimationRotationPhase: number;
+  uvAnimationScrollXSpeed: number;
+  uvAnimationScrollYSpeed: number;
+  uvAnimationRotationSpeed: number;
   v0CompatShade: boolean;
 
   isOutline: boolean;
@@ -64,11 +67,11 @@ export type VRMCMtoonMaterialType = pc.StandardMaterial & {
   _currentPointLights: number;
 
   parse(gltfMaterial: any, gltf: any): void;
-  setShaderChunks(): void;
-  setShaderUniforms(): void;
   updateLightState(lightStateInfo: ILightStateInfo): void;
-  updateIndirectLightUniforms(scene?: ISceneLightInfo): void;
-  replaceLightNumbers(dirNum: number, spotNum: number, pointNum: number): void;
+  updateUvAnimation(deltaTime: number): void;
+  _setShaderChunks(): void;
+  _setShaderUniforms(): void;
+  _updateIndirectLightUniforms(scene?: ISceneLightInfo): void;
 };
 
 export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMCMtoonMaterialType {
@@ -104,6 +107,9 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
   material.uvAnimationScrollXOffset = 0.0;
   material.uvAnimationScrollYOffset = 0.0;
   material.uvAnimationRotationPhase = 0.0;
+  material.uvAnimationScrollXSpeed = 0.0;
+  material.uvAnimationScrollYSpeed = 0.0;
+  material.uvAnimationRotationSpeed = 0.0;
   material.v0CompatShade = false;
 
   material.isOutline = false;
@@ -157,28 +163,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       }
     }
 
-    if (this.diffuseMap) {
-      updateTextureMatrix(pcRef, this.mapUvTransform, {
-        offset: [this.diffuseMapOffset.x, this.diffuseMapOffset.y],
-        rotation: this.diffuseMapRotation,
-      });
-    }
-
-    if (this.normalMap) {
-      this.normalScale.set(this.bumpiness, this.bumpiness);
-      updateTextureMatrix(pcRef, this.normalMapUvTransform, {
-        offset: [this.normalDetailMapOffset.x, this.normalDetailMapOffset.y],
-        rotation: this.normalMapRotation,
-      });
-    }
-
-    if (this.emissiveMap) {
-      updateTextureMatrix(pcRef, this.emissiveMapUvTransform, {
-        offset: [this.emissiveMapOffset.x, this.emissiveMapOffset.y],
-        rotation: this.emissiveMapRotation,
-      });
-    }
-
     // Extension parameters
     const extension = gltfMaterial?.extensions?.[EXTENSION_VRMC_MATERIALS_MTOON];
 
@@ -196,7 +180,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       rimMultiplyTexture: rimMultiplyTextureInfo,
       matcapTexture: matcapTextureInfo,
       matcapFactor,
-      uvAnimationMaskTexture,
       outlineWidthFactor,
       outlineColorFactor,
       outlineLightingMixFactor,
@@ -204,14 +187,30 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       outlineWidthMultiplyTexture: outlineWidthMultiplyTextureInfo,
       transparentWithZWrite,
       v0CompatShade,
+      uvAnimationMaskTexture,
+      uvAnimationScrollXSpeedFactor,
+      uvAnimationScrollYSpeedFactor,
+      uvAnimationRotationSpeedFactor,
     } = extension;
 
     if (v0CompatShade !== undefined) {
       this.v0CompatShade = v0CompatShade;
     }
 
-    if (uvAnimationMaskTexture) {
+    if (uvAnimationMaskTexture !== undefined) {
       // TODO: uvAnimationMaskTexture;
+    }
+
+    if (uvAnimationScrollXSpeedFactor !== undefined) {
+      this.uvAnimationScrollXSpeed = uvAnimationScrollXSpeedFactor;
+    }
+
+    if (uvAnimationScrollYSpeedFactor !== undefined) {
+      this.uvAnimationScrollYSpeed = uvAnimationScrollYSpeedFactor;
+    }
+
+    if (uvAnimationRotationSpeedFactor !== undefined) {
+      this.uvAnimationRotationSpeed = uvAnimationRotationSpeedFactor;
     }
 
     if (giEqualizationFactor !== undefined) {
@@ -341,8 +340,8 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
 
     if (this.isOutline) this.cull = pcRef.CULLFACE_FRONT;
 
-    this.setShaderChunks();
-    this.setShaderUniforms();
+    this._setShaderChunks();
+    this._setShaderUniforms();
   };
 
   material.onUpdateShader = function (options: pc.StandardMaterialOptions) {
@@ -372,24 +371,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
 
     if (this.v0CompatShade) {
       options.defines.set('V0_COMPAT_SHADE', '');
-    }
-
-    const useUvInVert = this.outlineWidthMultiplyTexture !== null;
-    const useUvInFrag =
-      this.diffuseMap !== null ||
-      this.normalMap !== null ||
-      this.emissiveMap !== null ||
-      this.shadeMultiplyTexture !== null ||
-      this.shadingShiftTexture !== null ||
-      this.rimMultiplyTexture !== null ||
-      this.uvAnimationMaskTexture !== null;
-
-    if (useUvInVert || useUvInFrag) {
-      options.defines.set('MTOON_USE_UV', '');
-    }
-
-    if (useUvInVert && !useUvInFrag) {
-      options.defines.set('MTOON_UVS_VERTEX_ONLY', '');
     }
 
     const USE_RIMMULTIPLYTEXTURE = this.rimMultiplyTexture;
@@ -451,18 +432,19 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     return options;
   };
 
-  material.setShaderChunks = function () {
+  material._setShaderChunks = function () {
+    this.shaderChunksVersion = '2.8';
     const glsl = pc.SHADERLANGUAGE_GLSL;
     this.getShaderChunks(glsl).set('litUserDeclarationVS', shaderChunksMtoon.litUserDeclarationVS);
     this.getShaderChunks(glsl).set('litUserMainEndVS', shaderChunksMtoon.litUserMainEndVS);
     this.getShaderChunks(glsl).set('litUserDeclarationPS', shaderChunksMtoon.litUserDeclarationPS);
     this.getShaderChunks(glsl).set('litUserCodePS', shaderChunksMtoon.litUserCodePS);
     this.getShaderChunks(glsl).set('litUserMainEndPS', shaderChunksMtoon.litUserMainEndPS);
+    this.getShaderChunks(glsl).set('opacityPS', shaderChunksMtoon.opacityPS);
   };
 
-  material.setShaderUniforms = function () {
+  material._setShaderUniforms = function () {
     this.setParameter('litFactor', [this.diffuse.r, this.diffuse.g, this.diffuse.b]);
-    this.setParameter('opacity', this.opacity);
     this.setParameters('giEqualizationFactor', this.giEqualizationFactor);
     this.setParameter('shadeColorFactor', [
       this.shadeColorFactor.r,
@@ -549,7 +531,7 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
 
   material.updateLightState = function (lightStateInfo: ILightStateInfo) {
     const { directionalLights, spotLights, pointLights, scene } = lightStateInfo;
-    this.updateIndirectLightUniforms(scene);
+    this._updateIndirectLightUniforms(scene);
 
     // Update light data
     directionalLights.forEach((info: IDirectionalLightInfo, i: number) => {
@@ -610,7 +592,7 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     }
   };
 
-  material.updateIndirectLightUniforms = function (scene?: ISceneLightInfo) {
+  material._updateIndirectLightUniforms = function (scene?: ISceneLightInfo) {
     if (!scene) return;
 
     if (!this.envAtlas && scene.envAtlas) {
@@ -623,6 +605,17 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       this.ambient.copy(scene.ambientLight);
       this.setParameter('ambientLightColor', [this.ambient.r, this.ambient.g, this.ambient.b]);
     }
+  };
+
+  material.updateUvAnimation = function (deltaTime: number) {
+    this.uvAnimationScrollXOffset += this.uvAnimationScrollXSpeed * deltaTime;
+    this.setParameter('uvAnimationScrollXOffset', this.uvAnimationScrollXOffset);
+
+    this.uvAnimationScrollYOffset += this.uvAnimationScrollYSpeed * deltaTime;
+    this.setParameter('uvAnimationScrollYOffset', this.uvAnimationScrollYOffset);
+
+    this.uvAnimationRotationPhase += this.uvAnimationRotationSpeed * deltaTime;
+    this.setParameter('uvAnimationRotationPhase', this.uvAnimationRotationPhase);
   };
 
   return material;
