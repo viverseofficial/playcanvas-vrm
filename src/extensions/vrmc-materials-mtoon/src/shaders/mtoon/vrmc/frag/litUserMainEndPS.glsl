@@ -5,18 +5,20 @@ export default /* glsl */ `
         uv = applyUvAnimation(uv);
     #endif
 
-
     float finalOpacity = gl_FragColor.a; // result from "outputAlphaPS"
     vec4 diffuseColor = vec4( litFactor, finalOpacity );
-    ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
-    vec3 totalEmissiveRadiance = emissive * emissiveIntensity;
+    #if LIT_BLEND_TYPE == PREMULTIPLIED
+        diffuseColor.rgb *= litArgs_opacity; // get premultiplied rgb
+    #endif
 
+    ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
+    vec3 totalEmissiveRadiance = material_emissive * material_emissiveIntensity;
 
 
     #ifdef USE_MAP
         vec2 colorMapUv = ( mapUvTransform * vec3( uv, 1 ) ).xy;
         vec4 sampledDiffuseColor = texture2D( diffuseMap, colorMapUv );
-        diffuseColor *= sampledDiffuseColor;
+        diffuseColor.rgb *= sampledDiffuseColor.rgb;
     #endif
 
 
@@ -174,10 +176,5 @@ export default /* glsl */ `
         col = outlineColorFactor.rgb * mix( vec3( 1.0 ), col, outlineLightingMixFactor );
     #endif
 
-    #ifdef OPAQUE
-        diffuseColor.a = 1.0;
-    #endif
-
     gl_FragColor = vec4( col, diffuseColor.a );
-    return;
 `

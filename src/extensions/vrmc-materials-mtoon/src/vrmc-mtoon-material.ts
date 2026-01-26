@@ -1,5 +1,6 @@
 import * as pc from 'playcanvas';
 import { shaderChunksMtoon } from './shaders/mtoon/vrmc/shader-chunk';
+import { GLTF as GLTFSchema } from '../../../types/gltf';
 import { updateTextureMatrix } from './utils';
 import {
   EXTENSION_VRMC_MATERIALS_MTOON,
@@ -14,6 +15,7 @@ import {
   ISceneLightInfo,
 } from '../../../helpers/RenderStates';
 import { GltfAssetResource } from './VRMMtoonLoader';
+import { MaterialPreprocessor } from './material-preprocessor';
 
 const textureTransformExtensionName = 'KHR_texture_transform';
 
@@ -127,44 +129,12 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
   material._currentPointLights = 0;
 
   // Methods
-  material.parse = function (gltfMaterial: any, gltf: any) {
-    // Check if KHR_materials_unlit was applied by glb-parser
-    // If so, restore diffuse from emissive as extensionUnlit moved it there
-    // Note: Playcanvas dose not have beforeRoot timing to remove this extension like three.js,
-    // only way is to restore here as a workaround.
-    const hasUnlitExtension =
-      gltfMaterial?.extensions?.KHR_materials_unlit !== undefined ||
-      gltf.extensionsUsed?.includes('KHR_materials_unlit');
-    if (hasUnlitExtension) {
-      // Restore diffuse map from emissive
-      this.diffuseMap = this.emissiveMap;
-      this.diffuseMapUv = this.emissiveMapUv;
-      this.diffuseMapTiling.copy(this.emissiveMapTiling);
-      this.diffuseMapOffset.copy(this.emissiveMapOffset);
-      this.diffuseMapRotation = this.emissiveMapRotation;
-      this.diffuseMapChannel = this.emissiveMapChannel;
-      this.diffuse.copy(this.emissive);
-
-      if (gltfMaterial.hasOwnProperty('pbrMetallicRoughness')) {
-        const pbrData = gltfMaterial.pbrMetallicRoughness;
-
-        if (pbrData.hasOwnProperty('baseColorFactor')) {
-          const [r, g, b, a] = pbrData.baseColorFactor;
-          material.diffuse.set(r, g, b).gamma();
-          material.opacity = a;
-        }
-      }
-
-      if (gltfMaterial.hasOwnProperty('emissiveFactor')) {
-        // playcanvas will throw warning when emissive is black(0,0,0) and has emissive map
-        // workaround: set very small value to warn nothing
-        const [r, g, b] = gltfMaterial.emissiveFactor.map((v: number) => Math.max(0.0001, v));
-        material.emissive.set(r, g, b).gamma();
-      }
-    }
+  material.parse = function (gltfMaterial: GLTFSchema.IMaterial, gltf: GLTFSchema.IGLTF) {
+    // Apply all preprocessed settings
+    MaterialPreprocessor.applyToMaterial(this, gltfMaterial, gltf, pcRef);
 
     // Extension parameters
-    const extension = gltfMaterial?.extensions?.[EXTENSION_VRMC_MATERIALS_MTOON];
+    const extension = gltfMaterial?.extensions?.[EXTENSION_VRMC_MATERIALS_MTOON] as any;
 
     const {
       shadeColorFactor,
@@ -361,10 +331,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       options.defines.set('USE_NORMALMAP', '');
     }
 
-    if (this.cull === pcRef.CULLFACE_NONE) {
-      options.defines.set('DOUBLE_SIDED', '');
-    }
-
     if (this.matcapTexture) {
       options.defines.set('USE_MATCAPTEXTURE', '');
     }
@@ -381,11 +347,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     const USE_UVANIMATIONMASKTEXTURE = this.uvAnimationMaskTexture !== null;
     if (USE_UVANIMATIONMASKTEXTURE) {
       options.defines.set('USE_UVANIMATIONMASKTEXTURE', '');
-    }
-
-    const OPAQUE = this.blendType === pcRef.BLEND_NONE;
-    if (OPAQUE) {
-      options.defines.set('OPAQUE', '');
     }
 
     const USE_OUTLINEWIDTHMULTIPLYTEXTURE = this.outlineWidthMultiplyTexture !== null;
@@ -478,12 +439,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     }
     this.setParameter('shadingShiftFactor', this.shadingShiftFactor);
     this.setParameter('shadingToonyFactor', this.shadingToonyFactor);
-    if (this.emissive) {
-      this.setParameter('emissive', [this.emissive.r, this.emissive.g, this.emissive.b]);
-    }
-    if (this.emissiveIntensity) {
-      this.setParameter('emissiveIntensity', this.emissiveIntensity);
-    }
     this.setParameter('parametricRimColorFactor', [
       this.parametricRimColorFactor.r,
       this.parametricRimColorFactor.g,
