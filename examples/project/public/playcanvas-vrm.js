@@ -3651,18 +3651,20 @@ const litUserMainEndPS = (
         uv = applyUvAnimation(uv);
     #endif
 
-
     float finalOpacity = gl_FragColor.a; // result from "outputAlphaPS"
     vec4 diffuseColor = vec4( litFactor, finalOpacity );
-    ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
-    vec3 totalEmissiveRadiance = emissive * emissiveIntensity;
+    #if LIT_BLEND_TYPE == PREMULTIPLIED
+        diffuseColor.rgb *= litArgs_opacity; // get premultiplied rgb
+    #endif
 
+    ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
+    vec3 totalEmissiveRadiance = material_emissive * material_emissiveIntensity;
 
 
     #ifdef USE_MAP
         vec2 colorMapUv = ( mapUvTransform * vec3( uv, 1 ) ).xy;
         vec4 sampledDiffuseColor = texture2D( diffuseMap, colorMapUv );
-        diffuseColor *= sampledDiffuseColor;
+        diffuseColor.rgb *= sampledDiffuseColor.rgb;
     #endif
 
 
@@ -3820,12 +3822,7 @@ const litUserMainEndPS = (
         col = outlineColorFactor.rgb * mix( vec3( 1.0 ), col, outlineLightingMixFactor );
     #endif
 
-    #ifdef OPAQUE
-        diffuseColor.a = 1.0;
-    #endif
-
     gl_FragColor = vec4( col, diffuseColor.a );
-    return;
 `
 );
 const opacityPS = (
@@ -3849,14 +3846,78 @@ void getOpacity() {
 }
 `
 );
+const litUserCodePS = `${lightPS}`;
 const shaderChunksMtoon = {
   litUserDeclarationVS,
   litUserMainEndVS,
   litUserDeclarationPS,
-  litUserCodePS: lightPS,
+  litUserCodePS,
   litUserMainEndPS,
   opacityPS
 };
+class MaterialPreprocessor {
+  /**
+   * Applies preprocessed material settings to the given PlayCanvas material.
+   * Reference: playcanvas glb-parser.js implementation
+   *
+   * Note: Playcanvas dose not have beforeRoot timing to remove this extension like three.js,
+   * only way is to restore here as a workaround.
+   */
+  static applyToMaterial(pcMaterial, gltfMaterial, gltf, pcRef) {
+    var _a, _b;
+    const hasUnlitExtension = ((_a = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _a.KHR_materials_unlit) !== void 0 || ((_b = gltf.extensionsUsed) == null ? void 0 : _b.includes("KHR_materials_unlit"));
+    if (hasUnlitExtension) {
+      pcMaterial.diffuseMap = pcMaterial.emissiveMap;
+      pcMaterial.diffuseMapUv = pcMaterial.emissiveMapUv;
+      pcMaterial.diffuseMapTiling.copy(pcMaterial.emissiveMapTiling);
+      pcMaterial.diffuseMapOffset.copy(pcMaterial.emissiveMapOffset);
+      pcMaterial.diffuseMapRotation = pcMaterial.emissiveMapRotation;
+      pcMaterial.diffuseMapChannel = pcMaterial.emissiveMapChannel;
+      pcMaterial.diffuse.copy(pcMaterial.emissive);
+      if (gltfMaterial.hasOwnProperty("pbrMetallicRoughness")) {
+        const pbrData = gltfMaterial.pbrMetallicRoughness;
+        if (pbrData && pbrData.hasOwnProperty("baseColorFactor")) {
+          const [r, g, b, a] = pbrData.baseColorFactor;
+          pcMaterial.diffuse.set(r, g, b).gamma();
+          pcMaterial.opacity = a;
+        }
+      }
+      if (gltfMaterial.hasOwnProperty("emissiveFactor")) {
+        const [r, g, b] = gltfMaterial.emissiveFactor.map((v) => Math.max(1e-4, v));
+        pcMaterial.emissive.set(r, g, b).gamma();
+      }
+    }
+    if (gltfMaterial.hasOwnProperty("alphaMode")) {
+      switch (gltfMaterial.alphaMode) {
+        case "MASK":
+          pcMaterial.blendType = pcRef.BLEND_NONE;
+          if (gltfMaterial.hasOwnProperty("alphaCutoff")) {
+            pcMaterial.alphaTest = gltfMaterial.alphaCutoff;
+          } else {
+            pcMaterial.alphaTest = 0.5;
+          }
+          break;
+        case "BLEND":
+          pcMaterial.blendType = pcRef.BLEND_NORMAL;
+          pcMaterial.depthWrite = false;
+          break;
+        default:
+        case "OPAQUE":
+          pcMaterial.blendType = pcRef.BLEND_NONE;
+          break;
+      }
+    } else {
+      pcMaterial.blendType = pcRef.BLEND_NONE;
+    }
+    if (gltfMaterial.hasOwnProperty("doubleSided") && gltfMaterial.doubleSided !== void 0) {
+      pcMaterial.twoSidedLighting = gltfMaterial.doubleSided;
+      pcMaterial.cull = gltfMaterial.doubleSided ? pcRef.CULLFACE_NONE : pcRef.CULLFACE_BACK;
+    } else {
+      pcMaterial.twoSidedLighting = false;
+      pcMaterial.cull = pcRef.CULLFACE_BACK;
+    }
+  }
+}
 const textureTransformExtensionName = "KHR_texture_transform";
 function createVRMCMtoonMaterial(pcRef, asset) {
   const material = new pcRef.StandardMaterial();
@@ -3905,30 +3966,9 @@ function createVRMCMtoonMaterial(pcRef, asset) {
   material._currentSpotLights = 0;
   material._currentPointLights = 0;
   material.parse = function(gltfMaterial, gltf) {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q;
-    const hasUnlitExtension = ((_a = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _a.KHR_materials_unlit) !== void 0 || ((_b = gltf.extensionsUsed) == null ? void 0 : _b.includes("KHR_materials_unlit"));
-    if (hasUnlitExtension) {
-      this.diffuseMap = this.emissiveMap;
-      this.diffuseMapUv = this.emissiveMapUv;
-      this.diffuseMapTiling.copy(this.emissiveMapTiling);
-      this.diffuseMapOffset.copy(this.emissiveMapOffset);
-      this.diffuseMapRotation = this.emissiveMapRotation;
-      this.diffuseMapChannel = this.emissiveMapChannel;
-      this.diffuse.copy(this.emissive);
-      if (gltfMaterial.hasOwnProperty("pbrMetallicRoughness")) {
-        const pbrData = gltfMaterial.pbrMetallicRoughness;
-        if (pbrData.hasOwnProperty("baseColorFactor")) {
-          const [r, g, b, a] = pbrData.baseColorFactor;
-          material.diffuse.set(r, g, b).gamma();
-          material.opacity = a;
-        }
-      }
-      if (gltfMaterial.hasOwnProperty("emissiveFactor")) {
-        const [r, g, b] = gltfMaterial.emissiveFactor.map((v) => Math.max(1e-4, v));
-        material.emissive.set(r, g, b).gamma();
-      }
-    }
-    const extension = (_c = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _c[EXTENSION_VRMC_MATERIALS_MTOON];
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o;
+    MaterialPreprocessor.applyToMaterial(this, gltfMaterial, gltf, pcRef);
+    const extension = (_a = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _a[EXTENSION_VRMC_MATERIALS_MTOON];
     const {
       shadeColorFactor,
       shadeMultiplyTexture: shadeMultiplyTextureInfo,
@@ -3980,44 +4020,44 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     }
     if (shadeMultiplyTextureInfo !== void 0) {
       const resource = this._asset.resource;
-      const texture = (_e = (_d = resource == null ? void 0 : resource.textures) == null ? void 0 : _d[shadeMultiplyTextureInfo.index]) == null ? void 0 : _e.resource;
+      const texture = (_c = (_b = resource == null ? void 0 : resource.textures) == null ? void 0 : _b[shadeMultiplyTextureInfo.index]) == null ? void 0 : _c.resource;
       if (texture) {
         this.shadeMultiplyTexture = texture;
         updateTextureMatrix(
           pcRef,
           this.shadeMultiplyTextureUvTransform,
-          (_f = shadeMultiplyTextureInfo.extensions) == null ? void 0 : _f[textureTransformExtensionName]
+          (_d = shadeMultiplyTextureInfo.extensions) == null ? void 0 : _d[textureTransformExtensionName]
         );
       }
     }
     if (rimMultiplyTextureInfo !== void 0) {
       const resource = this._asset.resource;
-      const texture = (_h = (_g = resource == null ? void 0 : resource.textures) == null ? void 0 : _g[rimMultiplyTextureInfo.index]) == null ? void 0 : _h.resource;
+      const texture = (_f = (_e = resource == null ? void 0 : resource.textures) == null ? void 0 : _e[rimMultiplyTextureInfo.index]) == null ? void 0 : _f.resource;
       if (texture) {
         this.rimMultiplyTexture = texture;
         updateTextureMatrix(
           pcRef,
           this.rimMultiplyTextureUvTransform,
-          (_i = rimMultiplyTextureInfo.extensions) == null ? void 0 : _i[textureTransformExtensionName]
+          (_g = rimMultiplyTextureInfo.extensions) == null ? void 0 : _g[textureTransformExtensionName]
         );
       }
     }
     if (matcapTextureInfo !== void 0) {
       const resource = this._asset.resource;
-      const texture = (_k = (_j = resource == null ? void 0 : resource.textures) == null ? void 0 : _j[matcapTextureInfo.index]) == null ? void 0 : _k.resource;
+      const texture = (_i = (_h = resource == null ? void 0 : resource.textures) == null ? void 0 : _h[matcapTextureInfo.index]) == null ? void 0 : _i.resource;
       if (texture) {
         this.matcapTexture = texture;
       }
     }
     if (shadingShiftTextureInfo !== void 0) {
       const resource = this._asset.resource;
-      const texture = (_m = (_l = resource == null ? void 0 : resource.textures) == null ? void 0 : _l[shadingShiftTextureInfo.index]) == null ? void 0 : _m.resource;
+      const texture = (_k = (_j = resource == null ? void 0 : resource.textures) == null ? void 0 : _j[shadingShiftTextureInfo.index]) == null ? void 0 : _k.resource;
       if (texture) {
         this.shadingShiftTexture = texture;
         updateTextureMatrix(
           pcRef,
           this.shadingShiftTextureUvTransform,
-          (_n = shadingShiftTextureInfo.extensions) == null ? void 0 : _n[textureTransformExtensionName]
+          (_l = shadingShiftTextureInfo.extensions) == null ? void 0 : _l[textureTransformExtensionName]
         );
       }
       if (shadingShiftTextureInfo.scale !== void 0) {
@@ -4059,13 +4099,13 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     }
     if (outlineWidthMultiplyTextureInfo !== void 0) {
       const resource = this._asset.resource;
-      const texture = (_p = (_o = resource == null ? void 0 : resource.textures) == null ? void 0 : _o[outlineWidthMultiplyTextureInfo.index]) == null ? void 0 : _p.resource;
+      const texture = (_n = (_m = resource == null ? void 0 : resource.textures) == null ? void 0 : _m[outlineWidthMultiplyTextureInfo.index]) == null ? void 0 : _n.resource;
       if (texture) {
         this.outlineWidthMultiplyTexture = texture;
         updateTextureMatrix(
           pcRef,
           this.outlineWidthMultiplyTextureUvTransform,
-          (_q = outlineWidthMultiplyTextureInfo.extensions) == null ? void 0 : _q[textureTransformExtensionName]
+          (_o = outlineWidthMultiplyTextureInfo.extensions) == null ? void 0 : _o[textureTransformExtensionName]
         );
       }
     }
@@ -4090,9 +4130,6 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     if (this.normalMap) {
       options.defines.set("USE_NORMALMAP", "");
     }
-    if (this.cull === pcRef.CULLFACE_NONE) {
-      options.defines.set("DOUBLE_SIDED", "");
-    }
     if (this.matcapTexture) {
       options.defines.set("USE_MATCAPTEXTURE", "");
     }
@@ -4106,10 +4143,6 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     const USE_UVANIMATIONMASKTEXTURE = this.uvAnimationMaskTexture !== null;
     if (USE_UVANIMATIONMASKTEXTURE) {
       options.defines.set("USE_UVANIMATIONMASKTEXTURE", "");
-    }
-    const OPAQUE = this.blendType === pcRef.BLEND_NONE;
-    if (OPAQUE) {
-      options.defines.set("OPAQUE", "");
     }
     const USE_OUTLINEWIDTHMULTIPLYTEXTURE = this.outlineWidthMultiplyTexture !== null;
     if (USE_OUTLINEWIDTHMULTIPLYTEXTURE) {
@@ -4187,12 +4220,6 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     }
     this.setParameter("shadingShiftFactor", this.shadingShiftFactor);
     this.setParameter("shadingToonyFactor", this.shadingToonyFactor);
-    if (this.emissive) {
-      this.setParameter("emissive", [this.emissive.r, this.emissive.g, this.emissive.b]);
-    }
-    if (this.emissiveIntensity) {
-      this.setParameter("emissiveIntensity", this.emissiveIntensity);
-    }
     this.setParameter("parametricRimColorFactor", [
       this.parametricRimColorFactor.r,
       this.parametricRimColorFactor.g,
