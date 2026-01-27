@@ -1,13 +1,14 @@
 import * as pc from 'playcanvas';
 import VRMMaterialsV0CompatPlugin from '../extensions/vrmc-materials-mtoon/src/plugins/VRMMaterialsV0CompatPlugin';
 import { RenderStates } from '../helpers/RenderStates';
-import { VRMMtoonLoader } from '../extensions/vrmc-materials-mtoon';
+import { GltfAssetResource, VRMMtoonLoader } from '../extensions/vrmc-materials-mtoon';
 
 export const convertVRMMtoonMaterials = (pcRef: typeof pc, asset: pc.Asset) => {
   const v0CompatPlugin = new VRMMaterialsV0CompatPlugin(pcRef, asset);
   v0CompatPlugin.parseMaterials();
 
-  asset.resource?.data?.materials?.forEach((material: pc.StandardMaterial, index: number) => {
+  const resource = asset.resource as GltfAssetResource | undefined;
+  resource?.data?.materials?.forEach((material: pc.StandardMaterial, index: number) => {
     material.userId = `material_${index}`;
   });
 };
@@ -37,15 +38,13 @@ export const importScript = (pcRef: typeof pc) => {
       });
     }
 
-    update() {
+    update(dt: number) {
       const lightStateInfo = this.renderStates.lightStateInfo;
       if (!lightStateInfo) return;
 
       this.shaderMaterials.forEach((material) => {
-        if (material.updateLightUniforms) {
-          material.updateLightUniforms(lightStateInfo);
-          material.update();
-        }
+        material.updateLightState?.(lightStateInfo);
+        material.updateUvAnimation?.(dt);
       });
     }
   }

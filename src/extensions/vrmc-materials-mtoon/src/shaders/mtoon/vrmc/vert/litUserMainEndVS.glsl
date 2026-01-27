@@ -1,15 +1,7 @@
 export default /* glsl */ `
-    vUv0 = vertex_texCoord0;
-
-    // Transform the vertex position to world space
-    vec4 mvPosition = getModelMatrix() * vec4(vertex_position, 1.0);
-    // Pass the view position to the fragment shader
-    vViewPosition = -mvPosition.xyz;
-
-
-    vec4 worldPosition = mvPosition;
-    vViewDirection = view_position - worldPosition.xyz;
-    vViewDirection = normalize(vViewDirection);
+    vec4 worldPosition = vec4(vPositionW, 1.0);
+    vViewDirection = normalize(view_position - worldPosition.xyz);
+    vViewPosition = -worldPosition.xyz;
 
     vec3 objectNormal = vertex_normal;
 
@@ -23,14 +15,16 @@ export default /* glsl */ `
         float outlineTex = 1.0;
         
         #ifdef USE_OUTLINEWIDTHMULTIPLYTEXTURE
-            vec2 outlineWidthMultiplyTextureUv = ( outlineWidthMultiplyTextureUvTransform * vec3( vUv0, 1 ) ).xy;
-            outlineTex = texture2D( outlineWidthMultiplyTexture, outlineWidthMultiplyTextureUv ).g;
+            #ifdef UV0
+                vec2 outlineWidthMultiplyTextureUv = ( outlineWidthMultiplyTextureUvTransform * vec3( vUv0, 1 ) ).xy;
+                outlineTex = texture2D( outlineWidthMultiplyTexture, outlineWidthMultiplyTextureUv ).g;
+            #endif
         #endif
 
         #ifdef OUTLINE_WIDTH_WORLD
             float worldNormalLength = length( transformedNormal );
             vec3 outlineOffset = outlineWidthFactor * outlineTex * worldNormalLength * objectNormal;
-            vec3 localPos = vertex_position;     
+            vec3 localPos = getLocalPosition(vertex_position.xyz);
 
             // From playcanvas transform.js vertex shader
             #ifdef MORPHING

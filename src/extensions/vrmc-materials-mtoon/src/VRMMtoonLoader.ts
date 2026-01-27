@@ -5,6 +5,16 @@ import { EXTENSION_VRMC_MATERIALS_MTOON, MToonMaterialOutlineWidthMode } from '.
 
 const extensionVRMCName = EXTENSION_VRMC_MATERIALS_MTOON;
 
+type TextureAsset = pc.Asset & { resource: pc.Texture };
+
+export type GltfAssetResource = {
+  data: {
+    gltf: GLTFSchema.IGLTF;
+    materials?: pc.StandardMaterial[];
+  };
+  textures?: TextureAsset[];
+};
+
 export class VRMMtoonLoader {
   private _pcRef: typeof pc;
   public asset: pc.Asset;
@@ -15,12 +25,13 @@ export class VRMMtoonLoader {
   }
 
   public instantiated(entity: pc.Entity) {
-    if (!this.asset.resource?.data?.gltf) {
+    const resource = this.asset.resource as GltfAssetResource;
+    if (!resource?.data?.gltf) {
       console.error('applyMaterialMtoon: gltf is undefined');
       return;
     }
 
-    const gltf: GLTFSchema.IGLTF = this.asset.resource.data.gltf;
+    const gltf: GLTFSchema.IGLTF = resource.data.gltf;
     const outlineMaterials = this._applyVRMCOutlineShader(entity, gltf);
     const mtoonMaterials = this._applyVRMCMtoonShader(entity, gltf);
 
@@ -65,7 +76,7 @@ export class VRMMtoonLoader {
           shaderMaterial.isOutline = true;
           shaderMaterial.copy(material);
           shaderMaterial.name = material.name + '_outline';
-          shaderMaterial.parse(gltfMaterial);
+          shaderMaterial.parse(gltfMaterial, gltf);
           shaderMaterial.update();
           outlineShaderMaterials.set(material, shaderMaterial);
         }
@@ -128,7 +139,7 @@ export class VRMMtoonLoader {
         }
 
         shaderMaterial.copy(material);
-        shaderMaterial.parse(gltfMaterial);
+        shaderMaterial.parse(gltfMaterial, gltf);
         meshInstance.material = shaderMaterial;
         shaderMaterial.update();
       });

@@ -107,9 +107,15 @@ export class RenderStates {
       }
 
       const component = light._node.light;
+      // Multiply color by intensity for accurate lighting
+      const color = new this._pcRef.Color(
+        component.color.r * component.intensity,
+        component.color.g * component.intensity,
+        component.color.b * component.intensity,
+      );
       return {
         direction: light._direction,
-        color: component.color,
+        color,
       };
     });
 
@@ -119,10 +125,17 @@ export class RenderStates {
       }
 
       const component = light._node.light;
+      // Multiply color by intensity for accurate lighting
+      const color = new this._pcRef.Color(
+        component.color.r * component.intensity,
+        component.color.g * component.intensity,
+        component.color.b * component.intensity,
+      );
+
       return {
         position: light._node.getPosition(),
         direction: light._node.forward,
-        color: component.color,
+        color,
         distance: component.range,
         decay: light.falloffMode === this._pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2,
         coneCos: Math.cos(component.innerConeAngle),
@@ -136,9 +149,15 @@ export class RenderStates {
       }
 
       const component = light._node.light;
+      // Multiply color by intensity for accurate lighting
+      const color = new this._pcRef.Color(
+        component.color.r * component.intensity,
+        component.color.g * component.intensity,
+        component.color.b * component.intensity,
+      );
       return {
         position: light._node.getPosition(),
-        color: component.color,
+        color,
         distance: component.range,
         decay: light.falloffMode === this._pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2,
       };

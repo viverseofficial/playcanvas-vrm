@@ -921,7 +921,7 @@ function bindVRMAExpression(entity, resource, animEntity) {
   if (listenerEntity.anim) {
     listenerEntity.anim.on(`anim-track:${resource.name}`, () => {
       var _a, _b, _c;
-      entity.fire(`vrma-expression:clear-all`);
+      entity.fire("vrma-expression:clear-all");
       let upperBodyActiveState = (_b = (_a = listenerEntity.anim) == null ? void 0 : _a.baseLayer) == null ? void 0 : _b.activeState;
       let transitionInterval = listenerEntity.anim.baseLayer._controller._totalTransitionTime ?? 0;
       (_c = listenerEntity.anim) == null ? void 0 : _c.layers.forEach((layer) => {
@@ -1654,7 +1654,7 @@ const collectMeshInstances = (entity) => {
   }
   return meshInstances;
 };
-const importScript$1 = (pcRef) => {
+const importScript$2 = (pcRef) => {
   class VrmExpression2 extends pcRef.ScriptType {
     constructor() {
       super(...arguments);
@@ -1678,6 +1678,7 @@ const importScript$1 = (pcRef) => {
         this.entity.off("vrm-expression:start-emotion", this.startEmotion, this);
         this.entity.off("audio:is-talking-change", this.onIsTalkingChange, this);
         this.entity.off(`vrma-expression:start`, this.startVRMAExpression, this);
+        this.entity.off(`vrm-expression:reset`, this.resetExpression, this);
         this.entity.off(`vrma-expression:clear-all`, this.clearAllExpression, this);
       });
     }
@@ -1821,7 +1822,7 @@ const importScript$1 = (pcRef) => {
 };
 const VrmExpression = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
-  importScript: importScript$1
+  importScript: importScript$2
 }, Symbol.toStringTag, { value: "Module" }));
 function lowestCommonAncestor(objects) {
   const sharedAncestors = /* @__PURE__ */ new Map();
@@ -2542,7 +2543,7 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
 };
 _VRMSpringBoneLoaderPlugin.EXTENSION_NAME = "VRMC_springBone";
 let VRMSpringBoneLoaderPlugin = _VRMSpringBoneLoaderPlugin;
-const importScript = (pcRef) => {
+const importScript$1 = (pcRef) => {
   class VrmSpringBone2 extends pcRef.ScriptType {
     constructor() {
       super(...arguments);
@@ -2595,6 +2596,1882 @@ const importScript = (pcRef) => {
 };
 const VrmSpringBone = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
   __proto__: null,
+  importScript: importScript$1
+}, Symbol.toStringTag, { value: "Module" }));
+const gammaEOTF = (e) => {
+  return Math.pow(e, 2.2);
+};
+const updateTextureMatrix = (pcRef, mat3, textureTransform) => {
+  if (!textureTransform)
+    return;
+  const offset = new pcRef.Vec2(0, 0);
+  const repeat = new pcRef.Vec2(1, 1);
+  const center = new pcRef.Vec2(0.5, 0.5);
+  let rotation = 0;
+  if (textureTransform.scale) {
+    repeat.x = textureTransform.scale[0];
+    repeat.y = textureTransform.scale[1];
+  }
+  if (textureTransform.offset) {
+    offset.x = textureTransform.offset[0];
+    offset.y = 1 - repeat.y - textureTransform.offset[1];
+  }
+  if (textureTransform.rotation) {
+    rotation = textureTransform.rotation;
+  }
+  setUvTransform(mat3, offset.x, offset.y, repeat.x, repeat.y, rotation, center.x, center.y);
+  return mat3;
+};
+const setUvTransform = (mat3, tx, ty, sx, sy, rotation, cx, cy) => {
+  const c = Math.cos(rotation);
+  const s = Math.sin(rotation);
+  mat3.set([
+    sx * c,
+    sx * s,
+    -sx * (c * cx + s * cy) + cx + tx,
+    -sy * s,
+    sy * c,
+    -sy * (-s * cx + c * cy) + cy + ty,
+    0,
+    0,
+    1
+  ]);
+};
+class VRMMaterialsV0CompatPlugin {
+  constructor(pcRef, asset) {
+    this._pcRef = pcRef;
+    this.asset = asset;
+    this._renderQueueMapTransparent = /* @__PURE__ */ new Map();
+    this._renderQueueMapTransparentZWrite = /* @__PURE__ */ new Map();
+  }
+  parseMaterials() {
+    var _a, _b;
+    const resource = this.asset.resource;
+    const gltf = (_a = resource == null ? void 0 : resource.data) == null ? void 0 : _a.gltf;
+    if (!gltf) {
+      console.error("VRMMaterialsV0CompatPlugin: gltf data is undefined");
+      return;
+    }
+    const v0VRMExtension = (_b = gltf == null ? void 0 : gltf.extensions) == null ? void 0 : _b["VRM"];
+    const v0MaterialProperties = v0VRMExtension == null ? void 0 : v0VRMExtension.materialProperties;
+    if (!v0MaterialProperties) {
+      return;
+    }
+    this._populateRenderQueueMap(v0MaterialProperties);
+    v0MaterialProperties.forEach((materialProperties, materialIndex) => {
+      var _a2;
+      if (!gltf.materials) {
+        console.error("parseMaterials: gltf.materials is undefined");
+        return;
+      }
+      const materialDef = gltf.materials[materialIndex];
+      if (!materialDef) {
+        console.warn(
+          `VRMMaterialsV0CompatPlugin: Attempt to use materials[${materialIndex}] of glTF but the material doesn't exist`
+        );
+        return;
+      }
+      if (materialProperties.shader === "VRM/MToon") {
+        const material = this._parseV0MToonProperties(materialProperties, materialDef);
+        gltf.materials[materialIndex] = material;
+      } else if ((_a2 = materialProperties.shader) == null ? void 0 : _a2.startsWith("VRM/Unlit"))
+        ;
+      else if (materialProperties.shader === "VRM_USE_GLTFSHADER")
+        ;
+      else {
+        console.warn(`parseMaterials: Unknown shader: ${materialProperties.shader}`);
+      }
+    });
+  }
+  _parseV0MToonProperties(materialProperties, schemaMaterial) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o, _p, _q, _r, _s, _t, _u, _v, _w, _x, _y, _z, _A, _B, _C, _D, _E, _F, _G, _H;
+    if (schemaMaterial.v0Compat)
+      return schemaMaterial;
+    const isTransparent = ((_a = materialProperties.keywordMap) == null ? void 0 : _a["_ALPHABLEND_ON"]) ?? false;
+    const enabledZWrite = ((_b = materialProperties.floatProperties) == null ? void 0 : _b["_ZWrite"]) === 1;
+    const transparentWithZWrite = enabledZWrite && isTransparent;
+    const renderQueueOffsetNumber = this._v0ParseRenderQueue(materialProperties);
+    const isCutoff = ((_c = materialProperties.keywordMap) == null ? void 0 : _c["_ALPHATEST_ON"]) ?? false;
+    const alphaMode = isTransparent ? "BLEND" : isCutoff ? "MASK" : "OPAQUE";
+    const alphaCutoff = isCutoff ? ((_d = materialProperties.floatProperties) == null ? void 0 : _d["_Cutoff"]) ?? 0.5 : void 0;
+    const cullMode = ((_e = materialProperties.floatProperties) == null ? void 0 : _e["_CullMode"]) ?? 2;
+    const doubleSided = cullMode === 0;
+    const textureTransformExt = this._portTextureTransform(materialProperties);
+    const baseColorFactor = (((_f = materialProperties.vectorProperties) == null ? void 0 : _f["_Color"]) ?? [1, 1, 1, 1]).map(
+      (v, i) => i === 3 ? v : gammaEOTF(v)
+      // alpha channel is stored in linear
+    );
+    const baseColorTextureIndex = (_g = materialProperties.textureProperties) == null ? void 0 : _g["_MainTex"];
+    const baseColorTexture = baseColorTextureIndex != null ? {
+      index: baseColorTextureIndex,
+      extensions: {
+        ...textureTransformExt
+      }
+    } : void 0;
+    const normalTextureScale = ((_h = materialProperties.floatProperties) == null ? void 0 : _h["_BumpScale"]) ?? 1;
+    const normalTextureIndex = (_i = materialProperties.textureProperties) == null ? void 0 : _i["_BumpMap"];
+    const normalTexture = normalTextureIndex != null ? {
+      index: normalTextureIndex,
+      scale: normalTextureScale,
+      extensions: {
+        ...textureTransformExt
+      }
+    } : void 0;
+    const emissiveFactor = (_k = (_j = materialProperties.vectorProperties) == null ? void 0 : _j["_EmissionColor"]) == null ? void 0 : _k.map(gammaEOTF);
+    const emissiveTextureIndex = (_l = materialProperties.textureProperties) == null ? void 0 : _l["_EmissionMap"];
+    const emissiveTexture = emissiveTextureIndex != null ? {
+      index: emissiveTextureIndex,
+      extensions: {
+        ...textureTransformExt
+      }
+    } : void 0;
+    const shadeColorFactor = (_n = (_m = materialProperties.vectorProperties) == null ? void 0 : _m["_ShadeColor"]) == null ? void 0 : _n.map(gammaEOTF);
+    const shadeMultiplyTextureIndex = (_o = materialProperties.textureProperties) == null ? void 0 : _o["_ShadeTexture"];
+    const shadeMultiplyTexture = shadeMultiplyTextureIndex != null ? {
+      index: shadeMultiplyTextureIndex,
+      extensions: {
+        ...textureTransformExt
+      }
+    } : void 0;
+    let shadingShiftFactor = ((_p = materialProperties.floatProperties) == null ? void 0 : _p["_ShadeShift"]) ?? 0;
+    let shadingToonyFactor = ((_q = materialProperties.floatProperties) == null ? void 0 : _q["_ShadeToony"]) ?? 0.9;
+    shadingToonyFactor = this._pcRef.math.lerp(
+      shadingToonyFactor,
+      1,
+      0.5 + 0.5 * shadingShiftFactor
+    );
+    shadingShiftFactor = -shadingShiftFactor - (1 - shadingToonyFactor);
+    const giIntensityFactor = ((_r = materialProperties.floatProperties) == null ? void 0 : _r["_IndirectLightIntensity"]) ?? 0.1;
+    const giEqualizationFactor = giIntensityFactor ? 1 - giIntensityFactor : void 0;
+    const matcapTextureIndex = (_s = materialProperties.textureProperties) == null ? void 0 : _s["_SphereAdd"];
+    const matcapFactor = matcapTextureIndex != null ? [1, 1, 1] : void 0;
+    const matcapTexture = matcapTextureIndex != null ? {
+      index: matcapTextureIndex
+    } : void 0;
+    const rimLightingMixFactor = ((_t = materialProperties.floatProperties) == null ? void 0 : _t["_RimLightingMix"]) ?? 0;
+    const rimMultiplyTextureIndex = (_u = materialProperties.textureProperties) == null ? void 0 : _u["_RimTexture"];
+    const rimMultiplyTexture = rimMultiplyTextureIndex != null ? {
+      index: rimMultiplyTextureIndex,
+      extensions: {
+        ...textureTransformExt
+      }
+    } : void 0;
+    const parametricRimColorFactor = (((_v = materialProperties.vectorProperties) == null ? void 0 : _v["_RimColor"]) ?? [0, 0, 0, 1]).map(gammaEOTF);
+    const parametricRimFresnelPowerFactor = ((_w = materialProperties.floatProperties) == null ? void 0 : _w["_RimFresnelPower"]) ?? 1;
+    const parametricRimLiftFactor = ((_x = materialProperties.floatProperties) == null ? void 0 : _x["_RimLift"]) ?? 0;
+    const outlineWidthMode = ["none", "worldCoordinates", "screenCoordinates"][((_y = materialProperties.floatProperties) == null ? void 0 : _y["_OutlineWidthMode"]) ?? 0];
+    let outlineWidthFactor = ((_z = materialProperties.floatProperties) == null ? void 0 : _z["_OutlineWidth"]) ?? 0;
+    outlineWidthFactor = 0.01 * outlineWidthFactor;
+    const outlineWidthMultiplyTextureIndex = (_A = materialProperties.textureProperties) == null ? void 0 : _A["_OutlineWidthTexture"];
+    const outlineWidthMultiplyTexture = outlineWidthMultiplyTextureIndex != null ? {
+      index: outlineWidthMultiplyTextureIndex,
+      extensions: {
+        ...textureTransformExt
+      }
+    } : void 0;
+    const outlineColorFactor = (((_B = materialProperties.vectorProperties) == null ? void 0 : _B["_OutlineColor"]) ?? [0, 0, 0]).map(gammaEOTF);
+    const outlineColorMode = ((_C = materialProperties.floatProperties) == null ? void 0 : _C["_OutlineColorMode"]) ?? 0;
+    const outlineLightingMixFactor = outlineColorMode === 1 ? ((_D = materialProperties.floatProperties) == null ? void 0 : _D["_OutlineLightingMix"]) ?? 1 : 0;
+    const uvAnimationMaskTextureIndex = (_E = materialProperties.textureProperties) == null ? void 0 : _E["_UvAnimMaskTexture"];
+    const uvAnimationMaskTexture = uvAnimationMaskTextureIndex != null ? {
+      index: uvAnimationMaskTextureIndex,
+      extensions: {
+        ...textureTransformExt
+      }
+    } : void 0;
+    const uvAnimationScrollXSpeedFactor = ((_F = materialProperties.floatProperties) == null ? void 0 : _F["_UvAnimScrollX"]) ?? 0;
+    let uvAnimationScrollYSpeedFactor = ((_G = materialProperties.floatProperties) == null ? void 0 : _G["_UvAnimScrollY"]) ?? 0;
+    if (uvAnimationScrollYSpeedFactor != null) {
+      uvAnimationScrollYSpeedFactor = -uvAnimationScrollYSpeedFactor;
+    }
+    const uvAnimationRotationSpeedFactor = ((_H = materialProperties.floatProperties) == null ? void 0 : _H["_UvAnimRotation"]) ?? 0;
+    const mtoonExtension = {
+      specVersion: "1.0",
+      transparentWithZWrite,
+      renderQueueOffsetNumber,
+      shadeColorFactor,
+      shadeMultiplyTexture,
+      shadingShiftFactor,
+      shadingToonyFactor,
+      giEqualizationFactor,
+      matcapFactor,
+      matcapTexture,
+      rimLightingMixFactor,
+      rimMultiplyTexture,
+      parametricRimColorFactor,
+      parametricRimFresnelPowerFactor,
+      parametricRimLiftFactor,
+      outlineWidthMode,
+      outlineWidthFactor,
+      outlineWidthMultiplyTexture,
+      outlineColorFactor,
+      outlineLightingMixFactor,
+      uvAnimationMaskTexture,
+      uvAnimationScrollXSpeedFactor,
+      uvAnimationScrollYSpeedFactor,
+      uvAnimationRotationSpeedFactor
+    };
+    schemaMaterial.v0Compat = true;
+    return {
+      ...schemaMaterial,
+      pbrMetallicRoughness: {
+        baseColorFactor,
+        baseColorTexture
+      },
+      normalTexture,
+      emissiveTexture,
+      emissiveFactor,
+      alphaMode,
+      alphaCutoff,
+      doubleSided,
+      extensions: {
+        VRMC_materials_mtoon: mtoonExtension
+      }
+    };
+  }
+  _portTextureTransform(materialProperties) {
+    var _a;
+    const textureTransform = (_a = materialProperties.vectorProperties) == null ? void 0 : _a["_MainTex"];
+    if (textureTransform == null) {
+      return {};
+    }
+    const offset = [(textureTransform == null ? void 0 : textureTransform[0]) ?? 0, (textureTransform == null ? void 0 : textureTransform[1]) ?? 0];
+    const scale = [(textureTransform == null ? void 0 : textureTransform[2]) ?? 1, (textureTransform == null ? void 0 : textureTransform[3]) ?? 1];
+    offset[1] = 1 - scale[1] - offset[1];
+    return {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      KHR_texture_transform: { offset, scale }
+    };
+  }
+  /**
+   * Convert v0 render order into v1 render order.
+   * This uses a map from v0 render queue to v1 compliant render queue offset which is generated in {@link _populateRenderQueueMap}.
+   */
+  _v0ParseRenderQueue(materialProperties) {
+    var _a, _b;
+    const isTransparent = ((_a = materialProperties.keywordMap) == null ? void 0 : _a["_ALPHABLEND_ON"]) ?? false;
+    const enabledZWrite = ((_b = materialProperties.floatProperties) == null ? void 0 : _b["_ZWrite"]) === 1;
+    let offset = 0;
+    if (isTransparent) {
+      const v0Queue = materialProperties.renderQueue;
+      if (v0Queue != null) {
+        if (enabledZWrite) {
+          offset = this._renderQueueMapTransparentZWrite.get(v0Queue);
+        } else {
+          offset = this._renderQueueMapTransparent.get(v0Queue);
+        }
+      }
+    }
+    return offset;
+  }
+  /**
+   * Create a map which maps v0 render queue to v1 compliant render queue offset.
+   * This lists up all render queues the model use and creates a map to new render queue offsets in the same order.
+   */
+  _populateRenderQueueMap(materialPropertiesList) {
+    const renderQueuesTransparent = /* @__PURE__ */ new Set();
+    const renderQueuesTransparentZWrite = /* @__PURE__ */ new Set();
+    materialPropertiesList.forEach((materialProperties) => {
+      var _a, _b;
+      const isTransparent = ((_a = materialProperties.keywordMap) == null ? void 0 : _a["_ALPHABLEND_ON"]) ?? false;
+      const enabledZWrite = ((_b = materialProperties.floatProperties) == null ? void 0 : _b["_ZWrite"]) === 1;
+      if (isTransparent) {
+        const v0Queue = materialProperties.renderQueue;
+        if (v0Queue != null) {
+          if (enabledZWrite) {
+            renderQueuesTransparentZWrite.add(v0Queue);
+          } else {
+            renderQueuesTransparent.add(v0Queue);
+          }
+        }
+      }
+    });
+    if (renderQueuesTransparent.size > 10) {
+      console.warn(
+        `VRMMaterialsV0CompatPlugin: This VRM uses ${renderQueuesTransparent.size} render queues for Transparent materials while VRM 1.0 only supports up to 10 render queues. The model might not be rendered correctly.`
+      );
+    }
+    if (renderQueuesTransparentZWrite.size > 10) {
+      console.warn(
+        `VRMMaterialsV0CompatPlugin: This VRM uses ${renderQueuesTransparentZWrite.size} render queues for TransparentZWrite materials while VRM 1.0 only supports up to 10 render queues. The model might not be rendered correctly.`
+      );
+    }
+    Array.from(renderQueuesTransparent).sort().forEach((queue, i) => {
+      const newQueueOffset = Math.min(Math.max(i - renderQueuesTransparent.size + 1, -9), 0);
+      this._renderQueueMapTransparent.set(queue, newQueueOffset);
+    });
+    Array.from(renderQueuesTransparentZWrite).sort().forEach((queue, i) => {
+      const newQueueOffset = Math.min(Math.max(i, 0), 9);
+      this._renderQueueMapTransparentZWrite.set(queue, newQueueOffset);
+    });
+  }
+}
+class RenderStates {
+  constructor(pcRef) {
+    this._pcRef = pcRef;
+    this._app = null;
+    this.lightStateInfo = null;
+    this.defaultInfoSetting = {
+      directionalLight: {
+        direction: new pcRef.Vec3(0, 0, 0),
+        color: new pcRef.Color(0, 0, 0)
+      },
+      spotLight: {
+        position: new pcRef.Vec3(0, 0, 0),
+        direction: new pcRef.Vec3(0, 0, 0),
+        color: new pcRef.Color(0, 0, 0),
+        distance: 0,
+        decay: 0,
+        coneCos: 0,
+        penumbraCos: 0
+      },
+      pointLight: {
+        position: new pcRef.Vec3(0, 0, 0),
+        color: new pcRef.Color(0, 0, 0),
+        distance: 0,
+        decay: 0
+      }
+    };
+  }
+  _updateMaterialUniforms(lights) {
+    this.lightStateInfo = this.convertLightStateInfo(lights);
+  }
+  setApp(app) {
+    if (this._app)
+      return;
+    this._app = app;
+    this.update();
+    this._app.on("update", this.update, this);
+  }
+  convertLightStateInfo(lights) {
+    const directionalLights = lights[this._pcRef.LIGHTTYPE_DIRECTIONAL];
+    const spotLights = lights[this._pcRef.LIGHTTYPE_SPOT];
+    const pointLights = lights[this._pcRef.LIGHTTYPE_POINT];
+    const info = {
+      directionalLights: [],
+      spotLights: [],
+      pointLights: [],
+      ...this._app && {
+        scene: {
+          envAtlas: this._app.scene.envAtlas || null,
+          ambientLight: this._app.scene.ambientLight
+        }
+      }
+    };
+    info.directionalLights = directionalLights.map((light) => {
+      if (light._node === null) {
+        return this.defaultInfoSetting.directionalLight;
+      }
+      const component = light._node.light;
+      const color = new this._pcRef.Color(
+        component.color.r * component.intensity,
+        component.color.g * component.intensity,
+        component.color.b * component.intensity
+      );
+      return {
+        direction: light._direction,
+        color
+      };
+    });
+    info.spotLights = spotLights.map((light) => {
+      if (light._node === null) {
+        return this.defaultInfoSetting.spotLight;
+      }
+      const component = light._node.light;
+      const color = new this._pcRef.Color(
+        component.color.r * component.intensity,
+        component.color.g * component.intensity,
+        component.color.b * component.intensity
+      );
+      return {
+        position: light._node.getPosition(),
+        direction: light._node.forward,
+        color,
+        distance: component.range,
+        decay: light.falloffMode === this._pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2,
+        coneCos: Math.cos(component.innerConeAngle),
+        penumbraCos: Math.cos(component.outerConeAngle)
+      };
+    });
+    info.pointLights = pointLights.map((light) => {
+      if (light._node === null) {
+        return this.defaultInfoSetting.pointLight;
+      }
+      const component = light._node.light;
+      const color = new this._pcRef.Color(
+        component.color.r * component.intensity,
+        component.color.g * component.intensity,
+        component.color.b * component.intensity
+      );
+      return {
+        position: light._node.getPosition(),
+        color,
+        distance: component.range,
+        decay: light.falloffMode === this._pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2
+      };
+    });
+    return info;
+  }
+  destroy() {
+    if (this._app) {
+      this._app.off("update", this.update, this);
+    }
+  }
+  update() {
+    if (!this._app)
+      return;
+    const worldLayer = this._app.scene.layers.getLayerById(this._pcRef.LAYERID_WORLD);
+    if (worldLayer) {
+      const lights = worldLayer.splitLights;
+      this._updateMaterialUniforms(lights);
+    }
+  }
+}
+const EXTENSION_VRMC_MATERIALS_MTOON = "VRMC_materials_mtoon";
+const MToonMaterialOutlineWidthMode = {
+  None: "none",
+  WorldCoordinates: "worldCoordinates",
+  ScreenCoordinates: "screenCoordinates"
+};
+const SHADERLANGUAGE_GLSL = "glsl";
+const uniformTypeToNameWGSL = [
+  [
+    "bool"
+  ],
+  [
+    "i32"
+  ],
+  [
+    "f32"
+  ],
+  [
+    "vec2f",
+    "vec2<f32>"
+  ],
+  [
+    "vec3f",
+    "vec3<f32>"
+  ],
+  [
+    "vec4f",
+    "vec4<f32>"
+  ],
+  [
+    "vec2i",
+    "vec2<i32>"
+  ],
+  [
+    "vec3i",
+    "vec3<i32>"
+  ],
+  [
+    "vec4i",
+    "vec4<i32>"
+  ],
+  [
+    "vec2<bool>"
+  ],
+  [
+    "vec3<bool>"
+  ],
+  [
+    "vec4<bool>"
+  ],
+  [
+    "mat2x2f",
+    "mat2x2<f32>"
+  ],
+  [
+    "mat3x3f",
+    "mat3x3<f32>"
+  ],
+  [
+    "mat4x4f",
+    "mat4x4<f32>"
+  ],
+  [
+    "texture_2d<f32>"
+  ],
+  [
+    "texture_cube<f32>"
+  ],
+  [
+    "array<f32>"
+  ],
+  [
+    "texture_depth_2d"
+  ],
+  [
+    "texture_depth_cube"
+  ],
+  [
+    "texture_3d<f32>"
+  ],
+  [
+    "array<vec2<f32>>"
+  ],
+  [
+    "array<vec3<f32>>"
+  ],
+  [
+    "array<vec4<f32>>"
+  ],
+  [
+    "array<mat4x4<f32>>"
+  ],
+  [
+    "texture_2d_array<f32>"
+  ],
+  [
+    "u32"
+  ],
+  [
+    "vec2u",
+    "vec2<u32>"
+  ],
+  [
+    "vec3u",
+    "vec3<u32>"
+  ],
+  [
+    "vec4u",
+    "vec4<u32>"
+  ],
+  [
+    "array<i32>"
+  ],
+  [
+    "array<u32>"
+  ],
+  [
+    "array<bool>"
+  ],
+  [
+    "array<vec2i>",
+    "array<vec2<i32>>"
+  ],
+  [
+    "array<vec2u>",
+    "array<vec2<u32>>"
+  ],
+  [
+    "array<vec2b>",
+    "array<vec2<bool>>"
+  ],
+  [
+    "array<vec3i>",
+    "array<vec3<i32>>"
+  ],
+  [
+    "array<vec3u>",
+    "array<vec3<u32>>"
+  ],
+  [
+    "array<vec3b>",
+    "array<vec3<bool>>"
+  ],
+  [
+    "array<vec4i>",
+    "array<vec4<i32>>"
+  ],
+  [
+    "array<vec4u>",
+    "array<vec4<u32>>"
+  ],
+  [
+    "array<vec4b>",
+    "array<vec4<bool>>"
+  ],
+  [
+    "texture_2d<i32>"
+  ],
+  [
+    "texture_2d<u32>"
+  ],
+  [
+    "texture_cube<i32>"
+  ],
+  [
+    "texture_cube<u32>"
+  ],
+  [
+    "texture_3d<i32>"
+  ],
+  [
+    "texture_3d<u32>"
+  ],
+  [
+    "texture_2d_array<i32>"
+  ],
+  [
+    "texture_2d_array<u32>"
+  ]
+];
+const uniformTypeToNameMapWGSL = /* @__PURE__ */ new Map();
+uniformTypeToNameWGSL.forEach((names, index) => {
+  names.forEach((name) => uniformTypeToNameMapWGSL.set(name, index));
+});
+const litUserDeclarationVS = (
+  /* glsl */
+  `
+varying vec3 vViewPosition;
+varying vec3 vViewDirection;
+varying vec3 vNormal;
+
+// engine supplied uniforms
+uniform vec3 view_position;
+
+#ifdef OUTLINE
+  uniform float outlineWidthFactor;
+
+  #ifdef USE_OUTLINEWIDTHMULTIPLYTEXTURE
+    uniform sampler2D outlineWidthMultiplyTexture;
+    uniform mat3 outlineWidthMultiplyTextureUvTransform;
+  #endif
+
+#endif
+`
+);
+const litUserMainEndVS = (
+  /* glsl */
+  `
+    vec4 worldPosition = vec4(vPositionW, 1.0);
+    vViewDirection = normalize(view_position - worldPosition.xyz);
+    vViewPosition = -worldPosition.xyz;
+
+    vec3 objectNormal = vertex_normal;
+
+    // we need this to compute the outline properly
+    objectNormal = normalize( objectNormal );
+    vec3 transformedNormal = vNormalW;
+    vNormal = transformedNormal;
+
+
+    #ifdef OUTLINE
+        float outlineTex = 1.0;
+        
+        #ifdef USE_OUTLINEWIDTHMULTIPLYTEXTURE
+            #ifdef UV0
+                vec2 outlineWidthMultiplyTextureUv = ( outlineWidthMultiplyTextureUvTransform * vec3( vUv0, 1 ) ).xy;
+                outlineTex = texture2D( outlineWidthMultiplyTexture, outlineWidthMultiplyTextureUv ).g;
+            #endif
+        #endif
+
+        #ifdef OUTLINE_WIDTH_WORLD
+            float worldNormalLength = length( transformedNormal );
+            vec3 outlineOffset = outlineWidthFactor * outlineTex * worldNormalLength * objectNormal;
+            vec3 localPos = getLocalPosition(vertex_position.xyz);
+
+            // From playcanvas transform.js vertex shader
+            #ifdef MORPHING
+            #ifdef MORPHING_POS03
+            localPos.xyz += morph_weights_a[0] * morph_pos0;
+            localPos.xyz += morph_weights_a[1] * morph_pos1;
+            localPos.xyz += morph_weights_a[2] * morph_pos2;
+            localPos.xyz += morph_weights_a[3] * morph_pos3;
+            #endif // MORPHING_POS03
+            #ifdef MORPHING_POS47
+            localPos.xyz += morph_weights_b[0] * morph_pos4;
+            localPos.xyz += morph_weights_b[1] * morph_pos5;
+            localPos.xyz += morph_weights_b[2] * morph_pos6;
+            localPos.xyz += morph_weights_b[3] * morph_pos7;
+            #endif // MORPHING_POS47
+            #endif // MORPHING
+
+            #ifdef MORPHING_TEXTURE_BASED_POSITION
+                vec2 morphUV = getTextureMorphCoords();
+                    vec3 morphPos = texture2D(morphPositionTex, morphUV).xyz;
+                localPos += morphPos;
+            #endif
+
+            gl_Position = matrix_viewProjection * getModelMatrix() * vec4( localPos + outlineOffset, 1.0 );
+        #endif
+
+        #ifdef OUTLINE_WIDTH_SCREEN
+            // TODO: Wait until an avatar containing this information is found before proceeding with the implementation.
+        #endif
+
+        gl_Position.z += 1E-6 * gl_Position.w; // anti-artifact magic
+    #endif
+`
+);
+const litUserDeclarationPS = (
+  /* glsl */
+  `
+    #define RECIPROCAL_PI 0.3183098861837907
+
+    uniform vec3 shadeColorFactor;
+    uniform vec3 ambientLightColor;
+
+    #ifdef USE_SHADEMULTIPLYTEXTURE
+        uniform sampler2D shadeMultiplyTexture;
+        uniform mat3 shadeMultiplyTextureUvTransform;
+    #endif
+
+    uniform float shadingShiftFactor;
+    uniform float shadingToonyFactor;
+
+    #ifdef USE_SHADINGSHIFTTEXTURE
+        uniform sampler2D shadingShiftTexture;
+        uniform mat3 shadingShiftTextureUvTransform;
+        uniform float shadingShiftTextureScale;
+    #endif
+
+    uniform float giEqualizationFactor;
+    uniform vec3 parametricRimColorFactor;
+    #ifdef USE_RIMMULTIPLYTEXTURE
+        uniform sampler2D rimMultiplyTexture;
+        uniform mat3 rimMultiplyTextureUvTransform;
+    #endif
+
+    uniform float rimLightingMixFactor;
+    uniform float parametricRimFresnelPowerFactor;
+    uniform float parametricRimLiftFactor;
+
+    #ifdef USE_MATCAPTEXTURE
+        uniform vec3 matcapFactor;
+        uniform sampler2D matcapTexture;
+        uniform mat3 matcapTextureUvTransform;
+    #endif
+
+    uniform vec3 emissive;
+    uniform float emissiveIntensity;
+
+    uniform vec3 outlineColorFactor;
+    uniform float outlineLightingMixFactor;
+
+    #ifdef USE_UVANIMATIONMASKTEXTURE
+        uniform sampler2D uvAnimationMaskTexture;
+        uniform mat3 uvAnimationMaskTextureUvTransform;
+    #endif
+
+    uniform float uvAnimationScrollXOffset;
+    uniform float uvAnimationScrollYOffset;
+    uniform float uvAnimationRotationPhase;
+
+    uniform mat3 mapUvTransform;
+    uniform mat3 emissiveMapUvTransform;
+
+    varying vec3 vViewPosition;
+
+    struct MToonMaterial {
+        vec3 diffuseColor;
+        vec3 shadeColor;
+        float shadingShift;
+    };
+
+    struct GeometricContext {
+	    vec3 position;
+	    vec3 normal;
+	    vec3 viewDir;
+    };
+    
+    float linearstep( float a, float b, float t ) {
+        return clamp( ( t - a ) / ( b - a ), 0.0, 1.0 );
+    }
+
+    vec3 BRDF_Lambert( const in vec3 diffuseColor ) {
+        return RECIPROCAL_PI * diffuseColor;
+    }
+
+    /**
+    * Convert NdotL into toon shading factor using shadingShift and shadingToony
+    */
+    float getShading(
+        const in float dotNL,
+        const in float shadow,
+        const in float shadingShift
+    ) {
+        float shading = dotNL;
+        shading = shading + shadingShift;
+        shading = linearstep( -1.0 + shadingToonyFactor, 1.0 - shadingToonyFactor, shading );
+        shading *= shadow;
+        return shading;
+    }
+
+    vec3 getDiffuse(
+        const in MToonMaterial material,
+        const in float shading,
+            in vec3 lightColor
+    ) {
+        vec3 col = lightColor * BRDF_Lambert( mix( material.shadeColor, material.diffuseColor, shading ) );
+        
+        // The "comment out if you want to PBR absolutely" line
+        #ifdef V0_COMPAT_SHADE
+            col = min( col, material.diffuseColor );
+        #endif
+        
+        return col;
+    }
+
+
+    #ifdef USE_NORMALMAP
+        uniform sampler2D normalMap;
+        uniform mat3 normalMapUvTransform;
+        uniform vec2 normalScale;
+    #endif
+
+    uniform mat3 normalMatrix;
+
+
+    mat3 getTangentFrame( vec3 eye_pos, vec3 surf_norm, vec2 uv ) {
+
+        vec3 q0 = dFdx( eye_pos.xyz );
+        vec3 q1 = dFdy( eye_pos.xyz );
+        vec2 st0 = dFdx( uv.st );
+        vec2 st1 = dFdy( uv.st );
+
+        vec3 N = surf_norm;
+
+        vec3 q1perp = cross( q1, N );
+        vec3 q0perp = cross( N, q0 );
+
+        vec3 T = q1perp * st0.x + q0perp * st1.x;
+        vec3 B = q1perp * st0.y + q0perp * st1.y;
+
+        float det = max( dot( T, T ), dot( B, B ) );
+        float scale = ( det == 0.0 ) ? 0.0 : inversesqrt( det );
+
+        return mat3( T * scale, B * scale, N );
+    }
+
+
+    struct ReflectedLight {
+	    vec3 directDiffuse;
+	    vec3 directSpecular;
+	    vec3 indirectDiffuse;
+	    vec3 indirectSpecular;
+    };
+
+    struct IncidentLight {
+	    vec3 color;
+	    vec3 direction;
+	    bool visible;
+    };
+
+
+    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight ) {
+        float dotNL = clamp( dot( geometry.normal, directLight.direction ), -1.0, 1.0 );
+        vec3 irradiance = directLight.color;
+
+        // directSpecular will be used for rim lighting, not an actual specular
+        reflectedLight.directSpecular += irradiance;
+
+        irradiance *= dotNL;
+
+        float shading = getShading( dotNL, shadow, material.shadingShift );
+
+        // toon shaded diffuse
+        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color );
+    }
+
+    void RE_IndirectDiffuse_MToon( const in vec3 irradiance, const in GeometricContext geometry, const in MToonMaterial material, inout ReflectedLight reflectedLight ) {
+        // indirect diffuse will use diffuseColor, no shadeColor involved
+        reflectedLight.indirectDiffuse += irradiance * BRDF_Lambert( material.diffuseColor );
+
+        // directSpecular will be used for rim lighting, not an actual specular
+        reflectedLight.directSpecular += irradiance;
+    }
+
+    #define RE_Direct RE_Direct_MToon
+    #define RE_IndirectDiffuse RE_IndirectDiffuse_MToon
+
+    vec3 perturbNormal2Arb( vec2 uv, vec3 eye_pos, vec3 surf_norm, vec3 mapN, float faceDirection ) {
+        vec3 q0 = vec3( dFdx( eye_pos.x ), dFdx( eye_pos.y ), dFdx( eye_pos.z ) );
+        vec3 q1 = vec3( dFdy( eye_pos.x ), dFdy( eye_pos.y ), dFdy( eye_pos.z ) );
+        vec2 st0 = dFdx( uv.st );
+        vec2 st1 = dFdy( uv.st );
+
+        vec3 N = normalize( surf_norm );
+
+        vec3 q1perp = cross( q1, N );
+        vec3 q0perp = cross( N, q0 );
+
+        vec3 T = q1perp * st0.x + q0perp * st1.x;
+        vec3 B = q1perp * st0.y + q0perp * st1.y;
+
+        // From three-vrm specific change: Workaround for the issue that happens when delta of uv = 0.0
+        // TODO: Is this still required? Or shall I make a PR about it?
+        if ( length( T ) == 0.0 || length( B ) == 0.0 ) {
+          return surf_norm;
+        }
+
+        float det = max( dot( T, T ), dot( B, B ) );
+        float scale = ( det == 0.0 ) ? 0.0 : faceDirection * inversesqrt( det );
+
+        return normalize( T * ( mapN.x * scale ) + B * ( mapN.y * scale ) + N * mapN.z );
+    }
+
+    varying vec3 vNormal;
+    varying vec3 vViewDirection;
+
+    // Apply UV Animation to a given UV coordinate
+    vec2 applyUvAnimation(vec2 uv) {
+        #ifdef USE_UVANIMATIONMASKTEXTURE
+            vec2 uvAnimationMaskTextureUv = ( uvAnimationMaskTextureUvTransform * vec3( uv, 1 ) ).xy;
+            float uvAnimMask = texture2D( uvAnimationMaskTexture, uvAnimationMaskTextureUv ).b;
+        #else
+            float uvAnimMask = 1.0;
+        #endif
+
+        float uvRotCos = cos( uvAnimationRotationPhase * uvAnimMask );
+        float uvRotSin = sin( uvAnimationRotationPhase * uvAnimMask );
+        uv = mat2( uvRotCos, -uvRotSin, uvRotSin, uvRotCos ) * ( uv - 0.5 ) + 0.5;
+        uv = uv + vec2( uvAnimationScrollXOffset, uvAnimationScrollYOffset ) * uvAnimMask;
+        
+        return uv;
+    }
+`
+);
+const lightPS = (
+  /* glsl */
+  `
+    float getSpotAttenuation( const in float coneCosine, const in float penumbraCosine, const in float angleCosine ) {
+	    return smoothstep( coneCosine, penumbraCosine, angleCosine );
+    }
+
+    float getDistanceAttenuation( const in float lightDistance, const in float cutoffDistance, const in float decayExponent ) {
+		// based upon Frostbite 3 Moving to Physically-based Rendering
+		// page 32, equation 26: E[window1]
+		// https://seblagarde.files.wordpress.com/2015/07/course_notes_moving_frostbite_to_pbr_v32.pdf
+		float distanceFalloff = 1.0 / max( pow( lightDistance, decayExponent ), 0.01 );
+
+		if ( cutoffDistance > 0.0 ) {
+            distanceFalloff *= pow( saturate( 1.0 - pow( lightDistance / cutoffDistance, 4.0 ) ), 2.0 );
+		};
+
+		return distanceFalloff;
+    }
+
+	vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
+        vec3 irradiance = ambientLightColor;
+		return irradiance;
+	}
+	vec3 getIBLIrradiance( const in vec3 envMapColor ) {
+        return envMapColor.rgb;
+	}
+
+    // Point Lights
+    #ifdef USE_POINT_LIGHTS
+    #ifndef NUM_POINT_LIGHTS
+    #define NUM_POINT_LIGHTS 1
+    #endif
+    struct PointLight {
+        vec3 position;
+        vec3 color;
+        float distance;
+        float decay;
+    };
+    uniform PointLight pointLights[NUM_POINT_LIGHTS];
+
+    void getPointLightInfo( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight light ) {
+        vec3 lVector = pointLight.position - geometry.position;
+        light.direction = normalize( lVector );
+        float lightDistance = length( lVector );
+        light.color = pointLight.color;
+        light.color *= getDistanceAttenuation( lightDistance, pointLight.distance, pointLight.decay );
+
+        light.visible = ( light.color != vec3( 0.0 ) );
+    }
+    #endif
+
+    // Spot Lights
+    #ifdef USE_SPOT_LIGHTS
+    #ifndef NUM_SPOT_LIGHTS
+    #define NUM_SPOT_LIGHTS 1
+    #endif
+    struct SpotLight {
+        vec3 position;
+        vec3 direction;
+        vec3 color;
+        float distance;
+        float decay;
+        float coneCos;
+        float penumbraCos;
+    };
+    uniform SpotLight spotLights[NUM_SPOT_LIGHTS];
+
+    void getSpotLightInfo( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight light ) {
+        vec3 lVector = spotLight.position - geometry.position;
+        light.direction = normalize( lVector );
+        float angleCos = dot( light.direction, spotLight.direction );
+        float spotAttenuation = getSpotAttenuation( spotLight.coneCos, spotLight.penumbraCos, angleCos );
+
+        if ( spotAttenuation > 0.0 ) {
+            float lightDistance = length( lVector );
+            light.color = spotLight.color * spotAttenuation;
+            light.color *= getDistanceAttenuation( lightDistance, spotLight.distance, spotLight.decay );
+
+            light.visible = ( light.color != vec3( 0.0 ) );
+        } else {
+            light.color = vec3( 0.0 );
+            light.visible = false;
+        }
+    }
+    #endif
+
+    // Directional Lights
+    #ifdef USE_DIR_LIGHTS
+    #ifndef NUM_DIR_LIGHTS
+    #define NUM_DIR_LIGHTS 1
+    #endif
+    struct DirectionalLight {
+        vec3 direction;
+        vec3 color;
+    };
+    uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+
+    void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
+        light.color = directionalLight.color;
+
+        light.direction = directionalLight.direction;
+        light.visible = true;
+    }
+    #endif
+`
+);
+const litUserMainEndPS = (
+  /* glsl */
+  `
+    vec2 uv = vec2(0.5, 0.5);
+    #ifdef VARYING_VUV0
+        uv = vUv0;
+        uv = applyUvAnimation(uv);
+    #endif
+
+    float finalOpacity = gl_FragColor.a; // result from "outputAlphaPS"
+    vec4 diffuseColor = vec4( material_diffuse, finalOpacity );
+    #if LIT_BLEND_TYPE == PREMULTIPLIED
+        diffuseColor.rgb *= litArgs_opacity; // get premultiplied rgb
+    #endif
+
+    #ifdef STD_DIFFUSE_TEXTURE
+        vec2 colorMapUv = ( mapUvTransform * vec3( uv, 1 ) ).xy;
+        vec3 albedoTexture = {STD_DIFFUSE_TEXTURE_DECODE}(texture2DBias({STD_DIFFUSE_TEXTURE_NAME}, colorMapUv, textureBias)).{STD_DIFFUSE_TEXTURE_CHANNEL};
+        diffuseColor.rgb *= albedoTexture;
+    #endif
+
+    float faceDirection = gl_FrontFacing ? 1.0 : -1.0;
+    vec3 normal = normalize( vNormal );
+    normal *= faceDirection;
+
+    #ifdef OUTLINE
+        normal *= -1.0;
+    #endif
+
+    #ifdef USE_NORMALMAP
+        vec2 normalMapUv = ( normalMapUvTransform * vec3( uv, 1 ) ).xy;
+
+        #ifdef SHADERDEF_TANGENTS
+            mat3 tbn = mat3( normalize( vTangentW ), normalize( vBinormalW ), normal );
+        #else
+            mat3 tbn = getTangentFrame( - vViewPosition, normal, normalMapUv );
+        #endif
+
+        vec3 mapN = texture2D( normalMap, normalMapUv ).xyz * 2.0 - 1.0;
+        mapN.xy *= normalScale;
+
+        #if defined(SHADERDEF_TANGENTS)
+            normal = normalize( tbn * mapN );
+        #else
+            normal = perturbNormal2Arb( uv, -vViewPosition, normal, mapN, faceDirection );
+        #endif
+    #endif
+
+    vec3 totalEmissiveRadiance = material_emissive * material_emissiveIntensity;
+    #ifdef STD_EMISSIVE_TEXTURE
+        vec2 emissiveMapUv = (emissiveMapUvTransform * vec3( uv, 1 )).xy;
+        vec3 emissiveTexture = {STD_EMISSIVE_TEXTURE_DECODE}(texture2DBias({STD_EMISSIVE_TEXTURE_NAME}, emissiveMapUv, textureBias)).{STD_EMISSIVE_TEXTURE_CHANNEL};
+        totalEmissiveRadiance *= emissiveTexture;
+    #endif
+
+
+    // -- MToon: lighting --------------------------------------------------------
+    MToonMaterial material;
+    material.diffuseColor = diffuseColor.rgb;
+    material.shadeColor = shadeColorFactor;
+
+    #ifdef USE_SHADEMULTIPLYTEXTURE
+        vec2 shadeMultiplyTextureUv = ( shadeMultiplyTextureUvTransform * vec3( uv, 1 ) ).xy;
+        vec3 shadeMultiply = texture2D( shadeMultiplyTexture, shadeMultiplyTextureUv ).rgb;
+        shadeMultiply = decodeGamma(shadeMultiply); // convert to linear
+        material.shadeColor *= shadeMultiply;
+    #endif
+
+    material.shadingShift = shadingShiftFactor;
+    #ifdef USE_SHADINGSHIFTTEXTURE
+        vec2 shadingShiftTextureUv = ( shadingShiftTextureUvTransform * vec3( uv, 1 ) ).xy;
+        material.shadingShift += texture2D( shadingShiftTexture, shadingShiftTextureUv ).r * shadingShiftTextureScale;
+    #endif    
+
+
+    GeometricContext geometry;
+    geometry.position = - vViewPosition;
+    geometry.normal = normal;
+    geometry.viewDir = normalize( vViewPosition );
+
+    ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
+    IncidentLight directLight;
+    // since these variables will be used in unrolled loop, we have to define in prior
+    float shadow = 1.0;
+
+    // Point Lights - loop controlled by define
+    #if NUM_POINT_LIGHTS > 0
+    {
+        PointLight pointLight;
+        for ( int i = 0; i < NUM_POINT_LIGHTS; i++ ) {
+            pointLight = pointLights[i];
+            getPointLightInfo( pointLight, geometry, directLight );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
+        }
+    }
+    #endif
+
+    // Spot Lights - loop controlled by define
+    #if NUM_SPOT_LIGHTS > 0
+    {
+        SpotLight spotLight;
+        for ( int i = 0; i < NUM_SPOT_LIGHTS; i++ ) {
+            spotLight = spotLights[i];
+            getSpotLightInfo( spotLight, geometry, directLight );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
+        }
+    }
+    #endif
+
+    // Directional Lights - loop controlled by define
+    #if NUM_DIR_LIGHTS > 0
+    {
+        DirectionalLight directionalLight;
+        for ( int i = 0; i < NUM_DIR_LIGHTS; i++ ) {
+            directionalLight = directionalLights[i];
+            getDirectionalLightInfo( directionalLight, directLight );  
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
+        }
+    }
+    #endif 
+
+    // -- MToon: Ambient --------------------------------------------------------
+    vec3 iblIrradiance = vec3( 0.0 );
+    vec3 irradiance = getAmbientLightIrradiance( ambientLightColor );
+
+
+    // From three.js #include <lights_fragment_maps>
+    // -- MToon: Environment --------------------------------------------------------
+	#ifdef USE_ENV_LIGHTS
+		vec3 dir = normalize(cubeMapRotate(vNormal) * vec3(-1.0, 1.0, 1.0));
+        vec2 envuv = mapUv(toSphericalUv(dir), vec4(128.0, 256.0 + 128.0, 64.0, 32.0) / atlasSize);
+        vec4 raw = texture2D(texture_envAtlas, envuv);
+        vec3 linear = decodeLinear(raw);
+        irradiance += getIBLIrradiance(linear);
+	#endif
+
+
+    // From three.js #include <lights_fragment_end>
+    RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );
+
+    float directDiffuseIntensity = 2.5; // Boost the effect of direct light
+    reflectedLight.directDiffuse *= directDiffuseIntensity;
+    vec3 col = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
+    col = min( col, material.diffuseColor * 1.2 ); // Slightly boost the cap to allow brighter lighting
+
+ 
+    // -- MToon: rim lighting -----------------------------------------
+    vec3 viewDir = normalize( vViewDirection );
+
+    vec3 rimMix = mix( vec3( 1.0 ), reflectedLight.directSpecular, rimLightingMixFactor );
+    vec3 rim = parametricRimColorFactor * pow( saturate( 1.0 - dot( viewDir, normal ) + parametricRimLiftFactor ), parametricRimFresnelPowerFactor );
+
+    #ifdef USE_MATCAPTEXTURE
+        {
+          vec3 x = normalize( vec3( viewDir.z, 0.0, -viewDir.x ) );
+          vec3 y = cross( viewDir, x ); // guaranteed to be normalized
+          vec2 sphereUv = vec2(dot(x, normal), dot(y, normal)) * 0.5 + 0.5;
+          sphereUv = ( matcapTextureUvTransform * vec3( sphereUv, 1 ) ).xy;
+          vec3 matcap = texture2D( matcapTexture, sphereUv ).rgb;
+          matcap = decodeGamma(matcap); // convert to linear
+          rim += matcapFactor * matcap;
+        }
+    #endif
+
+
+    #ifdef USE_RIMMULTIPLYTEXTURE
+        vec2 rimMultiplyTextureUv = ( rimMultiplyTextureUvTransform * vec3( uv, 1 ) ).xy;
+        vec3 rimMultiply = texture2D( rimMultiplyTexture, rimMultiplyTextureUv ).rgb;
+        rimMultiply = decodeGamma(rimMultiply); // convert to linear
+        rim *= rimMultiply;
+    #endif
+
+
+    col += rimMix * rim;
+
+    // -- MToon: Emission --------------------------------------------------------
+    col += totalEmissiveRadiance;
+
+    // -- MToon: Outline --------------------------------------------------------
+    #ifdef OUTLINE
+        col = outlineColorFactor.rgb * mix( vec3( 1.0 ), col, outlineLightingMixFactor );
+    #endif
+
+    gl_FragColor = vec4( col, diffuseColor.a );
+    gl_FragColor.rgb = addFog(gl_FragColor.rgb);
+    gl_FragColor.rgb = toneMap(gl_FragColor.rgb);
+    gl_FragColor.rgb = gammaCorrectOutput(gl_FragColor.rgb);
+`
+);
+const opacityPS = (
+  /* glsl */
+  `
+uniform float material_opacity;
+
+void getOpacity() {
+    dAlpha = material_opacity;
+
+    #ifdef STD_OPACITY_TEXTURE
+    vec2 opacityUv = {STD_OPACITY_TEXTURE_UV};
+    opacityUv = applyUvAnimation(opacityUv);
+
+    dAlpha *= texture2DBias({STD_OPACITY_TEXTURE_NAME}, opacityUv, textureBias).{STD_OPACITY_TEXTURE_CHANNEL};
+    #endif
+
+    #ifdef STD_OPACITY_VERTEX
+    dAlpha *= clamp(vVertexColor.{STD_OPACITY_VERTEX_CHANNEL}, 0.0, 1.0);
+    #endif
+}
+`
+);
+const litUserCodePS = `${lightPS}`;
+const shaderChunksMtoon = {
+  litUserDeclarationVS,
+  litUserMainEndVS,
+  litUserDeclarationPS,
+  litUserCodePS,
+  litUserMainEndPS,
+  opacityPS
+};
+class MaterialPreprocessor {
+  /**
+   * Applies preprocessed material settings to the given PlayCanvas material.
+   * Reference: playcanvas glb-parser.js implementation
+   *
+   * Note: Playcanvas dose not have beforeRoot timing to remove this extension like three.js,
+   * only way is to restore here as a workaround.
+   */
+  static applyToMaterial(pcMaterial, gltfMaterial, gltf, pcRef) {
+    var _a, _b;
+    const hasUnlitExtension = ((_a = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _a.KHR_materials_unlit) !== void 0 || ((_b = gltf.extensionsUsed) == null ? void 0 : _b.includes("KHR_materials_unlit"));
+    if (hasUnlitExtension) {
+      pcMaterial.diffuseMap = pcMaterial.emissiveMap;
+      pcMaterial.diffuseMapUv = pcMaterial.emissiveMapUv;
+      pcMaterial.diffuseMapTiling.copy(pcMaterial.emissiveMapTiling);
+      pcMaterial.diffuseMapOffset.copy(pcMaterial.emissiveMapOffset);
+      pcMaterial.diffuseMapRotation = pcMaterial.emissiveMapRotation;
+      pcMaterial.diffuseMapChannel = pcMaterial.emissiveMapChannel;
+      pcMaterial.diffuse.copy(pcMaterial.emissive);
+      if (gltfMaterial.hasOwnProperty("pbrMetallicRoughness")) {
+        const pbrData = gltfMaterial.pbrMetallicRoughness;
+        if (pbrData && pbrData.hasOwnProperty("baseColorFactor")) {
+          const [r, g, b, a] = pbrData.baseColorFactor;
+          pcMaterial.diffuse.set(r, g, b).gamma();
+          pcMaterial.opacity = a;
+        }
+      }
+      if (gltfMaterial.hasOwnProperty("emissiveFactor")) {
+        const [r, g, b] = gltfMaterial.emissiveFactor.map((v) => Math.max(1e-4, v));
+        pcMaterial.emissive.set(r, g, b).gamma();
+      }
+    }
+    if (gltfMaterial.hasOwnProperty("alphaMode")) {
+      switch (gltfMaterial.alphaMode) {
+        case "MASK":
+          pcMaterial.blendType = pcRef.BLEND_NONE;
+          if (gltfMaterial.hasOwnProperty("alphaCutoff")) {
+            pcMaterial.alphaTest = gltfMaterial.alphaCutoff;
+          } else {
+            pcMaterial.alphaTest = 0.5;
+          }
+          break;
+        case "BLEND":
+          pcMaterial.blendType = pcRef.BLEND_NORMAL;
+          pcMaterial.depthWrite = false;
+          break;
+        default:
+        case "OPAQUE":
+          pcMaterial.blendType = pcRef.BLEND_NONE;
+          break;
+      }
+    } else {
+      pcMaterial.blendType = pcRef.BLEND_NONE;
+    }
+    if (gltfMaterial.hasOwnProperty("doubleSided") && gltfMaterial.doubleSided !== void 0) {
+      pcMaterial.twoSidedLighting = gltfMaterial.doubleSided;
+      pcMaterial.cull = gltfMaterial.doubleSided ? pcRef.CULLFACE_NONE : pcRef.CULLFACE_BACK;
+    } else {
+      pcMaterial.twoSidedLighting = false;
+      pcMaterial.cull = pcRef.CULLFACE_BACK;
+    }
+  }
+}
+const textureTransformExtensionName = "KHR_texture_transform";
+function createVRMCMtoonMaterial(pcRef, asset) {
+  const material = new pcRef.StandardMaterial();
+  material.isMtoonMaterial = true;
+  material.mapUvTransform = new pcRef.Mat3();
+  material.normalMapUvTransform = new pcRef.Mat3();
+  material.normalScale = new pcRef.Vec2(1, 1);
+  material.emissiveMapUvTransform = new pcRef.Mat3();
+  material.shadeColorFactor = new pcRef.Color(0, 0, 0, 1);
+  material.shadeMultiplyTexture = null;
+  material.shadeMultiplyTextureUvTransform = new pcRef.Mat3();
+  material.shadingShiftFactor = 0;
+  material.shadingShiftTexture = null;
+  material.shadingShiftTextureUvTransform = new pcRef.Mat3();
+  material.shadingShiftTextureScale = 1;
+  material.shadingToonyFactor = 0.9;
+  material.giEqualizationFactor = 0;
+  material.matcapFactor = new pcRef.Color(1, 1, 1, 1);
+  material.matcapTexture = null;
+  material.matcapTextureUvTransform = new pcRef.Mat3();
+  material.parametricRimColorFactor = new pcRef.Color(0, 0, 0, 1);
+  material.rimMultiplyTexture = null;
+  material.rimMultiplyTextureUvTransform = new pcRef.Mat3();
+  material.rimLightingMixFactor = 0;
+  material.parametricRimFresnelPowerFactor = 5;
+  material.parametricRimLiftFactor = 0;
+  material.uvAnimationMaskTexture = null;
+  material.uvAnimationMaskTextureUvTransform = new pcRef.Mat3();
+  material.uvAnimationScrollXOffset = 0;
+  material.uvAnimationScrollYOffset = 0;
+  material.uvAnimationRotationPhase = 0;
+  material.uvAnimationScrollXSpeed = 0;
+  material.uvAnimationScrollYSpeed = 0;
+  material.uvAnimationRotationSpeed = 0;
+  material.v0CompatShade = false;
+  material.isOutline = false;
+  material.outlineWidthMode = MToonMaterialOutlineWidthMode.None;
+  material.outlineWidthMultiplyTexture = null;
+  material.outlineWidthMultiplyTextureUvTransform = new pcRef.Mat3();
+  material.outlineWidthFactor = 0.02;
+  material.outlineColorFactor = new pcRef.Color(1, 0.5, 0, 1);
+  material.outlineLightingMixFactor = 0;
+  material._asset = asset;
+  material._vec3A = new pcRef.Vec3();
+  material._currentDirLights = 0;
+  material._currentSpotLights = 0;
+  material._currentPointLights = 0;
+  material.parse = function(gltfMaterial, gltf) {
+    var _a, _b, _c, _d, _e, _f, _g, _h, _i, _j, _k, _l, _m, _n, _o;
+    MaterialPreprocessor.applyToMaterial(this, gltfMaterial, gltf, pcRef);
+    const extension = (_a = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _a[EXTENSION_VRMC_MATERIALS_MTOON];
+    const {
+      shadeColorFactor,
+      shadeMultiplyTexture: shadeMultiplyTextureInfo,
+      shadingShiftFactor,
+      shadingToonyFactor,
+      parametricRimColorFactor,
+      rimLightingMixFactor,
+      parametricRimFresnelPowerFactor,
+      parametricRimLiftFactor,
+      shadingShiftTexture: shadingShiftTextureInfo,
+      giEqualizationFactor,
+      rimMultiplyTexture: rimMultiplyTextureInfo,
+      matcapTexture: matcapTextureInfo,
+      matcapFactor,
+      outlineWidthFactor,
+      outlineColorFactor,
+      outlineLightingMixFactor,
+      outlineWidthMode,
+      outlineWidthMultiplyTexture: outlineWidthMultiplyTextureInfo,
+      transparentWithZWrite,
+      v0CompatShade,
+      uvAnimationMaskTexture,
+      uvAnimationScrollXSpeedFactor,
+      uvAnimationScrollYSpeedFactor,
+      uvAnimationRotationSpeedFactor
+    } = extension;
+    if (v0CompatShade !== void 0) {
+      this.v0CompatShade = v0CompatShade;
+    }
+    if (uvAnimationScrollXSpeedFactor !== void 0) {
+      this.uvAnimationScrollXSpeed = uvAnimationScrollXSpeedFactor;
+    }
+    if (uvAnimationScrollYSpeedFactor !== void 0) {
+      this.uvAnimationScrollYSpeed = uvAnimationScrollYSpeedFactor;
+    }
+    if (uvAnimationRotationSpeedFactor !== void 0) {
+      this.uvAnimationRotationSpeed = uvAnimationRotationSpeedFactor;
+    }
+    if (giEqualizationFactor !== void 0) {
+      this.giEqualizationFactor = giEqualizationFactor;
+    }
+    if (shadeColorFactor) {
+      this.shadeColorFactor = new pcRef.Color(
+        shadeColorFactor[0],
+        shadeColorFactor[1],
+        shadeColorFactor[2],
+        1
+      );
+    }
+    if (shadeMultiplyTextureInfo !== void 0) {
+      const resource = this._asset.resource;
+      const texture = (_c = (_b = resource == null ? void 0 : resource.textures) == null ? void 0 : _b[shadeMultiplyTextureInfo.index]) == null ? void 0 : _c.resource;
+      if (texture) {
+        this.shadeMultiplyTexture = texture;
+        updateTextureMatrix(
+          pcRef,
+          this.shadeMultiplyTextureUvTransform,
+          (_d = shadeMultiplyTextureInfo.extensions) == null ? void 0 : _d[textureTransformExtensionName]
+        );
+      }
+    }
+    if (rimMultiplyTextureInfo !== void 0) {
+      const resource = this._asset.resource;
+      const texture = (_f = (_e = resource == null ? void 0 : resource.textures) == null ? void 0 : _e[rimMultiplyTextureInfo.index]) == null ? void 0 : _f.resource;
+      if (texture) {
+        this.rimMultiplyTexture = texture;
+        updateTextureMatrix(
+          pcRef,
+          this.rimMultiplyTextureUvTransform,
+          (_g = rimMultiplyTextureInfo.extensions) == null ? void 0 : _g[textureTransformExtensionName]
+        );
+      }
+    }
+    if (matcapTextureInfo !== void 0) {
+      const resource = this._asset.resource;
+      const texture = (_i = (_h = resource == null ? void 0 : resource.textures) == null ? void 0 : _h[matcapTextureInfo.index]) == null ? void 0 : _i.resource;
+      if (texture) {
+        this.matcapTexture = texture;
+      }
+    }
+    if (shadingShiftTextureInfo !== void 0) {
+      const resource = this._asset.resource;
+      const texture = (_k = (_j = resource == null ? void 0 : resource.textures) == null ? void 0 : _j[shadingShiftTextureInfo.index]) == null ? void 0 : _k.resource;
+      if (texture) {
+        this.shadingShiftTexture = texture;
+        updateTextureMatrix(
+          pcRef,
+          this.shadingShiftTextureUvTransform,
+          (_l = shadingShiftTextureInfo.extensions) == null ? void 0 : _l[textureTransformExtensionName]
+        );
+      }
+      if (shadingShiftTextureInfo.scale !== void 0) {
+        this.shadingShiftTextureScale = shadingShiftTextureInfo.scale;
+      }
+    }
+    if (matcapFactor) {
+      this.matcapFactor = new pcRef.Color(matcapFactor[0], matcapFactor[1], matcapFactor[2], 1);
+    }
+    this.shadingShiftFactor = shadingShiftFactor;
+    this.shadingToonyFactor = shadingToonyFactor;
+    if (parametricRimColorFactor) {
+      this.parametricRimColorFactor = new pcRef.Color(
+        parametricRimColorFactor[0],
+        parametricRimColorFactor[1],
+        parametricRimColorFactor[2],
+        1
+      );
+    }
+    this.rimLightingMixFactor = rimLightingMixFactor;
+    this.parametricRimFresnelPowerFactor = parametricRimFresnelPowerFactor;
+    this.parametricRimLiftFactor = parametricRimLiftFactor;
+    if (transparentWithZWrite) {
+      this.depthWrite = true;
+    }
+    if (outlineWidthFactor !== void 0) {
+      this.outlineWidthFactor = outlineWidthFactor;
+    }
+    if (outlineColorFactor) {
+      this.outlineColorFactor = new pcRef.Color(
+        outlineColorFactor[0],
+        outlineColorFactor[1],
+        outlineColorFactor[2],
+        1
+      );
+    }
+    if (outlineWidthMode) {
+      this.outlineWidthMode = outlineWidthMode;
+    }
+    if (outlineWidthMultiplyTextureInfo !== void 0) {
+      const resource = this._asset.resource;
+      const texture = (_n = (_m = resource == null ? void 0 : resource.textures) == null ? void 0 : _m[outlineWidthMultiplyTextureInfo.index]) == null ? void 0 : _n.resource;
+      if (texture) {
+        this.outlineWidthMultiplyTexture = texture;
+        updateTextureMatrix(
+          pcRef,
+          this.outlineWidthMultiplyTextureUvTransform,
+          (_o = outlineWidthMultiplyTextureInfo.extensions) == null ? void 0 : _o[textureTransformExtensionName]
+        );
+      }
+    }
+    if (outlineLightingMixFactor !== void 0) {
+      this.outlineLightingMixFactor = outlineLightingMixFactor;
+    }
+    if (this.isOutline)
+      this.cull = pcRef.CULLFACE_FRONT;
+    this._setShaderChunks();
+    this._setShaderUniforms();
+  };
+  material.onUpdateShader = function(options) {
+    if (this.shadeMultiplyTexture) {
+      options.defines.set("USE_SHADEMULTIPLYTEXTURE", "");
+    }
+    if (this.normalMap) {
+      options.defines.set("USE_NORMALMAP", "");
+    }
+    if (this.matcapTexture) {
+      options.defines.set("USE_MATCAPTEXTURE", "");
+    }
+    if (this.v0CompatShade) {
+      options.defines.set("V0_COMPAT_SHADE", "");
+    }
+    const USE_RIMMULTIPLYTEXTURE = this.rimMultiplyTexture;
+    if (USE_RIMMULTIPLYTEXTURE) {
+      options.defines.set("USE_RIMMULTIPLYTEXTURE", "");
+    }
+    const USE_UVANIMATIONMASKTEXTURE = this.uvAnimationMaskTexture !== null;
+    if (USE_UVANIMATIONMASKTEXTURE) {
+      options.defines.set("USE_UVANIMATIONMASKTEXTURE", "");
+    }
+    const USE_OUTLINEWIDTHMULTIPLYTEXTURE = this.outlineWidthMultiplyTexture !== null;
+    if (USE_OUTLINEWIDTHMULTIPLYTEXTURE) {
+      options.defines.set("USE_OUTLINEWIDTHMULTIPLYTEXTURE", "");
+    }
+    const OUTLINE_WIDTH_WORLD = this.outlineWidthMode === MToonMaterialOutlineWidthMode.WorldCoordinates;
+    if (OUTLINE_WIDTH_WORLD) {
+      options.defines.set("OUTLINE_WIDTH_WORLD", "");
+    }
+    const OUTLINE_WIDTH_SCREEN = this.outlineWidthMode === MToonMaterialOutlineWidthMode.ScreenCoordinates;
+    if (OUTLINE_WIDTH_SCREEN) {
+      options.defines.set("OUTLINE_WIDTH_SCREEN", "");
+    }
+    if (this.isOutline) {
+      options.defines.set("OUTLINE", "");
+    }
+    if (this.envAtlas) {
+      options.defines.set("USE_ENV_LIGHTS", "");
+    }
+    options.defines.set("NUM_DIR_LIGHTS", this._currentDirLights.toString());
+    options.defines.set("NUM_SPOT_LIGHTS", this._currentSpotLights.toString());
+    options.defines.set("NUM_POINT_LIGHTS", this._currentPointLights.toString());
+    if (this._currentDirLights > 0) {
+      options.defines.set("USE_DIR_LIGHTS", "");
+    }
+    if (this._currentSpotLights > 0) {
+      options.defines.set("USE_SPOT_LIGHTS", "");
+    }
+    if (this._currentPointLights > 0) {
+      options.defines.set("USE_POINT_LIGHTS", "");
+    }
+    return options;
+  };
+  material._setShaderChunks = function() {
+    this.shaderChunksVersion = "2.8";
+    const glsl = SHADERLANGUAGE_GLSL;
+    this.getShaderChunks(glsl).set("litUserDeclarationVS", shaderChunksMtoon.litUserDeclarationVS);
+    this.getShaderChunks(glsl).set("litUserMainEndVS", shaderChunksMtoon.litUserMainEndVS);
+    this.getShaderChunks(glsl).set("litUserDeclarationPS", shaderChunksMtoon.litUserDeclarationPS);
+    this.getShaderChunks(glsl).set("litUserCodePS", shaderChunksMtoon.litUserCodePS);
+    this.getShaderChunks(glsl).set("litUserMainEndPS", shaderChunksMtoon.litUserMainEndPS);
+    this.getShaderChunks(glsl).set("opacityPS", shaderChunksMtoon.opacityPS);
+  };
+  material._setShaderUniforms = function() {
+    this.setParameters("giEqualizationFactor", this.giEqualizationFactor);
+    this.setParameter("shadeColorFactor", [
+      this.shadeColorFactor.r,
+      this.shadeColorFactor.g,
+      this.shadeColorFactor.b
+    ]);
+    if (this.shadeMultiplyTexture) {
+      this.setParameter("shadeMultiplyTexture", this.shadeMultiplyTexture);
+      this.setParameter(
+        "shadeMultiplyTextureUvTransform",
+        this.shadeMultiplyTextureUvTransform.data
+      );
+    }
+    if (this.matcapTexture) {
+      this.setParameter("matcapTexture", this.matcapTexture);
+      this.setParameter("matcapTextureUvTransform", this.matcapTextureUvTransform.data);
+    }
+    this.setParameter("matcapFactor", [
+      this.matcapFactor.r,
+      this.matcapFactor.g,
+      this.matcapFactor.b
+    ]);
+    if (this.shadingShiftTexture) {
+      this.setParameter("shadingShiftTexture", this.shadingShiftTexture);
+    }
+    this.setParameter("shadingShiftTextureUvTransform", this.shadingShiftTextureUvTransform.data);
+    this.setParameter("mapUvTransform", this.mapUvTransform.data);
+    this.setParameter("shadingShiftFactor", this.shadingShiftFactor);
+    this.setParameter("shadingToonyFactor", this.shadingToonyFactor);
+    this.setParameter("parametricRimColorFactor", [
+      this.parametricRimColorFactor.r,
+      this.parametricRimColorFactor.g,
+      this.parametricRimColorFactor.b
+    ]);
+    this.setParameter("rimLightingMixFactor", this.rimLightingMixFactor);
+    this.setParameter("parametricRimFresnelPowerFactor", this.parametricRimFresnelPowerFactor);
+    this.setParameter("parametricRimLiftFactor", this.parametricRimLiftFactor);
+    if (this.normalMap) {
+      this.setParameter("normalMap", this.normalMap);
+      this.setParameter("normalScale", [this.normalScale.x, this.normalScale.y]);
+    }
+    this.setParameter("normalMapUvTransform", this.normalMapUvTransform.data);
+    this.setParameter("emissiveMapUvTransform", this.emissiveMapUvTransform.data);
+    this.setParameter("shadingShiftTextureScale", this.shadingShiftTextureScale);
+    if (this.matcapTexture) {
+      this.setParameter("matcapTexture", this.matcapTexture);
+    }
+    if (this.rimMultiplyTexture) {
+      this.setParameter("rimMultiplyTexture", this.rimMultiplyTexture);
+      this.setParameter("rimMultiplyTextureUvTransform", this.rimMultiplyTextureUvTransform.data);
+    }
+    if (this.outlineWidthMultiplyTexture) {
+      this.setParameter("outlineWidthMultiplyTexture", this.outlineWidthMultiplyTexture);
+      this.setParameter(
+        "outlineWidthMultiplyTextureUvTransform",
+        this.outlineWidthMultiplyTextureUvTransform.data
+      );
+    }
+    this.setParameter("outlineWidthFactor", this.outlineWidthFactor);
+    this.setParameter("outlineLightingMixFactor", this.outlineLightingMixFactor);
+    this.setParameter("outlineColorFactor", [
+      this.outlineColorFactor.r,
+      this.outlineColorFactor.g,
+      this.outlineColorFactor.b
+    ]);
+    this.setParameter("uvAnimationScrollXOffset", this.uvAnimationScrollXOffset);
+    this.setParameter("uvAnimationScrollYOffset", this.uvAnimationScrollYOffset);
+    this.setParameter("uvAnimationRotationPhase", this.uvAnimationRotationPhase);
+  };
+  material.updateLightState = function(lightStateInfo) {
+    const { directionalLights, spotLights, pointLights, scene } = lightStateInfo;
+    this._updateIndirectLightUniforms(scene);
+    directionalLights.forEach((info, i) => {
+      const direction = info.direction;
+      this._vec3A.copy(direction);
+      this._vec3A.mulScalar(-1);
+      this._vec3A.normalize();
+      const color = info.color;
+      this.setParameter(`directionalLights[${i}].color`, [color.r, color.g, color.b]);
+      this.setParameter(`directionalLights[${i}].direction`, [
+        this._vec3A.x,
+        this._vec3A.y,
+        this._vec3A.z
+      ]);
+    });
+    spotLights.forEach((info, i) => {
+      const position = info.position;
+      const direction = info.direction;
+      const color = info.color;
+      const distance = info.distance;
+      const decay = info.decay;
+      const coneCos = info.coneCos;
+      const penumbraCos = info.penumbraCos;
+      this.setParameter(`spotLights[${i}].position`, [position.x, position.y, position.z]);
+      this.setParameter(`spotLights[${i}].direction`, [direction.x, direction.y, direction.z]);
+      this.setParameter(`spotLights[${i}].color`, [color.r, color.g, color.b]);
+      this.setParameter(`spotLights[${i}].distance`, distance);
+      this.setParameter(`spotLights[${i}].decay`, decay);
+      this.setParameter(`spotLights[${i}].coneCos`, coneCos);
+      this.setParameter(`spotLights[${i}].penumbraCos`, penumbraCos);
+    });
+    pointLights.forEach((info, i) => {
+      const position = info.position;
+      const color = info.color;
+      const distance = info.distance;
+      const decay = info.decay;
+      this.setParameter(`pointLights[${i}].position`, [position.x, position.y, position.z]);
+      this.setParameter(`pointLights[${i}].color`, [color.r, color.g, color.b]);
+      this.setParameter(`pointLights[${i}].distance`, distance);
+      this.setParameter(`pointLights[${i}].decay`, decay);
+    });
+    const dirNum = directionalLights.length;
+    const spotNum = spotLights.length;
+    const pointNum = pointLights.length;
+    const lightsChanged = dirNum !== this._currentDirLights || spotNum !== this._currentSpotLights || pointNum !== this._currentPointLights;
+    if (lightsChanged) {
+      this._currentDirLights = dirNum;
+      this._currentSpotLights = spotNum;
+      this._currentPointLights = pointNum;
+      this.update();
+    }
+  };
+  material._updateIndirectLightUniforms = function(scene) {
+    if (!scene)
+      return;
+    if (!this.envAtlas && scene.envAtlas) {
+      this.envAtlas = scene.envAtlas;
+    }
+    if (this.envAtlas) {
+      this.setParameter("ambientLightColor", [0, 0, 0]);
+    } else {
+      this.ambient.copy(scene.ambientLight);
+      this.setParameter("ambientLightColor", [this.ambient.r, this.ambient.g, this.ambient.b]);
+    }
+  };
+  material.updateUvAnimation = function(deltaTime) {
+    this.uvAnimationScrollXOffset += this.uvAnimationScrollXSpeed * deltaTime;
+    this.setParameter("uvAnimationScrollXOffset", this.uvAnimationScrollXOffset);
+    this.uvAnimationScrollYOffset += this.uvAnimationScrollYSpeed * deltaTime;
+    this.setParameter("uvAnimationScrollYOffset", this.uvAnimationScrollYOffset);
+    this.uvAnimationRotationPhase += this.uvAnimationRotationSpeed * deltaTime;
+    this.setParameter("uvAnimationRotationPhase", this.uvAnimationRotationPhase);
+  };
+  return material;
+}
+const extensionVRMCName = EXTENSION_VRMC_MATERIALS_MTOON;
+class VRMMtoonLoader {
+  constructor(pcRef, asset) {
+    this._pcRef = pcRef;
+    this.asset = asset;
+  }
+  instantiated(entity) {
+    var _a;
+    const resource = this.asset.resource;
+    if (!((_a = resource == null ? void 0 : resource.data) == null ? void 0 : _a.gltf)) {
+      console.error("applyMaterialMtoon: gltf is undefined");
+      return;
+    }
+    const gltf = resource.data.gltf;
+    const outlineMaterials = this._applyVRMCOutlineShader(entity, gltf);
+    const mtoonMaterials = this._applyVRMCMtoonShader(entity, gltf);
+    return [...outlineMaterials.values(), ...mtoonMaterials.values()];
+  }
+  _applyVRMCOutlineShader(entity, gltf) {
+    const renders = entity.findComponents("render");
+    const outlineShaderMaterials = /* @__PURE__ */ new Map();
+    renders.forEach((renderComponent) => {
+      const render = renderComponent;
+      const meshInstances = render.meshInstances;
+      meshInstances.forEach((meshInstance) => {
+        var _a, _b, _c;
+        const material = meshInstance.material;
+        let shaderMaterial = outlineShaderMaterials.get(material);
+        if (!shaderMaterial) {
+          const index = ((_a = material.userId.split("_")) == null ? void 0 : _a[1]) ?? -1;
+          const parsedIndex = parseInt(index);
+          if (parsedIndex === -1) {
+            return;
+          }
+          const gltfMaterial = (_b = gltf.materials) == null ? void 0 : _b[parsedIndex];
+          if (!gltfMaterial) {
+            console.error("applyVRMCOutlineShader: gltfMaterial is undefined");
+            return;
+          }
+          const extension = (_c = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _c[extensionVRMCName];
+          if (!extension) {
+            return;
+          }
+          if (extension.outlineWidthMode === MToonMaterialOutlineWidthMode.None) {
+            return;
+          }
+          shaderMaterial = createVRMCMtoonMaterial(this._pcRef, this.asset);
+          shaderMaterial.isOutline = true;
+          shaderMaterial.copy(material);
+          shaderMaterial.name = material.name + "_outline";
+          shaderMaterial.parse(gltfMaterial, gltf);
+          shaderMaterial.update();
+          outlineShaderMaterials.set(material, shaderMaterial);
+        }
+        const shaderMeshInstance = new this._pcRef.MeshInstance(
+          meshInstance.mesh,
+          shaderMaterial,
+          render.entity
+        );
+        if (meshInstance.morphInstance) {
+          const morphInstance = meshInstance.morphInstance.clone();
+          shaderMeshInstance.morphInstance = morphInstance;
+        }
+        meshInstances.push(shaderMeshInstance);
+      });
+    });
+    return outlineShaderMaterials;
+  }
+  _applyVRMCMtoonShader(entity, gltf) {
+    const shaderMaterials = /* @__PURE__ */ new Map();
+    const renders = entity.findComponents("render");
+    renders.forEach((renderComponent) => {
+      const render = renderComponent;
+      const meshInstances = render.meshInstances;
+      meshInstances.forEach((meshInstance) => {
+        var _a, _b, _c;
+        if (meshInstance.material.isMtoonMaterial) {
+          return;
+        }
+        const material = meshInstance.material;
+        let shaderMaterial = shaderMaterials.get(material);
+        const index = ((_a = material.userId.split("_")) == null ? void 0 : _a[1]) ?? -1;
+        const parsedIndex = parseInt(index);
+        if (parsedIndex === -1) {
+          return;
+        }
+        const gltfMaterial = (_b = gltf.materials) == null ? void 0 : _b[parsedIndex];
+        if (!gltfMaterial) {
+          console.error("applyVRMCMtoonShader: gltfMaterial is undefined");
+          return;
+        }
+        const extension = (_c = gltfMaterial == null ? void 0 : gltfMaterial.extensions) == null ? void 0 : _c[extensionVRMCName];
+        if (!extension) {
+          return;
+        }
+        if (!shaderMaterial) {
+          shaderMaterial = createVRMCMtoonMaterial(this._pcRef, this.asset);
+          shaderMaterials.set(material, shaderMaterial);
+        }
+        shaderMaterial.copy(material);
+        shaderMaterial.parse(gltfMaterial, gltf);
+        meshInstance.material = shaderMaterial;
+        shaderMaterial.update();
+      });
+    });
+    return shaderMaterials;
+  }
+}
+const convertVRMMtoonMaterials = (pcRef, asset) => {
+  var _a, _b;
+  const v0CompatPlugin = new VRMMaterialsV0CompatPlugin(pcRef, asset);
+  v0CompatPlugin.parseMaterials();
+  const resource = asset.resource;
+  (_b = (_a = resource == null ? void 0 : resource.data) == null ? void 0 : _a.materials) == null ? void 0 : _b.forEach((material, index) => {
+    material.userId = `material_${index}`;
+  });
+};
+const importScript = (pcRef) => {
+  const renderStates = new RenderStates(pcRef);
+  class VrmMtoon2 extends pcRef.ScriptType {
+    initialize() {
+      renderStates.setApp(this.app);
+      this.renderStates = renderStates;
+      const mtoonLoader = new VRMMtoonLoader(pcRef, this.asset);
+      this.shaderMaterials = mtoonLoader.instantiated(this.entity) || [];
+      this.on("destroy", () => {
+        this.shaderMaterials.forEach((material) => {
+          material.destroy();
+        });
+        this.shaderMaterials = [];
+      });
+    }
+    update(dt) {
+      const lightStateInfo = this.renderStates.lightStateInfo;
+      if (!lightStateInfo)
+        return;
+      this.shaderMaterials.forEach((material) => {
+        var _a, _b;
+        (_a = material.updateLightState) == null ? void 0 : _a.call(material, lightStateInfo);
+        (_b = material.updateUvAnimation) == null ? void 0 : _b.call(material, dt);
+      });
+    }
+  }
+  pcRef.registerScript(VrmMtoon2, "vrmMtoon");
+  VrmMtoon2.attributes.add("asset", {
+    type: "asset",
+    description: "Set the container asset loaded from vrm avatar."
+  });
+};
+const VrmMtoon = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
+  __proto__: null,
+  convertVRMMtoonMaterials,
   importScript
 }, Symbol.toStringTag, { value: "Module" }));
 class VRMRig {
@@ -2894,116 +4771,11 @@ const getVersion = (asset) => {
   const isV0Used = (_b = resource.data.gltf.extensions) == null ? void 0 : _b.VRM;
   return isV1Used ? "v1" : isV0Used ? "v0" : null;
 };
-class RenderStates {
-  constructor(pcRef) {
-    this._pcRef = pcRef;
-    this._app = null;
-    this.lightStateInfo = null;
-    this.defaultInfoSetting = {
-      directionalLight: {
-        direction: new pcRef.Vec3(0, 0, 0),
-        color: new pcRef.Color(0, 0, 0)
-      },
-      spotLight: {
-        position: new pcRef.Vec3(0, 0, 0),
-        direction: new pcRef.Vec3(0, 0, 0),
-        color: new pcRef.Color(0, 0, 0),
-        distance: 0,
-        decay: 0,
-        coneCos: 0,
-        penumbraCos: 0
-      },
-      pointLight: {
-        position: new pcRef.Vec3(0, 0, 0),
-        color: new pcRef.Color(0, 0, 0),
-        distance: 0,
-        decay: 0
-      }
-    };
-  }
-  _updateMaterialUniforms(lights) {
-    this.lightStateInfo = this.convertLightStateInfo(lights);
-  }
-  setApp(app) {
-    if (this._app)
-      return;
-    this._app = app;
-    this.update();
-    this._app.on("update", this.update, this);
-  }
-  convertLightStateInfo(lights) {
-    const directionalLights = lights[this._pcRef.LIGHTTYPE_DIRECTIONAL];
-    const spotLights = lights[this._pcRef.LIGHTTYPE_SPOT];
-    const pointLights = lights[this._pcRef.LIGHTTYPE_POINT];
-    const info = {
-      directionalLights: [],
-      spotLights: [],
-      pointLights: [],
-      ...this._app && {
-        scene: {
-          envAtlas: this._app.scene.envAtlas || null,
-          ambientLight: this._app.scene.ambientLight
-        }
-      }
-    };
-    info.directionalLights = directionalLights.map((light) => {
-      if (light._node === null) {
-        return this.defaultInfoSetting.directionalLight;
-      }
-      const component = light._node.light;
-      return {
-        direction: light._direction,
-        color: component.color
-      };
-    });
-    info.spotLights = spotLights.map((light) => {
-      if (light._node === null) {
-        return this.defaultInfoSetting.spotLight;
-      }
-      const component = light._node.light;
-      return {
-        position: light._node.getPosition(),
-        direction: light._node.forward,
-        color: component.color,
-        distance: component.range,
-        decay: light.falloffMode === this._pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2,
-        coneCos: Math.cos(component.innerConeAngle),
-        penumbraCos: Math.cos(component.outerConeAngle)
-      };
-    });
-    info.pointLights = pointLights.map((light) => {
-      if (light._node === null) {
-        return this.defaultInfoSetting.pointLight;
-      }
-      const component = light._node.light;
-      return {
-        position: light._node.getPosition(),
-        color: component.color,
-        distance: component.range,
-        decay: light.falloffMode === this._pcRef.LIGHTFALLOFF_LINEAR ? 1 : 2
-      };
-    });
-    return info;
-  }
-  destroy() {
-    if (this._app) {
-      this._app.off("update", this.update, this);
-    }
-  }
-  update() {
-    if (!this._app)
-      return;
-    const worldLayer = this._app.scene.layers.getLayerById(this._pcRef.LAYERID_WORLD);
-    if (worldLayer) {
-      const lights = worldLayer.splitLights;
-      this._updateMaterialUniforms(lights);
-    }
-  }
-}
 window.VRMLoader = {
   VrmAnimation,
   VrmExpression,
   VrmSpringBone,
+  VrmMtoon,
   VrmMapList,
   createFormattedVRMHumanoid,
   addIndexToNodeTags,
@@ -3017,6 +4789,7 @@ export {
   VrmAnimation,
   VrmExpression,
   VrmMapList,
+  VrmMtoon,
   VrmSpringBone,
   addIndexToNodeTags,
   createFormattedVRMHumanoid,

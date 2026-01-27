@@ -4,7 +4,9 @@
   "description": "PlayCanvas VRM library for loading and manipulating VRM models",
   "license": "UNLICENSED",
   "type": "module",
-  "files": ["dist"],  
+  "files": [
+    "dist"
+  ],
   "main": "dist/playcanvas-vrm.js",
   "types": "dist/playcanvas-vrm.d.ts",
   "scripts": {

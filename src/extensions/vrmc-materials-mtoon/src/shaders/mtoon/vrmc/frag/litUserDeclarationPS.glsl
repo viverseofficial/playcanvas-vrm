@@ -1,8 +1,6 @@
 export default /* glsl */ `
     #define RECIPROCAL_PI 0.3183098861837907
 
-    uniform vec3 litFactor;
-    uniform float opacity;
     uniform vec3 shadeColorFactor;
     uniform vec3 ambientLightColor;
 
@@ -44,25 +42,16 @@ export default /* glsl */ `
     uniform float outlineLightingMixFactor;
 
     #ifdef USE_UVANIMATIONMASKTEXTURE
-        // TODO:  Wait until an avatar containing this information is found before proceeding with the implementation.
-        // uniform sampler2D uvAnimationMaskTexture;
-        // uniform mat3 uvAnimationMaskTextureUvTransform;
+        uniform sampler2D uvAnimationMaskTexture;
+        uniform mat3 uvAnimationMaskTextureUvTransform;
     #endif
 
     uniform float uvAnimationScrollXOffset;
     uniform float uvAnimationScrollYOffset;
     uniform float uvAnimationRotationPhase;
 
-
-    #ifdef USE_MAP
-        uniform sampler2D baseColorMap;
-        uniform mat3 mapUvTransform;
-    #endif
-
-    #ifdef USE_EMISSIVEMAP
-        uniform sampler2D emissiveMap;
-        uniform mat3 emissiveMapUvTransform;
-    #endif
+    uniform mat3 mapUvTransform;
+    uniform mat3 emissiveMapUvTransform;
 
     varying vec3 vViewPosition;
 
@@ -87,7 +76,7 @@ export default /* glsl */ `
     }
 
     /**
-        * Convert NdotL into toon shading factor using shadingShift and shadingToony
+    * Convert NdotL into toon shading factor using shadingShift and shadingToony
     */
     float getShading(
         const in float dotNL,
@@ -107,6 +96,12 @@ export default /* glsl */ `
             in vec3 lightColor
     ) {
         vec3 col = lightColor * BRDF_Lambert( mix( material.shadeColor, material.diffuseColor, shading ) );
+        
+        // The "comment out if you want to PBR absolutely" line
+        #ifdef V0_COMPAT_SHADE
+            col = min( col, material.diffuseColor );
+        #endif
+        
         return col;
     }
 
@@ -156,7 +151,7 @@ export default /* glsl */ `
     };
 
 
-    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight, const in float shrinkNum ) {
+    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight ) {
         float dotNL = clamp( dot( geometry.normal, directLight.direction ), -1.0, 1.0 );
         vec3 irradiance = directLight.color;
 
@@ -167,10 +162,8 @@ export default /* glsl */ `
 
         float shading = getShading( dotNL, shadow, material.shadingShift );
 
-        // Note: Shrink the light intensity to prevent the color from becoming too bright
-        float shrink = 1.0 / shrinkNum; 
         // toon shaded diffuse
-        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color ) * shrink;
+        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color );
     }
 
     void RE_IndirectDiffuse_MToon( const in vec3 irradiance, const in GeometricContext geometry, const in MToonMaterial material, inout ReflectedLight reflectedLight ) {
@@ -212,4 +205,21 @@ export default /* glsl */ `
 
     varying vec3 vNormal;
     varying vec3 vViewDirection;
+
+    // Apply UV Animation to a given UV coordinate
+    vec2 applyUvAnimation(vec2 uv) {
+        #ifdef USE_UVANIMATIONMASKTEXTURE
+            vec2 uvAnimationMaskTextureUv = ( uvAnimationMaskTextureUvTransform * vec3( uv, 1 ) ).xy;
+            float uvAnimMask = texture2D( uvAnimationMaskTexture, uvAnimationMaskTextureUv ).b;
+        #else
+            float uvAnimMask = 1.0;
+        #endif
+
+        float uvRotCos = cos( uvAnimationRotationPhase * uvAnimMask );
+        float uvRotSin = sin( uvAnimationRotationPhase * uvAnimMask );
+        uv = mat2( uvRotCos, -uvRotSin, uvRotSin, uvRotCos ) * ( uv - 0.5 ) + 0.5;
+        uv = uv + vec2( uvAnimationScrollXOffset, uvAnimationScrollYOffset ) * uvAnimMask;
+        
+        return uv;
+    }
 `

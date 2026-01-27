@@ -3,7 +3,7 @@ varying vec3 vViewPosition;
 varying vec3 vViewDirection;
 varying vec3 vNormal;
 
-// position of the camera
+// engine supplied uniforms
 uniform vec3 view_position;
 
 #ifdef OUTLINE

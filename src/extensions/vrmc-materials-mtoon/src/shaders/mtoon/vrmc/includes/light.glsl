@@ -17,89 +17,88 @@ export default /* glsl */ `
     }
 
 	vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
-		vec3 irradiance = ambientLightColor;
+        vec3 irradiance = ambientLightColor;
 		return irradiance;
 	}
 	vec3 getIBLIrradiance( const in vec3 envMapColor ) {
-		return 3.141592653589793 * envMapColor.rgb;
+        return envMapColor.rgb;
 	}
 
-    #if USE_POINT_LIGHTS
-        struct PointLight {
-            vec3 position;
-            vec3 color;
-            float distance;
-            float decay;
-        };
+    // Point Lights
+    #ifdef USE_POINT_LIGHTS
+    #ifndef NUM_POINT_LIGHTS
+    #define NUM_POINT_LIGHTS 1
+    #endif
+    struct PointLight {
+        vec3 position;
+        vec3 color;
+        float distance;
+        float decay;
+    };
+    uniform PointLight pointLights[NUM_POINT_LIGHTS];
 
-        uniform PointLight pointLights[NUM_POINT_LIGHTS];
+    void getPointLightInfo( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight light ) {
+        vec3 lVector = pointLight.position - geometry.position;
+        light.direction = normalize( lVector );
+        float lightDistance = length( lVector );
+        light.color = pointLight.color;
+        light.color *= getDistanceAttenuation( lightDistance, pointLight.distance, pointLight.decay );
 
-	    void getPointLightInfo( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight light ) {
-
-		    vec3 lVector = pointLight.position - geometry.position;
-
-		    light.direction = normalize( lVector );
-
-		    float lightDistance = length( lVector );
-
-		    light.color = pointLight.color;
-		    light.color *= getDistanceAttenuation( lightDistance, pointLight.distance, pointLight.decay );
-		    light.visible = ( light.color != vec3( 0.0 ) );
-	    }
+        light.visible = ( light.color != vec3( 0.0 ) );
+    }
     #endif
 
-    #if USE_SPOT_LIGHTS
-    	struct SpotLight {
-		    vec3 position;
-		    vec3 direction;
-		    vec3 color;
-		    float distance;
-		    float decay;
-		    float coneCos;
-		    float penumbraCos;
-	    };
-
-        uniform SpotLight spotLights[NUM_SPOT_LIGHTS];
-
-        void getSpotLightInfo( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight light ) {
-
-		    vec3 lVector = spotLight.position - geometry.position;
-
-		    light.direction = normalize( lVector );
-
-		    float angleCos = dot( light.direction, spotLight.direction );
-
-		    float spotAttenuation = getSpotAttenuation( spotLight.coneCos, spotLight.penumbraCos, angleCos );
-
-		    if ( spotAttenuation > 0.0 ) {
-
-			    float lightDistance = length( lVector );
-
-			    light.color = spotLight.color * spotAttenuation;
-			    light.color *= getDistanceAttenuation( lightDistance, spotLight.distance, spotLight.decay );
-			    light.visible = ( light.color != vec3( 0.0 ) );
-
-		    } else {
-
-			    light.color = vec3( 0.0 );
-			    light.visible = false;
-
-		    }
-	    }
+    // Spot Lights
+    #ifdef USE_SPOT_LIGHTS
+    #ifndef NUM_SPOT_LIGHTS
+    #define NUM_SPOT_LIGHTS 1
     #endif
+    struct SpotLight {
+        vec3 position;
+        vec3 direction;
+        vec3 color;
+        float distance;
+        float decay;
+        float coneCos;
+        float penumbraCos;
+    };
+    uniform SpotLight spotLights[NUM_SPOT_LIGHTS];
 
-    #if USE_DIR_LIGHTS
-        struct DirectionalLight {
-            vec3 direction;
-            vec3 color;
-        };
+    void getSpotLightInfo( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight light ) {
+        vec3 lVector = spotLight.position - geometry.position;
+        light.direction = normalize( lVector );
+        float angleCos = dot( light.direction, spotLight.direction );
+        float spotAttenuation = getSpotAttenuation( spotLight.coneCos, spotLight.penumbraCos, angleCos );
 
-        uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+        if ( spotAttenuation > 0.0 ) {
+            float lightDistance = length( lVector );
+            light.color = spotLight.color * spotAttenuation;
+            light.color *= getDistanceAttenuation( lightDistance, spotLight.distance, spotLight.decay );
 
-        void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
-            light.color = directionalLight.color;
-            light.direction = directionalLight.direction;
-            light.visible = true;
+            light.visible = ( light.color != vec3( 0.0 ) );
+        } else {
+            light.color = vec3( 0.0 );
+            light.visible = false;
         }
+    }
+    #endif
+
+    // Directional Lights
+    #ifdef USE_DIR_LIGHTS
+    #ifndef NUM_DIR_LIGHTS
+    #define NUM_DIR_LIGHTS 1
+    #endif
+    struct DirectionalLight {
+        vec3 direction;
+        vec3 color;
+    };
+    uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+
+    void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
+        light.color = directionalLight.color;
+
+        light.direction = directionalLight.direction;
+        light.visible = true;
+    }
     #endif
 `

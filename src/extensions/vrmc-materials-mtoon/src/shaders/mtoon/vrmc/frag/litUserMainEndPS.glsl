@@ -1,30 +1,20 @@
 export default /* glsl */ `
     vec2 uv = vec2(0.5, 0.5);
-
-    #if (defined(MTOON_USE_UV))
-        #if !defined(MTOON_UVS_VERTEX_ONLY)
-            uv = vUv0;
-
-            float uvAnimMask = 1.0;
-            #ifdef USE_UVANIMATIONMASKTEXTURE
-                // TODO: Wait until an avatar containing this information is found before proceeding with the implementation.
-            #endif
-
-            uv = uv + vec2( uvAnimationScrollXOffset, uvAnimationScrollYOffset ) * uvAnimMask;
-            float uvRotCos = cos( uvAnimationRotationPhase * uvAnimMask );
-            float uvRotSin = sin( uvAnimationRotationPhase * uvAnimMask );
-            uv = mat2( uvRotCos, -uvRotSin, uvRotSin, uvRotCos ) * ( uv - 0.5 ) + 0.5;
-        #endif
+    #ifdef VARYING_VUV0
+        uv = vUv0;
+        uv = applyUvAnimation(uv);
     #endif
 
-    vec4 diffuseColor = vec4( litFactor, opacity );
-    ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
-    vec3 totalEmissiveRadiance = emissive;
+    float finalOpacity = gl_FragColor.a; // result from "outputAlphaPS"
+    vec4 diffuseColor = vec4( material_diffuse, finalOpacity );
+    #if LIT_BLEND_TYPE == PREMULTIPLIED
+        diffuseColor.rgb *= litArgs_opacity; // get premultiplied rgb
+    #endif
 
-    #ifdef USE_MAP
+    #ifdef STD_DIFFUSE_TEXTURE
         vec2 colorMapUv = ( mapUvTransform * vec3( uv, 1 ) ).xy;
-        vec4 sampledDiffuseColor = texture2D( baseColorMap, colorMapUv );
-        diffuseColor *= sampledDiffuseColor;
+        vec3 albedoTexture = {STD_DIFFUSE_TEXTURE_DECODE}(texture2DBias({STD_DIFFUSE_TEXTURE_NAME}, colorMapUv, textureBias)).{STD_DIFFUSE_TEXTURE_CHANNEL};
+        diffuseColor.rgb *= albedoTexture;
     #endif
 
     float faceDirection = gl_FrontFacing ? 1.0 : -1.0;
@@ -54,10 +44,13 @@ export default /* glsl */ `
         #endif
     #endif
 
-    #ifdef USE_EMISSIVEMAP
+    vec3 totalEmissiveRadiance = material_emissive * material_emissiveIntensity;
+    #ifdef STD_EMISSIVE_TEXTURE
         vec2 emissiveMapUv = (emissiveMapUvTransform * vec3( uv, 1 )).xy;
-        totalEmissiveRadiance *= texture2D( emissiveMap, emissiveMapUv ).rgb;
+        vec3 emissiveTexture = {STD_EMISSIVE_TEXTURE_DECODE}(texture2DBias({STD_EMISSIVE_TEXTURE_NAME}, emissiveMapUv, textureBias)).{STD_EMISSIVE_TEXTURE_CHANNEL};
+        totalEmissiveRadiance *= emissiveTexture;
     #endif
+
 
     // -- MToon: lighting --------------------------------------------------------
     MToonMaterial material;
@@ -66,63 +59,62 @@ export default /* glsl */ `
 
     #ifdef USE_SHADEMULTIPLYTEXTURE
         vec2 shadeMultiplyTextureUv = ( shadeMultiplyTextureUvTransform * vec3( uv, 1 ) ).xy;
-        material.shadeColor *= texture2D( shadeMultiplyTexture, shadeMultiplyTextureUv ).rgb;
+        vec3 shadeMultiply = texture2D( shadeMultiplyTexture, shadeMultiplyTextureUv ).rgb;
+        shadeMultiply = decodeGamma(shadeMultiply); // convert to linear
+        material.shadeColor *= shadeMultiply;
     #endif
 
     material.shadingShift = shadingShiftFactor;
     #ifdef USE_SHADINGSHIFTTEXTURE
         vec2 shadingShiftTextureUv = ( shadingShiftTextureUvTransform * vec3( uv, 1 ) ).xy;
         material.shadingShift += texture2D( shadingShiftTexture, shadingShiftTextureUv ).r * shadingShiftTextureScale;
-    #endif
-    
+    #endif    
+
 
     GeometricContext geometry;
     geometry.position = - vViewPosition;
     geometry.normal = normal;
     geometry.viewDir = normalize( vViewPosition );
 
+    ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
     IncidentLight directLight;
     // since these variables will be used in unrolled loop, we have to define in prior
     float shadow = 1.0;
 
-    #ifdef USE_POINT_LIGHTS
+    // Point Lights - loop controlled by define
+    #if NUM_POINT_LIGHTS > 0
+    {
         PointLight pointLight;
-        shadow = 1.0; 
-
-        #pragma unroll_loop_start
-        for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {
-            pointLight = pointLights[ i ];
+        for ( int i = 0; i < NUM_POINT_LIGHTS; i++ ) {
+            pointLight = pointLights[i];
             getPointLightInfo( pointLight, geometry, directLight );
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
-        #pragma unroll_loop_end
+    }
     #endif
-    
 
-    #if USE_SPOT_LIGHTS
+    // Spot Lights - loop controlled by define
+    #if NUM_SPOT_LIGHTS > 0
+    {
         SpotLight spotLight;
-        shadow = 1.0; 
-
-        #pragma unroll_loop_start
-        for ( int i = 0; i < NUM_SPOT_LIGHTS; i ++ ) {
-            spotLight = spotLights[ i ];
+        for ( int i = 0; i < NUM_SPOT_LIGHTS; i++ ) {
+            spotLight = spotLights[i];
             getSpotLightInfo( spotLight, geometry, directLight );
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
-        #pragma unroll_loop_end
+    }
     #endif
 
-    #if USE_DIR_LIGHTS
+    // Directional Lights - loop controlled by define
+    #if NUM_DIR_LIGHTS > 0
+    {
         DirectionalLight directionalLight;
-        shadow = 1.0; 
-
-        #pragma unroll_loop_start
-        for ( int i = 0; i < NUM_DIR_LIGHTS; i ++ ) {
-            directionalLight = directionalLights[0];
+        for ( int i = 0; i < NUM_DIR_LIGHTS; i++ ) {
+            directionalLight = directionalLights[i];
             getDirectionalLightInfo( directionalLight, directLight );  
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight, float(NUM_DIR_LIGHTS) );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
-        #pragma unroll_loop_end
+    }
     #endif 
 
     // -- MToon: Ambient --------------------------------------------------------
@@ -137,28 +129,23 @@ export default /* glsl */ `
         vec2 envuv = mapUv(toSphericalUv(dir), vec4(128.0, 256.0 + 128.0, 64.0, 32.0) / atlasSize);
         vec4 raw = texture2D(texture_envAtlas, envuv);
         vec3 linear = decodeLinear(raw);
-
-        float shrinkEnvLightRatio = 0.75;
-
-        #ifdef USE_DIR_LIGHTS
-            shrinkEnvLightRatio = 0.25;
-        #endif
-
-        irradiance += getIBLIrradiance(linear) * shrinkEnvLightRatio;
+        irradiance += getIBLIrradiance(linear);
 	#endif
 
 
     // From three.js #include <lights_fragment_end>
     RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );
-    
 
-    // force the color lighter
-    float lighter = 2.5;
-    vec3 col = lighter * reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
+    float directDiffuseIntensity = 2.5; // Boost the effect of direct light
+    reflectedLight.directDiffuse *= directDiffuseIntensity;
+    vec3 col = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
+    col = min( col, material.diffuseColor * 1.2 ); // Slightly boost the cap to allow brighter lighting
 
+ 
     // -- MToon: rim lighting -----------------------------------------
     vec3 viewDir = normalize( vViewDirection );
-    vec3 rimMix = mix( vec3( 1.0 ), reflectedLight.directSpecular, 1.0 );
+
+    vec3 rimMix = mix( vec3( 1.0 ), reflectedLight.directSpecular, rimLightingMixFactor );
     vec3 rim = parametricRimColorFactor * pow( saturate( 1.0 - dot( viewDir, normal ) + parametricRimLiftFactor ), parametricRimFresnelPowerFactor );
 
     #ifdef USE_MATCAPTEXTURE
@@ -168,6 +155,7 @@ export default /* glsl */ `
           vec2 sphereUv = vec2(dot(x, normal), dot(y, normal)) * 0.5 + 0.5;
           sphereUv = ( matcapTextureUvTransform * vec3( sphereUv, 1 ) ).xy;
           vec3 matcap = texture2D( matcapTexture, sphereUv ).rgb;
+          matcap = decodeGamma(matcap); // convert to linear
           rim += matcapFactor * matcap;
         }
     #endif
@@ -175,25 +163,24 @@ export default /* glsl */ `
 
     #ifdef USE_RIMMULTIPLYTEXTURE
         vec2 rimMultiplyTextureUv = ( rimMultiplyTextureUvTransform * vec3( uv, 1 ) ).xy;
-        rim *= texture2D( rimMultiplyTexture, rimMultiplyTextureUv ).rgb;
+        vec3 rimMultiply = texture2D( rimMultiplyTexture, rimMultiplyTextureUv ).rgb;
+        rimMultiply = decodeGamma(rimMultiply); // convert to linear
+        rim *= rimMultiply;
     #endif
+
 
     col += rimMix * rim;
 
     // -- MToon: Emission --------------------------------------------------------
-    // Note: Sometimes look wired, but this is the implemention from three-vrm.
-    // Remove it temporarily.
-    // col += totalEmissiveRadiance;
-
+    col += totalEmissiveRadiance;
 
     // -- MToon: Outline --------------------------------------------------------
     #ifdef OUTLINE
         col = outlineColorFactor.rgb * mix( vec3( 1.0 ), col, outlineLightingMixFactor );
     #endif
 
-    #ifdef OPAQUE
-        diffuseColor.a = 1.0;
-    #endif
-
     gl_FragColor = vec4( col, diffuseColor.a );
+    gl_FragColor.rgb = addFog(gl_FragColor.rgb);
+    gl_FragColor.rgb = toneMap(gl_FragColor.rgb);
+    gl_FragColor.rgb = gammaCorrectOutput(gl_FragColor.rgb);
 `

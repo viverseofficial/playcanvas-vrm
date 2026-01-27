@@ -17,12 +17,22 @@ export const updateTextureMatrix = (
   const center = new pcRef.Vec2(0.5, 0.5);
   let rotation = 0;
 
-  if (textureTransform.offset) {
-    offset.x = textureTransform.offset[0];
-    offset.y = textureTransform.offset[1];
+  // Read scale (tiling) from KHR_texture_transform
+  if (textureTransform.scale) {
+    repeat.x = textureTransform.scale[0];
+    repeat.y = textureTransform.scale[1];
   }
 
+  // Read offset - PlayCanvas flips Y and considers scale
+  if (textureTransform.offset) {
+    offset.x = textureTransform.offset[0];
+    offset.y = 1.0 - repeat.y - textureTransform.offset[1];
+  }
+
+  // Read rotation - note: rotation is in radians, no conversion needed for matrix calculation
   if (textureTransform.rotation) {
+    // PlayCanvas uses negative rotation, but since we're building matrix directly,
+    // the sign depends on your setUvTransform implementation
     rotation = textureTransform.rotation;
   }
 
