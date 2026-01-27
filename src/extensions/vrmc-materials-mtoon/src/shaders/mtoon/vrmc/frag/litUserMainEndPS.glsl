@@ -6,21 +6,16 @@ export default /* glsl */ `
     #endif
 
     float finalOpacity = gl_FragColor.a; // result from "outputAlphaPS"
-    vec4 diffuseColor = vec4( litFactor, finalOpacity );
+    vec4 diffuseColor = vec4( material_diffuse, finalOpacity );
     #if LIT_BLEND_TYPE == PREMULTIPLIED
         diffuseColor.rgb *= litArgs_opacity; // get premultiplied rgb
     #endif
 
-    ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
-    vec3 totalEmissiveRadiance = material_emissive * material_emissiveIntensity;
-
-
-    #ifdef USE_MAP
+    #ifdef STD_DIFFUSE_TEXTURE
         vec2 colorMapUv = ( mapUvTransform * vec3( uv, 1 ) ).xy;
-        vec4 sampledDiffuseColor = texture2D( diffuseMap, colorMapUv );
-        diffuseColor.rgb *= sampledDiffuseColor.rgb;
+        vec3 albedoTexture = {STD_DIFFUSE_TEXTURE_DECODE}(texture2DBias({STD_DIFFUSE_TEXTURE_NAME}, colorMapUv, textureBias)).{STD_DIFFUSE_TEXTURE_CHANNEL};
+        diffuseColor.rgb *= albedoTexture;
     #endif
-
 
     float faceDirection = gl_FrontFacing ? 1.0 : -1.0;
     vec3 normal = normalize( vNormal );
@@ -49,9 +44,11 @@ export default /* glsl */ `
         #endif
     #endif
 
-    #ifdef USE_EMISSIVEMAP
+    vec3 totalEmissiveRadiance = material_emissive * material_emissiveIntensity;
+    #ifdef STD_EMISSIVE_TEXTURE
         vec2 emissiveMapUv = (emissiveMapUvTransform * vec3( uv, 1 )).xy;
-        totalEmissiveRadiance *= texture2D( emissiveMap, emissiveMapUv ).rgb;
+        vec3 emissiveTexture = {STD_EMISSIVE_TEXTURE_DECODE}(texture2DBias({STD_EMISSIVE_TEXTURE_NAME}, emissiveMapUv, textureBias)).{STD_EMISSIVE_TEXTURE_CHANNEL};
+        totalEmissiveRadiance *= emissiveTexture;
     #endif
 
 
@@ -62,7 +59,9 @@ export default /* glsl */ `
 
     #ifdef USE_SHADEMULTIPLYTEXTURE
         vec2 shadeMultiplyTextureUv = ( shadeMultiplyTextureUvTransform * vec3( uv, 1 ) ).xy;
-        material.shadeColor *= texture2D( shadeMultiplyTexture, shadeMultiplyTextureUv ).rgb;
+        vec3 shadeMultiply = texture2D( shadeMultiplyTexture, shadeMultiplyTextureUv ).rgb;
+        shadeMultiply = decodeGamma(shadeMultiply); // convert to linear
+        material.shadeColor *= shadeMultiply;
     #endif
 
     material.shadingShift = shadingShiftFactor;
@@ -77,6 +76,7 @@ export default /* glsl */ `
     geometry.normal = normal;
     geometry.viewDir = normalize( vViewPosition );
 
+    ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
     IncidentLight directLight;
     // since these variables will be used in unrolled loop, we have to define in prior
     float shadow = 1.0;
@@ -88,7 +88,7 @@ export default /* glsl */ `
         for ( int i = 0; i < NUM_POINT_LIGHTS; i++ ) {
             pointLight = pointLights[i];
             getPointLightInfo( pointLight, geometry, directLight );
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
     }
     #endif
@@ -100,7 +100,7 @@ export default /* glsl */ `
         for ( int i = 0; i < NUM_SPOT_LIGHTS; i++ ) {
             spotLight = spotLights[i];
             getSpotLightInfo( spotLight, geometry, directLight );
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
     }
     #endif
@@ -112,7 +112,7 @@ export default /* glsl */ `
         for ( int i = 0; i < NUM_DIR_LIGHTS; i++ ) {
             directionalLight = directionalLights[i];
             getDirectionalLightInfo( directionalLight, directLight );  
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight, float(NUM_DIR_LIGHTS) );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
     }
     #endif 
@@ -136,12 +136,12 @@ export default /* glsl */ `
     // From three.js #include <lights_fragment_end>
     RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );
 
-    float directDiffuseIntensity = 2.0; // Boost the effect of direct light
+    float directDiffuseIntensity = 2.5; // Boost the effect of direct light
     reflectedLight.directDiffuse *= directDiffuseIntensity;
     vec3 col = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
     col = min( col, material.diffuseColor * 1.2 ); // Slightly boost the cap to allow brighter lighting
- 
 
+ 
     // -- MToon: rim lighting -----------------------------------------
     vec3 viewDir = normalize( vViewDirection );
 
@@ -155,6 +155,7 @@ export default /* glsl */ `
           vec2 sphereUv = vec2(dot(x, normal), dot(y, normal)) * 0.5 + 0.5;
           sphereUv = ( matcapTextureUvTransform * vec3( sphereUv, 1 ) ).xy;
           vec3 matcap = texture2D( matcapTexture, sphereUv ).rgb;
+          matcap = decodeGamma(matcap); // convert to linear
           rim += matcapFactor * matcap;
         }
     #endif
@@ -162,7 +163,9 @@ export default /* glsl */ `
 
     #ifdef USE_RIMMULTIPLYTEXTURE
         vec2 rimMultiplyTextureUv = ( rimMultiplyTextureUvTransform * vec3( uv, 1 ) ).xy;
-        rim *= texture2D( rimMultiplyTexture, rimMultiplyTextureUv ).rgb;
+        vec3 rimMultiply = texture2D( rimMultiplyTexture, rimMultiplyTextureUv ).rgb;
+        rimMultiply = decodeGamma(rimMultiply); // convert to linear
+        rim *= rimMultiply;
     #endif
 
 
@@ -177,4 +180,7 @@ export default /* glsl */ `
     #endif
 
     gl_FragColor = vec4( col, diffuseColor.a );
+    gl_FragColor.rgb = addFog(gl_FragColor.rgb);
+    gl_FragColor.rgb = toneMap(gl_FragColor.rgb);
+    gl_FragColor.rgb = gammaCorrectOutput(gl_FragColor.rgb);
 `

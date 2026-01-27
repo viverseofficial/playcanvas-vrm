@@ -17,12 +17,11 @@ export default /* glsl */ `
     }
 
 	vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
-		// Boost by 2 to match the effect in playcanvas
-		return 2.0 * ambientLightColor;
+        vec3 irradiance = ambientLightColor;
+		return irradiance;
 	}
 	vec3 getIBLIrradiance( const in vec3 envMapColor ) {
-        // Boost by 2 to match the effect in playcanvas
-		return 2.0 * envMapColor.rgb;
+        return envMapColor.rgb;
 	}
 
     // Point Lights

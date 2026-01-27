@@ -319,14 +319,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       options.defines.set('USE_SHADEMULTIPLYTEXTURE', '');
     }
 
-    if (this.emissiveMap) {
-      options.defines.set('USE_EMISSIVEMAP', '');
-    }
-
-    if (this.diffuseMap) {
-      options.defines.set('USE_MAP', '');
-    }
-
     if (this.normalMap) {
       options.defines.set('USE_NORMALMAP', '');
     }
@@ -405,7 +397,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
   };
 
   material._setShaderUniforms = function () {
-    this.setParameter('litFactor', [this.diffuse.r, this.diffuse.g, this.diffuse.b]);
     this.setParameters('giEqualizationFactor', this.giEqualizationFactor);
     this.setParameter('shadeColorFactor', [
       this.shadeColorFactor.r,
@@ -433,10 +424,7 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
       this.setParameter('shadingShiftTexture', this.shadingShiftTexture);
     }
     this.setParameter('shadingShiftTextureUvTransform', this.shadingShiftTextureUvTransform.data);
-    if (this.diffuseMap) {
-      this.setParameter('diffuseMap', this.diffuseMap);
-      this.setParameter('mapUvTransform', this.mapUvTransform.data);
-    }
+    this.setParameter('mapUvTransform', this.mapUvTransform.data);
     this.setParameter('shadingShiftFactor', this.shadingShiftFactor);
     this.setParameter('shadingToonyFactor', this.shadingToonyFactor);
     this.setParameter('parametricRimColorFactor', [
@@ -453,9 +441,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     }
     this.setParameter('normalMapUvTransform', this.normalMapUvTransform.data);
     this.setParameter('emissiveMapUvTransform', this.emissiveMapUvTransform.data);
-    if (this.emissiveMap) {
-      this.setParameter('emissiveMap', this.emissiveMap);
-    }
     this.setParameter('shadingShiftTextureScale', this.shadingShiftTextureScale);
     if (this.matcapTexture) {
       this.setParameter('matcapTexture', this.matcapTexture);

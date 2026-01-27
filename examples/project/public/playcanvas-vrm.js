@@ -3300,7 +3300,6 @@ const litUserDeclarationPS = (
   `
     #define RECIPROCAL_PI 0.3183098861837907
 
-    uniform vec3 litFactor;
     uniform vec3 shadeColorFactor;
     uniform vec3 ambientLightColor;
 
@@ -3350,16 +3349,8 @@ const litUserDeclarationPS = (
     uniform float uvAnimationScrollYOffset;
     uniform float uvAnimationRotationPhase;
 
-
-    #ifdef USE_MAP
-        uniform sampler2D diffuseMap;
-        uniform mat3 mapUvTransform;
-    #endif
-
-    #ifdef USE_EMISSIVEMAP
-        uniform sampler2D emissiveMap;
-        uniform mat3 emissiveMapUvTransform;
-    #endif
+    uniform mat3 mapUvTransform;
+    uniform mat3 emissiveMapUvTransform;
 
     varying vec3 vViewPosition;
 
@@ -3459,7 +3450,7 @@ const litUserDeclarationPS = (
     };
 
 
-    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight, const in float shrinkNum ) {
+    void RE_Direct_MToon( const in IncidentLight directLight, const in GeometricContext geometry, const in MToonMaterial material, const in float shadow, inout ReflectedLight reflectedLight ) {
         float dotNL = clamp( dot( geometry.normal, directLight.direction ), -1.0, 1.0 );
         vec3 irradiance = directLight.color;
 
@@ -3470,10 +3461,8 @@ const litUserDeclarationPS = (
 
         float shading = getShading( dotNL, shadow, material.shadingShift );
 
-        // Note: Shrink the light intensity to prevent the color from becoming too bright
-        float shrink = 1.0 / shrinkNum;
         // toon shaded diffuse
-        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color ) * shrink;
+        reflectedLight.directDiffuse += getDiffuse( material, shading, directLight.color );
     }
 
     void RE_IndirectDiffuse_MToon( const in vec3 irradiance, const in GeometricContext geometry, const in MToonMaterial material, inout ReflectedLight reflectedLight ) {
@@ -3555,12 +3544,11 @@ const lightPS = (
     }
 
 	vec3 getAmbientLightIrradiance( const in vec3 ambientLightColor ) {
-		// Boost by 2 to match the effect in playcanvas
-		return 2.0 * ambientLightColor;
+        vec3 irradiance = ambientLightColor;
+		return irradiance;
 	}
 	vec3 getIBLIrradiance( const in vec3 envMapColor ) {
-        // Boost by 2 to match the effect in playcanvas
-		return 2.0 * envMapColor.rgb;
+        return envMapColor.rgb;
 	}
 
     // Point Lights
@@ -3652,21 +3640,16 @@ const litUserMainEndPS = (
     #endif
 
     float finalOpacity = gl_FragColor.a; // result from "outputAlphaPS"
-    vec4 diffuseColor = vec4( litFactor, finalOpacity );
+    vec4 diffuseColor = vec4( material_diffuse, finalOpacity );
     #if LIT_BLEND_TYPE == PREMULTIPLIED
         diffuseColor.rgb *= litArgs_opacity; // get premultiplied rgb
     #endif
 
-    ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
-    vec3 totalEmissiveRadiance = material_emissive * material_emissiveIntensity;
-
-
-    #ifdef USE_MAP
+    #ifdef STD_DIFFUSE_TEXTURE
         vec2 colorMapUv = ( mapUvTransform * vec3( uv, 1 ) ).xy;
-        vec4 sampledDiffuseColor = texture2D( diffuseMap, colorMapUv );
-        diffuseColor.rgb *= sampledDiffuseColor.rgb;
+        vec3 albedoTexture = {STD_DIFFUSE_TEXTURE_DECODE}(texture2DBias({STD_DIFFUSE_TEXTURE_NAME}, colorMapUv, textureBias)).{STD_DIFFUSE_TEXTURE_CHANNEL};
+        diffuseColor.rgb *= albedoTexture;
     #endif
-
 
     float faceDirection = gl_FrontFacing ? 1.0 : -1.0;
     vec3 normal = normalize( vNormal );
@@ -3695,9 +3678,11 @@ const litUserMainEndPS = (
         #endif
     #endif
 
-    #ifdef USE_EMISSIVEMAP
+    vec3 totalEmissiveRadiance = material_emissive * material_emissiveIntensity;
+    #ifdef STD_EMISSIVE_TEXTURE
         vec2 emissiveMapUv = (emissiveMapUvTransform * vec3( uv, 1 )).xy;
-        totalEmissiveRadiance *= texture2D( emissiveMap, emissiveMapUv ).rgb;
+        vec3 emissiveTexture = {STD_EMISSIVE_TEXTURE_DECODE}(texture2DBias({STD_EMISSIVE_TEXTURE_NAME}, emissiveMapUv, textureBias)).{STD_EMISSIVE_TEXTURE_CHANNEL};
+        totalEmissiveRadiance *= emissiveTexture;
     #endif
 
 
@@ -3708,7 +3693,9 @@ const litUserMainEndPS = (
 
     #ifdef USE_SHADEMULTIPLYTEXTURE
         vec2 shadeMultiplyTextureUv = ( shadeMultiplyTextureUvTransform * vec3( uv, 1 ) ).xy;
-        material.shadeColor *= texture2D( shadeMultiplyTexture, shadeMultiplyTextureUv ).rgb;
+        vec3 shadeMultiply = texture2D( shadeMultiplyTexture, shadeMultiplyTextureUv ).rgb;
+        shadeMultiply = decodeGamma(shadeMultiply); // convert to linear
+        material.shadeColor *= shadeMultiply;
     #endif
 
     material.shadingShift = shadingShiftFactor;
@@ -3723,6 +3710,7 @@ const litUserMainEndPS = (
     geometry.normal = normal;
     geometry.viewDir = normalize( vViewPosition );
 
+    ReflectedLight reflectedLight = ReflectedLight( vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ), vec3( 0.0 ) );
     IncidentLight directLight;
     // since these variables will be used in unrolled loop, we have to define in prior
     float shadow = 1.0;
@@ -3734,7 +3722,7 @@ const litUserMainEndPS = (
         for ( int i = 0; i < NUM_POINT_LIGHTS; i++ ) {
             pointLight = pointLights[i];
             getPointLightInfo( pointLight, geometry, directLight );
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
     }
     #endif
@@ -3746,7 +3734,7 @@ const litUserMainEndPS = (
         for ( int i = 0; i < NUM_SPOT_LIGHTS; i++ ) {
             spotLight = spotLights[i];
             getSpotLightInfo( spotLight, geometry, directLight );
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight, 1.0 );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
     }
     #endif
@@ -3758,7 +3746,7 @@ const litUserMainEndPS = (
         for ( int i = 0; i < NUM_DIR_LIGHTS; i++ ) {
             directionalLight = directionalLights[i];
             getDirectionalLightInfo( directionalLight, directLight );  
-            RE_Direct( directLight, geometry, material, shadow, reflectedLight, float(NUM_DIR_LIGHTS) );
+            RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
     }
     #endif 
@@ -3782,12 +3770,12 @@ const litUserMainEndPS = (
     // From three.js #include <lights_fragment_end>
     RE_IndirectDiffuse( irradiance, geometry, material, reflectedLight );
 
-    float directDiffuseIntensity = 2.0; // Boost the effect of direct light
+    float directDiffuseIntensity = 2.5; // Boost the effect of direct light
     reflectedLight.directDiffuse *= directDiffuseIntensity;
     vec3 col = reflectedLight.directDiffuse + reflectedLight.indirectDiffuse;
     col = min( col, material.diffuseColor * 1.2 ); // Slightly boost the cap to allow brighter lighting
- 
 
+ 
     // -- MToon: rim lighting -----------------------------------------
     vec3 viewDir = normalize( vViewDirection );
 
@@ -3801,6 +3789,7 @@ const litUserMainEndPS = (
           vec2 sphereUv = vec2(dot(x, normal), dot(y, normal)) * 0.5 + 0.5;
           sphereUv = ( matcapTextureUvTransform * vec3( sphereUv, 1 ) ).xy;
           vec3 matcap = texture2D( matcapTexture, sphereUv ).rgb;
+          matcap = decodeGamma(matcap); // convert to linear
           rim += matcapFactor * matcap;
         }
     #endif
@@ -3808,7 +3797,9 @@ const litUserMainEndPS = (
 
     #ifdef USE_RIMMULTIPLYTEXTURE
         vec2 rimMultiplyTextureUv = ( rimMultiplyTextureUvTransform * vec3( uv, 1 ) ).xy;
-        rim *= texture2D( rimMultiplyTexture, rimMultiplyTextureUv ).rgb;
+        vec3 rimMultiply = texture2D( rimMultiplyTexture, rimMultiplyTextureUv ).rgb;
+        rimMultiply = decodeGamma(rimMultiply); // convert to linear
+        rim *= rimMultiply;
     #endif
 
 
@@ -3823,6 +3814,9 @@ const litUserMainEndPS = (
     #endif
 
     gl_FragColor = vec4( col, diffuseColor.a );
+    gl_FragColor.rgb = addFog(gl_FragColor.rgb);
+    gl_FragColor.rgb = toneMap(gl_FragColor.rgb);
+    gl_FragColor.rgb = gammaCorrectOutput(gl_FragColor.rgb);
 `
 );
 const opacityPS = (
@@ -4121,12 +4115,6 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     if (this.shadeMultiplyTexture) {
       options.defines.set("USE_SHADEMULTIPLYTEXTURE", "");
     }
-    if (this.emissiveMap) {
-      options.defines.set("USE_EMISSIVEMAP", "");
-    }
-    if (this.diffuseMap) {
-      options.defines.set("USE_MAP", "");
-    }
     if (this.normalMap) {
       options.defines.set("USE_NORMALMAP", "");
     }
@@ -4187,7 +4175,6 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     this.getShaderChunks(glsl).set("opacityPS", shaderChunksMtoon.opacityPS);
   };
   material._setShaderUniforms = function() {
-    this.setParameter("litFactor", [this.diffuse.r, this.diffuse.g, this.diffuse.b]);
     this.setParameters("giEqualizationFactor", this.giEqualizationFactor);
     this.setParameter("shadeColorFactor", [
       this.shadeColorFactor.r,
@@ -4214,10 +4201,7 @@ function createVRMCMtoonMaterial(pcRef, asset) {
       this.setParameter("shadingShiftTexture", this.shadingShiftTexture);
     }
     this.setParameter("shadingShiftTextureUvTransform", this.shadingShiftTextureUvTransform.data);
-    if (this.diffuseMap) {
-      this.setParameter("diffuseMap", this.diffuseMap);
-      this.setParameter("mapUvTransform", this.mapUvTransform.data);
-    }
+    this.setParameter("mapUvTransform", this.mapUvTransform.data);
     this.setParameter("shadingShiftFactor", this.shadingShiftFactor);
     this.setParameter("shadingToonyFactor", this.shadingToonyFactor);
     this.setParameter("parametricRimColorFactor", [
@@ -4234,9 +4218,6 @@ function createVRMCMtoonMaterial(pcRef, asset) {
     }
     this.setParameter("normalMapUvTransform", this.normalMapUvTransform.data);
     this.setParameter("emissiveMapUvTransform", this.emissiveMapUvTransform.data);
-    if (this.emissiveMap) {
-      this.setParameter("emissiveMap", this.emissiveMap);
-    }
     this.setParameter("shadingShiftTextureScale", this.shadingShiftTextureScale);
     if (this.matcapTexture) {
       this.setParameter("matcapTexture", this.matcapTexture);
