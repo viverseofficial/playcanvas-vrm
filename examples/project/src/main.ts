@@ -9,7 +9,7 @@ import setupApplication, {
 } from './setup';
 import { createDefaultAnimations, createWindowTestAnimation } from './utils/animations';
 
-import avatarUrl from '/avatars/sample_alicia_solid.vrm?url';
+import avatarUrl from '/avatars/viverse.vrm?url';
 // import avatarUrl2 from 'your-path';
 
 declare global {
