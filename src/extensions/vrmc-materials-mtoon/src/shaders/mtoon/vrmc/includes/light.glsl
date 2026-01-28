@@ -1,4 +1,5 @@
 export default /* glsl */ `
+#ifdef FORWARD_PASS
     float getSpotAttenuation( const in float coneCosine, const in float penumbraCosine, const in float angleCosine ) {
 	    return smoothstep( coneCosine, penumbraCosine, angleCosine );
     }
@@ -27,7 +28,7 @@ export default /* glsl */ `
     // Point Lights
     #ifdef USE_POINT_LIGHTS
     #ifndef NUM_POINT_LIGHTS
-    #define NUM_POINT_LIGHTS 1
+    #define NUM_POINT_LIGHTS 0
     #endif
     struct PointLight {
         vec3 position;
@@ -35,7 +36,9 @@ export default /* glsl */ `
         float distance;
         float decay;
     };
+    #if NUM_POINT_LIGHTS > 0
     uniform PointLight pointLights[NUM_POINT_LIGHTS];
+    #endif
 
     void getPointLightInfo( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight light ) {
         vec3 lVector = pointLight.position - geometry.position;
@@ -51,7 +54,7 @@ export default /* glsl */ `
     // Spot Lights
     #ifdef USE_SPOT_LIGHTS
     #ifndef NUM_SPOT_LIGHTS
-    #define NUM_SPOT_LIGHTS 1
+    #define NUM_SPOT_LIGHTS 0
     #endif
     struct SpotLight {
         vec3 position;
@@ -62,7 +65,9 @@ export default /* glsl */ `
         float coneCos;
         float penumbraCos;
     };
+    #if NUM_SPOT_LIGHTS > 0
     uniform SpotLight spotLights[NUM_SPOT_LIGHTS];
+    #endif
 
     void getSpotLightInfo( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight light ) {
         vec3 lVector = spotLight.position - geometry.position;
@@ -86,13 +91,15 @@ export default /* glsl */ `
     // Directional Lights
     #ifdef USE_DIR_LIGHTS
     #ifndef NUM_DIR_LIGHTS
-    #define NUM_DIR_LIGHTS 1
+    #define NUM_DIR_LIGHTS 0
     #endif
     struct DirectionalLight {
         vec3 direction;
         vec3 color;
     };
-    uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+    #if NUM_DIR_LIGHTS > 0
+        uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+    #endif
 
     void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
         light.color = directionalLight.color;
@@ -101,4 +108,6 @@ export default /* glsl */ `
         light.visible = true;
     }
     #endif
+    
+#endif
 `

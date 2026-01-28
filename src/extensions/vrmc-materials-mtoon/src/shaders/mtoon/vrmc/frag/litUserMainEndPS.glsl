@@ -1,4 +1,6 @@
 export default /* glsl */ `
+#ifdef FORWARD_PASS
+
     vec2 uv = vec2(0.5, 0.5);
     #ifdef VARYING_VUV0
         uv = vUv0;
@@ -82,6 +84,7 @@ export default /* glsl */ `
     float shadow = 1.0;
 
     // Point Lights - loop controlled by define
+    #ifdef USE_POINT_LIGHTS
     #if NUM_POINT_LIGHTS > 0
     {
         PointLight pointLight;
@@ -92,8 +95,10 @@ export default /* glsl */ `
         }
     }
     #endif
+    #endif
 
     // Spot Lights - loop controlled by define
+    #ifdef USE_SPOT_LIGHTS
     #if NUM_SPOT_LIGHTS > 0
     {
         SpotLight spotLight;
@@ -104,8 +109,10 @@ export default /* glsl */ `
         }
     }
     #endif
+    #endif
 
     // Directional Lights - loop controlled by define
+    #ifdef USE_DIR_LIGHTS
     #if NUM_DIR_LIGHTS > 0
     {
         DirectionalLight directionalLight;
@@ -115,6 +122,7 @@ export default /* glsl */ `
             RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
     }
+    #endif
     #endif 
 
     // -- MToon: Ambient --------------------------------------------------------
@@ -183,4 +191,5 @@ export default /* glsl */ `
     gl_FragColor.rgb = addFog(gl_FragColor.rgb);
     gl_FragColor.rgb = toneMap(gl_FragColor.rgb);
     gl_FragColor.rgb = gammaCorrectOutput(gl_FragColor.rgb);
+#endif
 `

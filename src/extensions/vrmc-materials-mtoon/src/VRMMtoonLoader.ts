@@ -17,9 +17,11 @@ export type GltfAssetResource = {
 
 export class VRMMtoonLoader {
   private _pcRef: typeof pc;
-  public asset: pc.Asset;
+  asset: pc.Asset;
+  private _pcApp: pc.AppBase;
 
-  constructor(pcRef: typeof pc, asset: pc.Asset) {
+  constructor(app: pc.AppBase, pcRef: typeof pc, asset: pc.Asset) {
+    this._pcApp = app;
     this._pcRef = pcRef;
     this.asset = asset;
   }
@@ -72,12 +74,15 @@ export class VRMMtoonLoader {
             return;
           }
 
-          shaderMaterial = createVRMCMtoonMaterial(this._pcRef, this.asset);
-          shaderMaterial.isOutline = true;
-          shaderMaterial.copy(material);
-          shaderMaterial.name = material.name + '_outline';
-          shaderMaterial.parse(gltfMaterial, gltf);
-          shaderMaterial.update();
+          shaderMaterial = createVRMCMtoonMaterial({
+            pcApp: this._pcApp,
+            pcRef: this._pcRef,
+            asset: this.asset,
+            isOutline: true,
+            sourceMaterial: material,
+            gltfMaterial,
+            gltf,
+          });
           outlineShaderMaterials.set(material, shaderMaterial);
         }
 
@@ -134,14 +139,18 @@ export class VRMMtoonLoader {
         }
 
         if (!shaderMaterial) {
-          shaderMaterial = createVRMCMtoonMaterial(this._pcRef, this.asset);
+          shaderMaterial = createVRMCMtoonMaterial({
+            pcApp: this._pcApp,
+            pcRef: this._pcRef,
+            asset: this.asset,
+            sourceMaterial: material,
+            gltfMaterial,
+            gltf,
+          });
           shaderMaterials.set(material, shaderMaterial);
         }
 
-        shaderMaterial.copy(material);
-        shaderMaterial.parse(gltfMaterial, gltf);
         meshInstance.material = shaderMaterial;
-        shaderMaterial.update();
       });
     });
 
