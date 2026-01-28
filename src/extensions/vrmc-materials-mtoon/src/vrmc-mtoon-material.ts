@@ -13,11 +13,22 @@ import {
   IPointLightInfo,
   ISpotLightInfo,
   ISceneLightInfo,
+  RenderStates,
 } from '../../../helpers/RenderStates';
 import { GltfAssetResource } from './VRMMtoonLoader';
 import { MaterialPreprocessor } from './material-preprocessor';
 
 const textureTransformExtensionName = 'KHR_texture_transform';
+
+export interface MtoonMaterialOptions {
+  pcApp: pc.AppBase;
+  pcRef: typeof pc;
+  asset: pc.Asset;
+  sourceMaterial: pc.StandardMaterial;
+  gltfMaterial: GLTFSchema.IMaterial;
+  gltf: GLTFSchema.IGLTF;
+  isOutline?: boolean;
+}
 
 export type VRMCMtoonMaterialType = pc.StandardMaterial & {
   isMtoonMaterial: boolean;
@@ -64,23 +75,30 @@ export type VRMCMtoonMaterialType = pc.StandardMaterial & {
 
   _asset: pc.Asset;
   _vec3A: pc.Vec3;
+  _pcApp: pc.AppBase;
+  _renderStates: RenderStates;
   _currentDirLights: number;
   _currentSpotLights: number;
   _currentPointLights: number;
+  _updateCallback?: (dt: number) => void;
 
-  parse(gltfMaterial: any, gltf: any): void;
+  parse(): void;
   updateLightState(lightStateInfo: ILightStateInfo): void;
   updateUvAnimation(deltaTime: number): void;
+  clone(): VRMCMtoonMaterialType;
   _setShaderChunks(): void;
   _setShaderUniforms(): void;
+  _setRenderStateUpdater(): void;
   _updateIndirectLightUniforms(scene?: ISceneLightInfo): void;
 };
 
-export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMCMtoonMaterialType {
-  const material = new pcRef.StandardMaterial() as VRMCMtoonMaterialType;
+export function createVRMCMtoonMaterial(options: MtoonMaterialOptions): VRMCMtoonMaterialType {
+  const { pcApp, pcRef, asset, isOutline = false } = options;
 
+  const material = new pcRef.StandardMaterial() as VRMCMtoonMaterialType;
   // Custom properties
   material.isMtoonMaterial = true;
+  material.isOutline = isOutline;
 
   material.mapUvTransform = new pcRef.Mat3();
   material.normalMapUvTransform = new pcRef.Mat3();
@@ -114,7 +132,6 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
   material.uvAnimationRotationSpeed = 0.0;
   material.v0CompatShade = false;
 
-  material.isOutline = false;
   material.outlineWidthMode = MToonMaterialOutlineWidthMode.None;
   material.outlineWidthMultiplyTexture = null;
   material.outlineWidthMultiplyTextureUvTransform = new pcRef.Mat3();
@@ -127,15 +144,23 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
   material._currentDirLights = 0;
   material._currentSpotLights = 0;
   material._currentPointLights = 0;
+  material._pcApp = pcApp;
+  material._renderStates = new RenderStates(pcRef);
 
   // Methods
-  material.parse = function (gltfMaterial: GLTFSchema.IMaterial, gltf: GLTFSchema.IGLTF) {
+  material.parse = function () {
+    const { gltfMaterial, gltf, sourceMaterial, isOutline } = options;
+    material.copy(sourceMaterial);
+
+    if (isOutline) {
+      this.name = sourceMaterial.name + '_outline';
+    }
+
     // Apply all preprocessed settings
     MaterialPreprocessor.applyToMaterial(this, gltfMaterial, gltf, pcRef);
 
     // Extension parameters
     const extension = gltfMaterial?.extensions?.[EXTENSION_VRMC_MATERIALS_MTOON] as any;
-
     const {
       shadeColorFactor,
       shadeMultiplyTexture: shadeMultiplyTextureInfo,
@@ -312,6 +337,20 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
 
     this._setShaderChunks();
     this._setShaderUniforms();
+    this._setRenderStateUpdater();
+    this.update(); // Compile shader
+  };
+
+  material._setRenderStateUpdater = function () {
+    this._renderStates.setApp(this._pcApp);
+    this._updateCallback = (dt: number) => {
+      this._renderStates.update();
+      const lightStateInfo = this._renderStates.lightStateInfo;
+      if (lightStateInfo) this.updateLightState(lightStateInfo);
+      this.updateUvAnimation(dt);
+    };
+    this._pcApp.on('update', this._updateCallback);
+    this._updateCallback(0);
   };
 
   material.onUpdateShader = function (options: pc.StandardMaterialOptions) {
@@ -387,7 +426,7 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
 
   material._setShaderChunks = function () {
     this.shaderChunksVersion = '2.8';
-    const glsl = pc.SHADERLANGUAGE_GLSL;
+    const glsl = pcRef.SHADERLANGUAGE_GLSL;
     this.getShaderChunks(glsl).set('litUserDeclarationVS', shaderChunksMtoon.litUserDeclarationVS);
     this.getShaderChunks(glsl).set('litUserMainEndVS', shaderChunksMtoon.litUserMainEndVS);
     this.getShaderChunks(glsl).set('litUserDeclarationPS', shaderChunksMtoon.litUserDeclarationPS);
@@ -558,5 +597,20 @@ export function createVRMCMtoonMaterial(pcRef: typeof pc, asset: pc.Asset): VRMC
     this.setParameter('uvAnimationRotationPhase', this.uvAnimationRotationPhase);
   };
 
+  material.destroy = function () {
+    pcRef.StandardMaterial.prototype.destroy.call(this);
+
+    if (this._updateCallback) {
+      this._pcApp.off('update', this._updateCallback);
+      this._updateCallback = undefined;
+    }
+  };
+
+  material.clone = function (): VRMCMtoonMaterialType {
+    const cloned = createVRMCMtoonMaterial(options);
+    return cloned;
+  };
+
+  material.parse();
   return material;
 }

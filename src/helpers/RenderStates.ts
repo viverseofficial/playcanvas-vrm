@@ -71,17 +71,13 @@ export class RenderStates {
     };
   }
 
-  private _updateMaterialUniforms(lights: pc.Light[][]) {
+  private _updateLightInfo(lights: pc.Light[][]) {
     this.lightStateInfo = this.convertLightStateInfo(lights);
   }
 
   setApp(app: pc.AppBase) {
     if (this._app) return;
-
     this._app = app;
-    this.update();
-
-    this._app.on('update', this.update, this);
   }
 
   convertLightStateInfo(lights: pc.Light[][]) {
@@ -166,12 +162,6 @@ export class RenderStates {
     return info;
   }
 
-  destroy() {
-    if (this._app) {
-      this._app.off('update', this.update, this);
-    }
-  }
-
   update() {
     if (!this._app) return;
 
@@ -179,7 +169,7 @@ export class RenderStates {
     const worldLayer = this._app.scene.layers.getLayerById(this._pcRef.LAYERID_WORLD);
     if (worldLayer) {
       const lights = worldLayer.splitLights;
-      this._updateMaterialUniforms(lights);
+      this._updateLightInfo(lights);
     }
   }
 }

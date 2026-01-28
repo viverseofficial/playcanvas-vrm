@@ -1,50 +1,25 @@
 import * as pc from 'playcanvas';
 import VRMMaterialsV0CompatPlugin from '../extensions/vrmc-materials-mtoon/src/plugins/VRMMaterialsV0CompatPlugin';
-import { RenderStates } from '../helpers/RenderStates';
 import { GltfAssetResource, VRMMtoonLoader } from '../extensions/vrmc-materials-mtoon';
 
-export const convertVRMMtoonMaterials = (pcRef: typeof pc, asset: pc.Asset) => {
-  const v0CompatPlugin = new VRMMaterialsV0CompatPlugin(pcRef, asset);
-  v0CompatPlugin.parseMaterials();
-
-  const resource = asset.resource as GltfAssetResource | undefined;
-  resource?.data?.materials?.forEach((material: pc.StandardMaterial, index: number) => {
-    material.userId = `material_${index}`;
-  });
-};
-
 export const importScript = (pcRef: typeof pc) => {
-  const renderStates = new RenderStates(pcRef);
-
   class VrmMtoon extends pcRef.ScriptType {
     asset!: pc.Asset;
     shaderMaterials!: Array<any>;
 
-    renderStates!: RenderStates;
-
     initialize() {
-      renderStates.setApp(this.app);
-      this.renderStates = renderStates;
-
-      const mtoonLoader = new VRMMtoonLoader(pcRef, this.asset);
-      this.shaderMaterials = mtoonLoader.instantiated(this.entity) || [];
-
-      this.on('destroy', () => {
-        this.shaderMaterials.forEach((material) => {
-          material.destroy();
-        });
-
-        this.shaderMaterials = [];
-      });
+      this.convertVRMMtoonMaterials(pcRef, this.asset);
+      const mtoonLoader = new VRMMtoonLoader(this.app, pcRef, this.asset);
+      mtoonLoader.instantiated(this.entity);
     }
 
-    update(dt: number) {
-      const lightStateInfo = this.renderStates.lightStateInfo;
-      if (!lightStateInfo) return;
+    convertVRMMtoonMaterials(pcRef: typeof pc, asset: pc.Asset) {
+      const v0CompatPlugin = new VRMMaterialsV0CompatPlugin(pcRef, asset);
+      v0CompatPlugin.parseMaterials();
 
-      this.shaderMaterials.forEach((material) => {
-        material.updateLightState?.(lightStateInfo);
-        material.updateUvAnimation?.(dt);
+      const resource = asset.resource as GltfAssetResource | undefined;
+      resource?.data?.materials?.forEach((material: pc.StandardMaterial, index: number) => {
+        material.userId = `material_${index}`;
       });
     }
   }

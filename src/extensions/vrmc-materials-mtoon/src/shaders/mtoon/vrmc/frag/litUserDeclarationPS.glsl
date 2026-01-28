@@ -1,8 +1,12 @@
 export default /* glsl */ `
+#ifdef FORWARD_PASS
     #define RECIPROCAL_PI 0.3183098861837907
 
     uniform vec3 shadeColorFactor;
     uniform vec3 ambientLightColor;
+
+    varying vec3 vNormal;
+    varying vec3 vViewDirection;
 
     #ifdef USE_SHADEMULTIPLYTEXTURE
         uniform sampler2D shadeMultiplyTexture;
@@ -41,14 +45,6 @@ export default /* glsl */ `
     uniform vec3 outlineColorFactor;
     uniform float outlineLightingMixFactor;
 
-    #ifdef USE_UVANIMATIONMASKTEXTURE
-        uniform sampler2D uvAnimationMaskTexture;
-        uniform mat3 uvAnimationMaskTextureUvTransform;
-    #endif
-
-    uniform float uvAnimationScrollXOffset;
-    uniform float uvAnimationScrollYOffset;
-    uniform float uvAnimationRotationPhase;
 
     uniform mat3 mapUvTransform;
     uniform mat3 emissiveMapUvTransform;
@@ -202,24 +198,32 @@ export default /* glsl */ `
 
         return normalize( T * ( mapN.x * scale ) + B * ( mapN.y * scale ) + N * mapN.z );
     }
+#endif
 
-    varying vec3 vNormal;
-    varying vec3 vViewDirection;
 
-    // Apply UV Animation to a given UV coordinate
-    vec2 applyUvAnimation(vec2 uv) {
-        #ifdef USE_UVANIMATIONMASKTEXTURE
-            vec2 uvAnimationMaskTextureUv = ( uvAnimationMaskTextureUvTransform * vec3( uv, 1 ) ).xy;
-            float uvAnimMask = texture2D( uvAnimationMaskTexture, uvAnimationMaskTextureUv ).b;
-        #else
-            float uvAnimMask = 1.0;
-        #endif
+#ifdef USE_UVANIMATIONMASKTEXTURE
+    uniform sampler2D uvAnimationMaskTexture;
+    uniform mat3 uvAnimationMaskTextureUvTransform;
+#endif
 
-        float uvRotCos = cos( uvAnimationRotationPhase * uvAnimMask );
-        float uvRotSin = sin( uvAnimationRotationPhase * uvAnimMask );
-        uv = mat2( uvRotCos, -uvRotSin, uvRotSin, uvRotCos ) * ( uv - 0.5 ) + 0.5;
-        uv = uv + vec2( uvAnimationScrollXOffset, uvAnimationScrollYOffset ) * uvAnimMask;
-        
-        return uv;
-    }
+uniform float uvAnimationScrollXOffset;
+uniform float uvAnimationScrollYOffset;
+uniform float uvAnimationRotationPhase;
+
+// Apply UV Animation to a given UV coordinate
+vec2 applyUvAnimation(vec2 uv) {
+    #ifdef USE_UVANIMATIONMASKTEXTURE
+        vec2 uvAnimationMaskTextureUv = ( uvAnimationMaskTextureUvTransform * vec3( uv, 1 ) ).xy;
+        float uvAnimMask = texture2D( uvAnimationMaskTexture, uvAnimationMaskTextureUv ).b;
+    #else
+        float uvAnimMask = 1.0;
+    #endif
+
+    float uvRotCos = cos( uvAnimationRotationPhase * uvAnimMask );
+    float uvRotSin = sin( uvAnimationRotationPhase * uvAnimMask );
+    uv = mat2( uvRotCos, -uvRotSin, uvRotSin, uvRotCos ) * ( uv - 0.5 ) + 0.5;
+    uv = uv + vec2( uvAnimationScrollXOffset, uvAnimationScrollYOffset ) * uvAnimMask;
+    
+    return uv;
+}
 `

@@ -35,7 +35,6 @@ const createAvatar = (url: string) => {
 
     asset.on('load', (asset) => {
       VRMLoader.addIndexToNodeTags(asset);
-      VRMLoader.VrmMtoon.convertVRMMtoonMaterials(pc, asset);
 
       const renderRootEntity = asset.resource.instantiateRenderEntity();
       const rootEntity = new pc.Entity('VRM_AVATAR_ROOT');
