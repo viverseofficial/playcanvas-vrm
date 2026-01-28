@@ -11,11 +11,7 @@ export const createDefaultAnimations = (
   const animationAssets = [
     {
       stateName: 'Idle',
-      asset: preloadAssets.AnimationIdle,
-    },
-    {
-      stateName: 'Run',
-      asset: preloadAssets.AnimationRun,
+      asset: preloadAssets.AnimationVrmaIdle,
     },
   ];
 
@@ -24,41 +20,10 @@ export const createDefaultAnimations = (
     animationAssets,
     asset,
     humanoid,
-    {
-      negativeZAnimNames: ['viverse.combination', 'viverse.rp'],
-    },
   );
 
   if (loadedResources) {
     loadedResources.forEach((resource: any) => {
-      VRMLoader.VrmAnimation.assignAnimation(animatedEntity, resource);
-      VRMLoader.VrmAnimation.bindVRMAExpression(rootEntity, resource, animatedEntity);
-    });
-  }
-
-  const mocapAnimationAssets = [
-    {
-      stateName: 'MocapA',
-      asset: preloadAssets.AnimationMocapV1,
-    },
-    {
-      stateName: 'MocapB',
-      asset: preloadAssets.AnimationMocapV2,
-    },
-  ];
-
-  const mocapLoadedResources = VRMLoader.VrmAnimation.createVRMAnimResources(
-    pc,
-    mocapAnimationAssets,
-    asset,
-    humanoid,
-    {
-      negativeZAnimNames: ['viverse.combination', 'viverse.rp'],
-    },
-  );
-
-  if (mocapLoadedResources) {
-    mocapLoadedResources.forEach((resource: any) => {
       VRMLoader.VrmAnimation.assignAnimation(animatedEntity, resource);
       VRMLoader.VrmAnimation.bindVRMAExpression(rootEntity, resource, animatedEntity);
     });
@@ -72,73 +37,37 @@ export const createWindowTestAnimation = (
   humanoid: any,
   VRMLoader: any,
 ) => {
-  window.createAnim = (type: 'A' | 'B' | 'C' | 'D' | 'E' | 'V' | 'R' | 'M' | 'T' | 'W' | 'X') => {
+  window.createAnim = (type: 'Y' | 'V' | 'X') => {
     let animAssets = [];
+    const stateMap = {
+      Y: 'Yawning',
+      V: 'IdleDeprecated',
+      X: 'PointingDeprecated',
+    };
+
+    const stateName = stateMap[type];
+    if (!stateName) {
+      console.error('Invalid animation type', type);
+      return;
+    }
+
     switch (type) {
-      case 'A':
+      case 'Y':
         animAssets.push({
-          stateName: 'A',
-          asset: preloadAssets.AnimationA,
-        });
-        break;
-      case 'B':
-        animAssets.push({
-          stateName: 'B',
-          asset: preloadAssets.AnimationB,
-        });
-        break;
-      case 'C':
-        animAssets.push({
-          stateName: 'C',
-          asset: preloadAssets.AnimationC,
-        });
-        break;
-      case 'D':
-        animAssets.push({
-          stateName: 'D',
-          asset: preloadAssets.AnimationD,
-        });
-        break;
-      case 'E':
-        animAssets.push({
-          stateName: 'E',
-          asset: preloadAssets.AnimationE,
+          stateName,
+          asset: preloadAssets.AnimationVrmaYawning,
         });
         break;
       case 'V':
         animAssets.push({
-          stateName: 'V',
-          asset: preloadAssets.AnimationVrmaA,
-        });
-        break;
-      case 'R':
-        animAssets.push({
-          stateName: 'R',
-          asset: preloadAssets.AnimationVrmaB,
-        });
-        break;
-      case 'M':
-        animAssets.push({
-          stateName: 'M',
-          asset: preloadAssets.AnimationVrmaC,
-        });
-        break;
-      case 'T':
-        animAssets.push({
-          stateName: 'T',
-          asset: preloadAssets.AnimationVrmaTest,
-        });
-        break;
-      case 'W':
-        animAssets.push({
-          stateName: 'W',
-          asset: preloadAssets.AnimationWaveUpper,
+          stateName,
+          asset: preloadAssets.AnimationIdle,
         });
         break;
       case 'X':
         animAssets.push({
-          stateName: 'X',
-          asset: preloadAssets.AnimationVrmaDance,
+          stateName,
+          asset: preloadAssets.AnimationPointing,
         });
         break;
     }
@@ -147,9 +76,6 @@ export const createWindowTestAnimation = (
       animAssets,
       asset,
       humanoid,
-      {
-        negativeZAnimNames: ['viverse.combination', 'viverse.rp'],
-      },
     );
 
     if (resources) {
@@ -159,7 +85,7 @@ export const createWindowTestAnimation = (
       });
     }
     if (animatedEntity.anim && animatedEntity.anim.baseLayer) {
-      animatedEntity.anim.baseLayer.transition(type);
+      animatedEntity.anim.baseLayer.transition(stateName);
     }
   };
 };
