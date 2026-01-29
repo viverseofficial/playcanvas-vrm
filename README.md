@@ -104,6 +104,12 @@ const VRMLoader = window.VRMLoader;
 
 ```typescript
 import * as pc from 'playcanvas';
+import * as VRMLoader from '@viverse/playcanvas-vrm';
+
+// Register VRM scripts
+VRMLoader.VrmExpression.importScript(pc);
+VRMLoader.VrmSpringBone.importScript(pc);
+VRMLoader.VrmMtoon.importScript(pc);
 
 // Load VRM model
 const asset = new pc.Asset('avatar', 'container', { url: 'path/to/model.vrm' });
@@ -142,6 +148,12 @@ asset.on('load', (asset) => {
   
   // Add VRM scripts
   rootEntity.addComponent('script');
+  
+  // If you are using the vrm-mtoon script, 
+  // please create it before other scripts.
+  rootEntity.script.create('vrmMtoon', {
+    attributes: { asset },
+  });
   
   rootEntity.script.create('vrmExpression', {
     attributes: { asset },
@@ -185,10 +197,8 @@ asset.load();
 
 See the `examples/` directory for complete examples:
 
-- `add-vrm-animations.ts` - Loading and playing VRMA animations
-- `vrm-expression.ts` - Working with facial expressions
-- `vrm-spring-bone.ts` - Spring bone physics setup
-- `project/` - Full working example project
+- [examples/README.md](./examples/README.md) - Describes the features and setup of the example project
+- [examples/project/](./examples/project/) - Full working example project
 
 ## Known Issues
 

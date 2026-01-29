@@ -9,12 +9,12 @@ import setupApplication, {
 } from './setup';
 import { createDefaultAnimations, createWindowTestAnimation } from './utils/animations';
 
-import avatarUrl from '/Avatar_v1.vrm?url'; // v1
-import avatarUrl2 from '/rara.vrm?url'; // v0
+import avatarUrl from '/avatars/viverse.vrm?url';
+// import avatarUrl2 from 'your-path';
 
 declare global {
   interface Window {
-    createAnim(type: 'A' | 'B' | 'C' | 'D'): void;
+    createAnim(type: 'Y' | 'V' | 'X'): void;
     avatar: pc.Entity;
   }
 }
@@ -85,7 +85,7 @@ const createAvatar = (url: string) => {
       app.on('update', (dt) => {
         timer += dt;
         if (humanoid) humanoid.update();
-        // Open when you want model move to test spring bone
+        // NOTE: Open when you want model move to test spring bone
         // rootEntity.setPosition(Math.sin(timer), 0, 0);
       });
 
@@ -101,20 +101,15 @@ const createAvatar = (url: string) => {
 };
 
 const setupAvatar = async (app: pc.Application) => {
-  const {
-    avatarEntity: avatarA,
-    animatedEntity: animatedEntityA,
-    asset: assetA,
-    humanoid: humanoidA,
-  } = await createAvatar(avatarUrl);
-  const { avatarEntity: avatarB } = await createAvatar(avatarUrl2);
+  const { avatarEntity, animatedEntity, asset, humanoid } = await createAvatar(avatarUrl);
+  window.avatar = animatedEntity;
+  createWindowTestAnimation(avatarEntity, animatedEntity, asset, humanoid, VRMLoader);
+  app.root.addChild(avatarEntity);
 
-  window.avatar = animatedEntityA;
-  createWindowTestAnimation(avatarA, animatedEntityA, assetA, humanoidA, VRMLoader);
-
-  app.root.addChild(avatarA);
-  app.root.addChild(avatarB);
-  avatarB.setPosition(0.5, 0, 0);
+  // NOTE: if you want to add another avatar, please uncomment the following code
+  // const { avatarEntity: avatarB } = await createAvatar(avatarUrl2);
+  // app.root.addChild(avatarB);
+  // avatarB.setPosition(0.5, 0, 0);
 };
 
 const app = setupApplication();
@@ -122,7 +117,8 @@ createMiniStats(app);
 
 app.once('start', async () => {
   const focusEntity = new pc.Entity('FocusEntity');
-  focusEntity.setPosition(0, 1, 0);
+  const height = 1;
+  focusEntity.setPosition(0, height, 0);
   app.root.addChild(focusEntity);
   focusEntity.addComponent('render', {
     type: 'box',
