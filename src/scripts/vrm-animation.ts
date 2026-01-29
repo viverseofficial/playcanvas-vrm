@@ -134,37 +134,30 @@ export function bindVRMAExpression(
   entity: pc.Entity,
   resource: IAnimationResource,
   animEntity?: pc.Entity,
-  // { animEntity, transitionInterval = 0.0 }: { animEntity?: pc.Entity; transitionInterval: number },
 ) {
   const listenerEntity = animEntity ?? entity;
 
   if (listenerEntity.anim) {
-    listenerEntity.anim.on(`anim-track:${resource.name}`, () => {
-      entity.fire('vrma-expression:clear-all');
+    listenerEntity.anim.on(`anim-track:${resource.name}-start`, () => {
+      const anim = listenerEntity.anim;
+      if (!anim) return;
 
-      // initialize active state and transition interval with baseLayer
-      let upperBodyActiveState = listenerEntity.anim?.baseLayer?.activeState;
-      let transitionInterval =
-        (listenerEntity.anim as any).baseLayer._controller._totalTransitionTime ?? 0.0;
+      let activeState = anim.baseLayer?.activeState;
+      // upperBodyLayer take priority for expression
+      const upperBodyLayer = anim.layers.find((layer) => layer.name === 'upperBodyLayer');
+      if (upperBodyLayer) activeState = upperBodyLayer.activeState;
 
-      // update active state and transition interval if there is upperBodyLayer
-      listenerEntity.anim?.layers.forEach((layer) => {
-        if (layer.name === 'upperBodyLayer') {
-          upperBodyActiveState = (layer as any)._controller._activeStateName;
-          transitionInterval = (layer as any)._controller._totalTransitionTime;
-        }
-      });
+      if (activeState !== resource.name) return;
 
-      if (resource.expression) {
-        entity.fire(`vrma-expression:start`, resource.expression);
-      } else if (
-        upperBodyActiveState === resource.name &&
-        upperBodyActiveState !== (listenerEntity.anim as any).lastFrameUpperBodyActiveState
-      ) {
-        entity.fire(`vrm-expression:reset`, transitionInterval);
+      const hasCustom = (resource.expression?.custom.size ?? 0) > 0;
+      const hasPreset = (resource.expression?.preset.size ?? 0) > 0;
+      const hasExpression = hasCustom || hasPreset;
+
+      if (hasExpression) {
+        entity.fire(`vrm-expression:vrma-start`, resource.expression);
+      } else {
+        entity.fire(`vrm-expression:vrma-reset`);
       }
-
-      (listenerEntity.anim as any).lastFrameUpperBodyActiveState = upperBodyActiveState;
     });
   }
 }

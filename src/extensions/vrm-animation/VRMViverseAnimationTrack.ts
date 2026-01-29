@@ -166,7 +166,7 @@ export class VRMViverseAnimationTrack {
       }
     });
     const events = new this.pcRef.AnimEvents([
-      { name: `anim-track:${this.animationAsset.stateName}`, time: 0 },
+      { name: `anim-track:${this.animationAsset.stateName}-start`, time: 0 },
     ]);
     animTrack.events = events;
 

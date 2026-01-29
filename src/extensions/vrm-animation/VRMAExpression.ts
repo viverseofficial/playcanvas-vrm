@@ -4,7 +4,7 @@ import { IAnimatedMorphConfig } from '../vrm-expression/vrm-expression';
 
 export class VRMAExpression {
   public preset: Map<VRMExpressionPresetName, IAnimatedMorphConfig>;
-  private custom: Map<VRMExpressionPresetName, IAnimatedMorphConfig>;
+  public custom: Map<string, IAnimatedMorphConfig>;
 
   constructor(vrmAnimation: VRMAnimation) {
     this.preset = vrmAnimation.expressionTracks.preset;
@@ -12,6 +12,7 @@ export class VRMAExpression {
   }
 
   createCustomExpression() {
+    // TODO: Custom expression is not implemented yet
     console.log(this.custom);
   }
 }
