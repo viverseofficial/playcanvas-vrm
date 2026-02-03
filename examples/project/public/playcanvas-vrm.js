@@ -286,7 +286,7 @@ function arrayChunk(array, every) {
   }
   return ret;
 }
-function applyMatrix4$1(pcRef, v3, m) {
+function applyMatrix4(pcRef, v3, m) {
   const e = m.data;
   const w = 1 / (e[3] * v3.x + e[7] * v3.y + e[11] * v3.z + e[15]);
   const _x = (e[0] * v3.x + e[4] * v3.y + e[8] * v3.z + e[12]) * w;
@@ -462,7 +462,7 @@ class VRMAnimationLoader {
             const hipsParentWorldMatrix = worldMatrixMap.get("hipsParent");
             const outputData = arrayChunk(output.data, 3).flatMap((v) => {
               let _vec3 = new this.pcRef.Vec3(v[0], v[1], v[2]);
-              _vec3 = applyMatrix4$1(this.pcRef, _vec3, hipsParentWorldMatrix);
+              _vec3 = applyMatrix4(this.pcRef, _vec3, hipsParentWorldMatrix);
               return [_vec3.x, _vec3.y, _vec3.z];
             });
             const _outputData = new Float32Array(outputData);
@@ -1057,93 +1057,6 @@ function getRandomInt(min, max) {
 }
 function getRandom(min, max) {
   return Math.random() * (max - min) + min;
-}
-function fromArray(vec3, array, offset = 0) {
-  vec3.x = array[offset];
-  vec3.y = array[offset + 1];
-  vec3.z = array[offset + 2];
-  return vec3;
-}
-function applyMatrix4(vector, matrixWorld) {
-  const x = vector.x, y = vector.y, z = vector.z;
-  const e = matrixWorld.data;
-  const w = 1 / (e[3] * x + e[7] * y + e[11] * z + e[15]);
-  vector.x = (e[0] * x + e[4] * y + e[8] * z + e[12]) * w;
-  vector.y = (e[1] * x + e[5] * y + e[9] * z + e[13]) * w;
-  vector.z = (e[2] * x + e[6] * y + e[10] * z + e[14]) * w;
-  return vector;
-}
-function localToWorld(vector, matrixWorld) {
-  return applyMatrix4(vector, matrixWorld);
-}
-class Matrix4InverseCache {
-  constructor(pcRef, matrix) {
-    this._pcRef = pcRef;
-    this.matrix = matrix;
-    this._inverseCache = new this._pcRef.Mat4();
-    this._shouldUpdateInverse = true;
-    const handler = {
-      // @ts-ignore
-      set: (obj, prop, newVal) => {
-        this._shouldUpdateInverse = true;
-        obj[prop] = newVal;
-        return true;
-      }
-    };
-    this._originalElements = matrix.data;
-    this.matrix.set(new Proxy(Array.from(matrix.data), handler));
-  }
-  /**
-   * Inverse of given matrix.
-   * Note that it will return its internal private instance.
-   * Make sure copying this before mutate this.
-   */
-  get inverse() {
-    if (this._shouldUpdateInverse) {
-      this._inverseCache.copy(this.matrix);
-      mat4InvertCompat(this._inverseCache);
-      this._shouldUpdateInverse = false;
-    }
-    return this._inverseCache;
-  }
-  revert() {
-    this.matrix.set(Array.from(this._originalElements));
-  }
-}
-function mat4InvertCompat(target) {
-  target.invert();
-  return target;
-}
-function setFromUnitVectors(quat, vFrom, vTo) {
-  let r = vFrom.dot(vTo) + 1;
-  if (r < Number.EPSILON) {
-    r = 0;
-    if (Math.abs(vFrom.x) > Math.abs(vFrom.z)) {
-      quat.x = -vFrom.y;
-      quat.y = vFrom.x;
-      quat.z = 0;
-      quat.w = r;
-    } else {
-      quat.x = 0;
-      quat.y = -vFrom.z;
-      quat.z = vFrom.y;
-      quat.w = r;
-    }
-  } else {
-    quat.x = vFrom.y * vTo.z - vFrom.z * vTo.y;
-    quat.y = vFrom.z * vTo.x - vFrom.x * vTo.z;
-    quat.z = vFrom.x * vTo.y - vFrom.y * vTo.x;
-    quat.w = r;
-  }
-  return quat.normalize();
-}
-function transformDirection(vec3, m) {
-  const x = vec3.x, y = vec3.y, z = vec3.z;
-  const e = m.data;
-  vec3.x = e[0] * x + e[4] * y + e[8] * z;
-  vec3.y = e[1] * x + e[5] * y + e[9] * z;
-  vec3.z = e[2] * x + e[6] * y + e[10] * z;
-  return vec3.normalize();
 }
 class VRMExpressionManager {
   constructor() {
@@ -1869,7 +1782,6 @@ class VRMSpringBoneManager {
     this._ancestors = [];
     this._objectSpringBonesMap = /* @__PURE__ */ new Map();
     this._isSortedJointsDirty = false;
-    this._relevantChildrenUpdated = this._relevantChildrenUpdated.bind(this);
   }
   get joints() {
     return this._joints;
@@ -1888,17 +1800,6 @@ class VRMSpringBoneManager {
       });
     });
     return Array.from(set);
-  }
-  _relevantChildrenUpdated(object) {
-    var _a;
-    if ((((_a = this._objectSpringBonesMap.get(object)) == null ? void 0 : _a.size) ?? 0) > 0) {
-      return true;
-    }
-    const colliderObject = object;
-    if (colliderObject.updateWorldMatrix) {
-      colliderObject.updateWorldMatrix();
-    }
-    return false;
   }
   addJoint(joint) {
     this._joints.add(joint);
@@ -2009,7 +1910,6 @@ class VRMSpringBoneManager {
     for (let i = 0; i < this._sortedJoints.length; i++) {
       const springBone = this._sortedJoints[i];
       springBone.update(delta, currentStrength);
-      traverseChildrenUntilConditionMet(springBone.bone, this._relevantChildrenUpdated);
     }
   }
 }
@@ -2088,7 +1988,6 @@ class VRMSpringBoneJoint {
     this._quatC = new this._pcRef.Quat();
     this._quatD = new this._pcRef.Quat();
     this._matA = new this._pcRef.Mat4();
-    this._matB = new this._pcRef.Mat4();
     this._identityMat4 = new this._pcRef.Mat4();
     this._worldSpacePosition = new this._pcRef.Vec3();
     this._worldSpaceBoneLength = 0;
@@ -2114,23 +2013,7 @@ class VRMSpringBoneJoint {
     return this._center;
   }
   set center(center) {
-    var _a;
-    if ((_a = this._center) == null ? void 0 : _a.userData.inverseCacheProxy) {
-      this._center.userData.inverseCacheProxy.revert();
-      delete this._center.userData.inverseCacheProxy;
-    }
     this._center = center;
-    if (this._center) {
-      if (!this._center.userData) {
-        this._center.userData = {};
-      }
-      if (!this._center.userData.inverseCacheProxy) {
-        this._center.userData.inverseCacheProxy = new Matrix4InverseCache(
-          this._pcRef,
-          this._center.getWorldTransform()
-        );
-      }
-    }
   }
   get _parentMatrixWorld() {
     return this.bone.parent ? this.bone.parent.getWorldTransform() : this._identityMat4;
@@ -2159,7 +2042,7 @@ class VRMSpringBoneJoint {
       childMatrixWorld.getTranslation(this._v3B);
     } else {
       this._v3B.copy(this._initialLocalChildPosition);
-      applyMatrix4(this._v3B, matrixWorld);
+      matrixWorld.transformPoint(this._v3B, this._v3B);
     }
     this._worldSpaceBoneLength = this._v3A.sub(this._v3B).length();
   }
@@ -2171,23 +2054,23 @@ class VRMSpringBoneJoint {
     } else {
       this._initialLocalChildPosition.copy(this.bone.getLocalPosition()).normalize().mulScalar(0.07);
     }
-    const matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
     const worldTransform = this.bone.getWorldTransform();
-    localToWorld(this._currentTail.copy(this._initialLocalChildPosition), worldTransform);
-    applyMatrix4(this._currentTail, matrixWorldToCenter);
+    worldTransform.transformPoint(
+      this._currentTail.copy(this._initialLocalChildPosition),
+      this._currentTail
+    );
+    this._transformPointWorldToCenter(this._currentTail);
     this._prevTail.copy(this._currentTail);
     this._boneAxis.copy(this._initialLocalChildPosition).normalize();
   }
   reset() {
     this.bone.setLocalRotation(this._initialLocalRotation);
-    const transform = new this._pcRef.Mat4();
-    transform.mul2(this._parentMatrixWorld, this.bone.getLocalTransform());
-    const position = transform.getTranslation();
-    this.bone.setPosition(position.x, position.y, position.z);
-    const matrixWorldToCenter = this._getMatrixWorldToCenter(this._matA);
     const worldTransform = this.bone.getWorldTransform();
-    localToWorld(this._currentTail.copy(this._initialLocalChildPosition), worldTransform);
-    applyMatrix4(this._currentTail, matrixWorldToCenter);
+    worldTransform.transformPoint(
+      this._currentTail.copy(this._initialLocalChildPosition),
+      this._currentTail
+    );
+    this._transformPointWorldToCenter(this._currentTail);
     this._prevTail.copy(this._currentTail);
   }
   update(dt, strength = 1) {
@@ -2195,53 +2078,48 @@ class VRMSpringBoneJoint {
       return;
     this._calcWorldSpaceBoneLength();
     const worldSpaceBoneAxis = this._v3A.copy(this._boneAxis);
-    transformDirection(worldSpaceBoneAxis, this._initialLocalMatrix);
-    transformDirection(worldSpaceBoneAxis, this._parentMatrixWorld);
+    this._initialLocalMatrix.transformVector(worldSpaceBoneAxis, worldSpaceBoneAxis);
+    worldSpaceBoneAxis.normalize();
+    this._parentMatrixWorld.transformVector(worldSpaceBoneAxis, worldSpaceBoneAxis);
+    worldSpaceBoneAxis.normalize();
     this._nextTail.copy(this._currentTail).add(
       this._v3B.sub2(this._currentTail, this._prevTail).mulScalar(1 - this.settings.dragForce)
     );
-    applyMatrix4(this._nextTail, this._getMatrixCenterToWorld(this._matA));
+    this._transformPointCenterToWorld(this._nextTail);
     this._nextTail.add(this._v3B.copy(worldSpaceBoneAxis).mulScalar(this.settings.stiffness * dt));
     this._nextTail.add(
       this._v3B.copy(this.settings.gravityDir).mulScalar(this.settings.gravityPower * dt)
     );
-    const matrixWorld = this.bone.getWorldTransform();
-    matrixWorld.getTranslation(this._worldSpacePosition);
+    this._worldSpacePosition.copy(this.bone.getPosition());
     this._nextTail.sub(this._worldSpacePosition).normalize().mulScalar(this._worldSpaceBoneLength).add(this._worldSpacePosition);
     this._collision(this._nextTail);
     this._prevTail.copy(this._currentTail);
     this._currentTail.copy(this._nextTail);
-    applyMatrix4(this._currentTail, this._getMatrixWorldToCenter(this._matB));
-    const worldSpaceInitialMatrixInv = this._matA.copy(this._parentMatrixWorld).mul(this._initialLocalMatrix).invert();
-    const to = this._v3A.copy(this._nextTail);
-    applyMatrix4(to, worldSpaceInitialMatrixInv);
+    this._transformPointWorldToCenter(this._currentTail);
+    const to = this._v3A.copy(this._nextTail).sub(this._worldSpacePosition).normalize();
+    const parentRotation = this.bone.parent ? this.bone.parent.getRotation() : this._quatC.set(0, 0, 0, 1);
+    const restPoseRotation = this._quatD.mul2(parentRotation, this._initialLocalRotation);
+    restPoseRotation.invert().transformVector(to, to);
     to.normalize();
-    const applyRotation = setFromUnitVectors(this._quatA, this._boneAxis, to);
+    const applyRotation = this._quatA.setFromDirections(this._boneAxis, to);
     if (strength !== 1) {
       const identityQuat = this._quatC.set(0, 0, 0, 1);
       const tempQuat = this._quatD.copy(applyRotation);
       applyRotation.slerp(identityQuat, tempQuat, strength);
     }
-    const rotation = this._quatB.copy(this._initialLocalRotation).mul(applyRotation);
+    const rotation = this._quatB.mul2(this._initialLocalRotation, applyRotation);
     this.bone.setLocalRotation(rotation);
   }
-  _getMatrixCenterToWorld(target) {
-    if (this._center) {
-      const worldTransform = this._center.getWorldTransform();
-      target.copy(worldTransform);
-    } else {
-      target.setIdentity();
-    }
-    return target;
+  _transformPointCenterToWorld(target) {
+    if (!this._center)
+      return;
+    this._center.getWorldTransform().transformPoint(target, target);
   }
-  // Create a matrix that converts world space into center space.
-  _getMatrixWorldToCenter(target) {
-    if (this._center) {
-      target.copy(this._center.userData.inverseCacheProxy.inverse);
-    } else {
-      target.setIdentity();
-    }
-    return target;
+  _transformPointWorldToCenter(target) {
+    if (!this._center)
+      return;
+    this._matA.copy(this._center.getWorldTransform()).invert();
+    this._matA.transformPoint(target, target);
   }
   _collision(tail) {
     if (!this.colliderGroups)
@@ -2252,7 +2130,7 @@ class VRMSpringBoneJoint {
       for (let j = 0; j < colliders.length; j++) {
         const collider = colliders[j];
         const dist = collider.shape.calculateCollision(
-          collider.colliderMatrix,
+          collider.getWorldTransform(),
           tail,
           this.settings.hitRadius,
           this._v3A,
@@ -2271,21 +2149,8 @@ class VRMSpringBoneJoint {
 function createVRMSpringBoneCollider(pcRef, shape) {
   const collider = new pcRef.Entity();
   collider.shape = shape;
-  collider.colliderMatrix = new pcRef.Mat4();
-  collider.updateWorldMatrix = function() {
-    const matrixWorld = this.getWorldTransform();
-    updateColliderMatrix(this.colliderMatrix, matrixWorld, this.shape.offset);
-  };
+  collider.setLocalPosition(shape.offset);
   return collider;
-}
-function updateColliderMatrix(colliderMatrix, matrixWorld, offset) {
-  const me = matrixWorld.data;
-  colliderMatrix.copy(matrixWorld);
-  if (offset) {
-    colliderMatrix.data[12] = me[0] * offset.x + me[4] * offset.y + me[8] * offset.z + me[12];
-    colliderMatrix.data[13] = me[1] * offset.x + me[5] * offset.y + me[9] * offset.z + me[13];
-    colliderMatrix.data[14] = me[2] * offset.x + me[6] * offset.y + me[10] * offset.z + me[14];
-  }
 }
 const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
   constructor(pcRef, asset, entity) {
@@ -2297,7 +2162,10 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
     const resource = this.asset.resource;
     const gltf = resource.data.gltf;
     const data = resource.data;
-    const v1Result = this._v1Import(gltf, data);
+    if (!gltf) {
+      return null;
+    }
+    const v1Result = this._v1Import(gltf);
     if (v1Result) {
       return v1Result;
     }
@@ -2307,19 +2175,18 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
     }
     return null;
   }
-  _v1Import(gltf, resourceData) {
-    var _a, _b;
+  _v1Import(gltf) {
+    var _a, _b, _c;
     const isSpringBoneUsed = ((_a = gltf.extensionsUsed) == null ? void 0 : _a.indexOf(_VRMSpringBoneLoaderPlugin.EXTENSION_NAME)) !== -1;
     if (!isSpringBoneUsed) {
       return null;
     }
-    const isVRMUsed = (gltf == null ? void 0 : gltf.extensionsUsed.indexOf("VRMC_vrm")) !== -1;
+    const isVRMUsed = ((_b = gltf == null ? void 0 : gltf.extensionsUsed) == null ? void 0 : _b.indexOf("VRMC_vrm")) !== -1;
     if (!isVRMUsed) {
       return null;
     }
     const manager = new VRMSpringBoneManager();
-    const gltfNodes = gltf == null ? void 0 : gltf.nodes;
-    const extension = (_b = gltf.extensions) == null ? void 0 : _b[_VRMSpringBoneLoaderPlugin.EXTENSION_NAME];
+    const extension = (_c = gltf.extensions) == null ? void 0 : _c[_VRMSpringBoneLoaderPlugin.EXTENSION_NAME];
     if (!extension) {
       return null;
     }
@@ -2330,7 +2197,7 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
       );
       return null;
     }
-    const extensionColliders = extension.colliders;
+    const extensionColliders = extension.colliders || [];
     const colliders = extensionColliders == null ? void 0 : extensionColliders.map((schemaCollider, iCollider) => {
       var _a2;
       const node = (_a2 = this.entity.findByTag(`node_${schemaCollider.node}`)) == null ? void 0 : _a2[0];
@@ -2344,23 +2211,20 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
       if (schemaShape) {
         if (schemaShape.sphere) {
           return this._importSphereCollider(node, {
-            offset: fromArray(new this._pcRef.Vec3(), schemaShape.sphere.offset ?? [0, 0, 0]),
+            offset: new this._pcRef.Vec3().fromArray(schemaShape.sphere.offset ?? [0, 0, 0]),
             radius: schemaShape.sphere.radius ?? 0
           });
         } else if (schemaShape.capsule) {
           return this._importCapsuleCollider(node, {
-            offset: fromArray(
-              new this._pcRef.Vec3(),
-              schemaShape.capsule.offset ?? [0, 0, 0]
-            ),
+            offset: new this._pcRef.Vec3().fromArray(schemaShape.capsule.offset ?? [0, 0, 0]),
             radius: schemaShape.capsule.radius ?? 0,
-            tail: fromArray(new this._pcRef.Vec3(), schemaShape.capsule.tail ?? [0, 0, 0])
+            tail: new this._pcRef.Vec3().fromArray(schemaShape.capsule.tail ?? [0, 0, 0])
           });
         }
       }
       throw new Error(`VRMSpringBoneLoaderPlugin: The collider #${iCollider} has no valid shape`);
     });
-    const extensionColliderGroups = extension.colliderGroups;
+    const extensionColliderGroups = extension.colliderGroups || [];
     const colliderGroups = extensionColliderGroups == null ? void 0 : extensionColliderGroups.map((schemaColliderGroup, iColliderGroup) => {
       const cols = (schemaColliderGroup.colliders ?? []).map((iCollider) => {
         const col = colliders == null ? void 0 : colliders[iCollider];
@@ -2376,9 +2240,9 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
         name: schemaColliderGroup.name
       };
     });
-    const extensionSprings = extension.springs;
+    const extensionSprings = extension.springs || [];
     extensionSprings.forEach((schemaSpring, iSpring) => {
-      var _a2;
+      var _a2, _b2;
       const schemaJoints = schemaSpring.joints;
       const colliderGroupsForSpring = (_a2 = schemaSpring.colliderGroups) == null ? void 0 : _a2.map((iColliderGroup) => {
         const group = colliderGroups == null ? void 0 : colliderGroups[iColliderGroup];
@@ -2389,22 +2253,21 @@ const _VRMSpringBoneLoaderPlugin = class _VRMSpringBoneLoaderPlugin {
         }
         return group;
       });
-      const center = schemaSpring.center != null ? resourceData.nodes[schemaSpring.center] : void 0;
+      const center = (_b2 = this.entity.findByTag(`node_${schemaSpring.center}`)) == null ? void 0 : _b2[0];
       let prevSchemaJoint;
       schemaJoints.forEach((schemaJoint) => {
+        var _a3, _b3;
         if (prevSchemaJoint) {
           const nodeIndex = prevSchemaJoint.node;
-          const rootNode = gltfNodes[nodeIndex];
-          const node = this.entity.findByName(rootNode.name);
+          const node = (_a3 = this.entity.findByTag(`node_${nodeIndex}`)) == null ? void 0 : _a3[0];
           const childIndex = schemaJoint.node;
-          const rootChild = gltfNodes[childIndex];
-          const child = this.entity.findByName(rootChild.name);
+          const child = (_b3 = this.entity.findByTag(`node_${childIndex}`)) == null ? void 0 : _b3[0];
           const setting = {
             hitRadius: prevSchemaJoint.hitRadius,
             dragForce: prevSchemaJoint.dragForce,
             gravityPower: prevSchemaJoint.gravityPower,
             stiffness: prevSchemaJoint.stiffness,
-            gravityDir: prevSchemaJoint.gravityDir != null ? fromArray(new this._pcRef.Vec3(), prevSchemaJoint.gravityDir) : void 0
+            gravityDir: prevSchemaJoint.gravityDir != null ? new this._pcRef.Vec3().fromArray(prevSchemaJoint.gravityDir) : void 0
           };
           const joint = this._importJoint(node, child, setting, colliderGroupsForSpring);
           if (center) {
@@ -2549,7 +2412,7 @@ const importScript$1 = (pcRef) => {
       super(...arguments);
       this.activeSpringBone = true;
       this.isLimitedStrength = false;
-      this.updateInterval = 1 / 60;
+      this.updateInterval = 1 / 90;
       this.timeSinceLastUpdate = 0;
     }
     initialize() {
@@ -2590,8 +2453,8 @@ const importScript$1 = (pcRef) => {
   });
   VrmSpringBone2.attributes.add("updateInterval", {
     type: "number",
-    default: 1 / 60
-    // 60 FPS
+    default: 1 / 90
+    // 90 FPS
   });
 };
 const VrmSpringBone = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
