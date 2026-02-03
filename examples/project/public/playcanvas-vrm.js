@@ -4210,14 +4210,15 @@ class VRMMtoonLoader {
     const resource = this.asset.resource;
     if (!((_a = resource == null ? void 0 : resource.data) == null ? void 0 : _a.gltf)) {
       console.error("applyMaterialMtoon: gltf is undefined");
-      return;
+      return [];
     }
     const gltf = resource.data.gltf;
-    const outlineMaterials = this._applyVRMCOutlineShader(entity, gltf);
-    const mtoonMaterials = this._applyVRMCMtoonShader(entity, gltf);
-    return [...outlineMaterials.values(), ...mtoonMaterials.values()];
+    const materialMappings = [];
+    this._applyVRMCOutlineShader(entity, gltf, materialMappings);
+    this._applyVRMCMtoonShader(entity, gltf, materialMappings);
+    return materialMappings;
   }
-  _applyVRMCOutlineShader(entity, gltf) {
+  _applyVRMCOutlineShader(entity, gltf, materialMappings) {
     const renders = entity.findComponents("render");
     const outlineShaderMaterials = /* @__PURE__ */ new Map();
     renders.forEach((renderComponent) => {
@@ -4266,11 +4267,15 @@ class VRMMtoonLoader {
           shaderMeshInstance.morphInstance = morphInstance;
         }
         meshInstances.push(shaderMeshInstance);
+        materialMappings.push({
+          meshInstance: shaderMeshInstance,
+          sourceMaterial: material,
+          shaderMaterial
+        });
       });
     });
-    return outlineShaderMaterials;
   }
-  _applyVRMCMtoonShader(entity, gltf) {
+  _applyVRMCMtoonShader(entity, gltf, materialMappings) {
     const shaderMaterials = /* @__PURE__ */ new Map();
     const renders = entity.findComponents("render");
     renders.forEach((renderComponent) => {
@@ -4308,20 +4313,60 @@ class VRMMtoonLoader {
           });
           shaderMaterials.set(material, shaderMaterial);
         }
+        materialMappings.push({
+          meshInstance,
+          sourceMaterial: material,
+          shaderMaterial
+        });
         meshInstance.material = shaderMaterial;
       });
     });
-    return shaderMaterials;
   }
 }
 const importScript = (pcRef) => {
   class VrmMtoon2 extends pcRef.ScriptType {
-    initialize() {
-      this.convertVRMMtoonMaterials(pcRef, this.asset);
-      const mtoonLoader = new VRMMtoonLoader(this.app, pcRef, this.asset);
-      mtoonLoader.instantiated(this.entity);
+    constructor() {
+      super(...arguments);
+      this.autoInitialize = true;
+      this.materialMappings = [];
+      this._mToonInitialized = false;
     }
-    convertVRMMtoonMaterials(pcRef2, asset) {
+    initialize() {
+      if (this.autoInitialize)
+        this._toggleEnabled(true);
+      this.entity.on("toggle-mtoon", this._toggleEnabled, this);
+      this.on("destroy", () => {
+        this.entity.off("toggle-mtoon", this._toggleEnabled, this);
+      });
+    }
+    _toggleEnabled(isActive) {
+      if (isActive) {
+        this._activateMtoon();
+      } else {
+        this._deactivateMtoon();
+      }
+    }
+    _activateMtoon() {
+      if (this._mToonInitialized) {
+        this.materialMappings.forEach(({ meshInstance, shaderMaterial }) => {
+          meshInstance.material = shaderMaterial;
+          meshInstance.material.update();
+        });
+      } else {
+        this._convertVRMMtoonMaterials(pcRef, this.asset);
+        const mtoonLoader = new VRMMtoonLoader(this.app, pcRef, this.asset);
+        const materialMappings = mtoonLoader.instantiated(this.entity);
+        this.materialMappings = materialMappings;
+        this._mToonInitialized = true;
+      }
+    }
+    _deactivateMtoon() {
+      this.materialMappings.forEach(({ meshInstance, sourceMaterial }) => {
+        meshInstance.material = sourceMaterial;
+        meshInstance.material.update();
+      });
+    }
+    _convertVRMMtoonMaterials(pcRef2, asset) {
       var _a, _b;
       const v0CompatPlugin = new VRMMaterialsV0CompatPlugin(pcRef2, asset);
       v0CompatPlugin.parseMaterials();
@@ -4335,6 +4380,11 @@ const importScript = (pcRef) => {
   VrmMtoon2.attributes.add("asset", {
     type: "asset",
     description: "Set the container asset loaded from vrm avatar."
+  });
+  VrmMtoon2.attributes.add("autoInitialize", {
+    type: "boolean",
+    description: "Initialize MToon materials on script initialization.",
+    default: true
   });
 };
 const VrmMtoon = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
