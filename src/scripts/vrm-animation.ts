@@ -8,6 +8,7 @@ import {
   IAnimationAsset,
   IAnimationResource,
   IAnimExtraSettings,
+  VRMAnimComponent,
 } from '../extensions/vrm-animation/vrm-animation-interfaces';
 import { VRMAExpression } from '../extensions/vrm-animation/VRMAExpression';
 
@@ -136,16 +137,23 @@ export function bindVRMAExpression(
   animEntity?: pc.Entity,
 ) {
   const listenerEntity = animEntity ?? entity;
+  const vrmAnim = listenerEntity.anim as VRMAnimComponent | undefined;
 
-  if (listenerEntity.anim) {
-    listenerEntity.anim.on(`anim-track:${resource.name}-start`, () => {
-      const anim = listenerEntity.anim;
-      if (!anim) return;
+  if (vrmAnim) {
+    vrmAnim.on(`anim-track:${resource.name}-start`, () => {
+      if (!vrmAnim) return;
 
-      let activeState = anim.baseLayer?.activeState;
-      // upperBodyLayer take priority for expression
-      const upperBodyLayer = anim.layers.find((layer) => layer.name === 'upperBodyLayer');
-      if (upperBodyLayer) activeState = upperBodyLayer.activeState;
+      let activeState: string | undefined;
+
+      // Use specified layer or default to baseLayer
+      if (vrmAnim.vrmaExpressionLayerName) {
+        const targetLayer = vrmAnim.layers.find(
+          (layer) => layer.name === vrmAnim.vrmaExpressionLayerName,
+        );
+        activeState = targetLayer?.activeState;
+      } else {
+        activeState = vrmAnim.baseLayer?.activeState;
+      }
 
       if (activeState !== resource.name) return;
 

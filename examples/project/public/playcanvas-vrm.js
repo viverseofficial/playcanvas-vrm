@@ -920,16 +920,21 @@ const assignAnimation = (entity, resource) => {
 };
 function bindVRMAExpression(entity, resource, animEntity) {
   const listenerEntity = animEntity ?? entity;
-  if (listenerEntity.anim) {
-    listenerEntity.anim.on(`anim-track:${resource.name}-start`, () => {
+  const vrmAnim = listenerEntity.anim;
+  if (vrmAnim) {
+    vrmAnim.on(`anim-track:${resource.name}-start`, () => {
       var _a, _b, _c;
-      const anim = listenerEntity.anim;
-      if (!anim)
+      if (!vrmAnim)
         return;
-      let activeState = (_a = anim.baseLayer) == null ? void 0 : _a.activeState;
-      const upperBodyLayer = anim.layers.find((layer) => layer.name === "upperBodyLayer");
-      if (upperBodyLayer)
-        activeState = upperBodyLayer.activeState;
+      let activeState;
+      if (vrmAnim.vrmaExpressionLayerName) {
+        const targetLayer = vrmAnim.layers.find(
+          (layer) => layer.name === vrmAnim.vrmaExpressionLayerName
+        );
+        activeState = targetLayer == null ? void 0 : targetLayer.activeState;
+      } else {
+        activeState = (_a = vrmAnim.baseLayer) == null ? void 0 : _a.activeState;
+      }
       if (activeState !== resource.name)
         return;
       const hasCustom = (((_b = resource.expression) == null ? void 0 : _b.custom.size) ?? 0) > 0;
