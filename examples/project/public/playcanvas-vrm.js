@@ -4329,15 +4329,20 @@ const importScript = (pcRef) => {
       super(...arguments);
       this.autoInitialize = true;
       this.materialMappings = [];
-      this._mToonInitialized = false;
     }
     initialize() {
-      if (this.autoInitialize)
-        this._toggleEnabled(true);
+      this._initializeMtoon();
+      this._toggleEnabled(this.autoInitialize);
       this.entity.on("toggle-mtoon", this._toggleEnabled, this);
       this.on("destroy", () => {
         this.entity.off("toggle-mtoon", this._toggleEnabled, this);
       });
+    }
+    _initializeMtoon() {
+      this._convertVRMMtoonMaterials(pcRef, this.asset);
+      const mtoonLoader = new VRMMtoonLoader(this.app, pcRef, this.asset);
+      const materialMappings = mtoonLoader.instantiated(this.entity);
+      this.materialMappings = materialMappings;
     }
     _toggleEnabled(isActive) {
       if (isActive) {
@@ -4347,23 +4352,19 @@ const importScript = (pcRef) => {
       }
     }
     _activateMtoon() {
-      if (this._mToonInitialized) {
-        this.materialMappings.forEach(({ meshInstance, shaderMaterial }) => {
-          meshInstance.material = shaderMaterial;
-          meshInstance.material.update();
-        });
-      } else {
-        this._convertVRMMtoonMaterials(pcRef, this.asset);
-        const mtoonLoader = new VRMMtoonLoader(this.app, pcRef, this.asset);
-        const materialMappings = mtoonLoader.instantiated(this.entity);
-        this.materialMappings = materialMappings;
-        this._mToonInitialized = true;
-      }
+      this.materialMappings.forEach(({ meshInstance, shaderMaterial }) => {
+        meshInstance.material = shaderMaterial;
+        meshInstance.material.update();
+        if (shaderMaterial.isOutline)
+          meshInstance.visible = true;
+      });
     }
     _deactivateMtoon() {
-      this.materialMappings.forEach(({ meshInstance, sourceMaterial }) => {
+      this.materialMappings.forEach(({ meshInstance, sourceMaterial, shaderMaterial }) => {
         meshInstance.material = sourceMaterial;
         meshInstance.material.update();
+        if (shaderMaterial.isOutline)
+          meshInstance.visible = false;
       });
     }
     _convertVRMMtoonMaterials(pcRef2, asset) {

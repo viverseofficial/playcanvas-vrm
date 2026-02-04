@@ -11,15 +11,22 @@ export const importScript = (pcRef: typeof pc) => {
     asset!: pc.Asset;
     autoInitialize: boolean = true;
     materialMappings: MtoonMaterialMapping[] = [];
-    private _mToonInitialized: boolean = false;
 
     initialize() {
-      if (this.autoInitialize) this._toggleEnabled(true);
+      this._initializeMtoon();
+      this._toggleEnabled(this.autoInitialize);
       this.entity.on('toggle-mtoon', this._toggleEnabled, this);
 
       this.on('destroy', () => {
         this.entity.off('toggle-mtoon', this._toggleEnabled, this);
       });
+    }
+
+    private _initializeMtoon() {
+      this._convertVRMMtoonMaterials(pcRef, this.asset);
+      const mtoonLoader = new VRMMtoonLoader(this.app, pcRef, this.asset);
+      const materialMappings = mtoonLoader.instantiated(this.entity);
+      this.materialMappings = materialMappings;
     }
 
     private _toggleEnabled(isActive: boolean) {
@@ -31,24 +38,18 @@ export const importScript = (pcRef: typeof pc) => {
     }
 
     private _activateMtoon() {
-      if (this._mToonInitialized) {
-        this.materialMappings.forEach(({ meshInstance, shaderMaterial }) => {
-          meshInstance.material = shaderMaterial;
-          meshInstance.material.update();
-        });
-      } else {
-        this._convertVRMMtoonMaterials(pcRef, this.asset);
-        const mtoonLoader = new VRMMtoonLoader(this.app, pcRef, this.asset);
-        const materialMappings = mtoonLoader.instantiated(this.entity);
-        this.materialMappings = materialMappings;
-        this._mToonInitialized = true;
-      }
+      this.materialMappings.forEach(({ meshInstance, shaderMaterial }) => {
+        meshInstance.material = shaderMaterial;
+        meshInstance.material.update();
+        if (shaderMaterial.isOutline) meshInstance.visible = true;
+      });
     }
 
     private _deactivateMtoon() {
-      this.materialMappings.forEach(({ meshInstance, sourceMaterial }) => {
+      this.materialMappings.forEach(({ meshInstance, sourceMaterial, shaderMaterial }) => {
         meshInstance.material = sourceMaterial;
         meshInstance.material.update();
+        if (shaderMaterial.isOutline) meshInstance.visible = false;
       });
     }
 
