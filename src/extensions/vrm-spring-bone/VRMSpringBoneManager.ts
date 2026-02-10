@@ -5,10 +5,6 @@ import { ExtensionManagerNameType } from '../extensions';
 import { VRMSpringBoneColliderGroup } from './vrm-spring-bone';
 import { VRMSpringBoneJoint } from './VRMSpringBoneJoint';
 
-interface IColliderNode extends pc.Entity {
-  updateWorldMatrix(): void;
-}
-
 export class VRMSpringBoneManager {
   public managerName: ExtensionManagerNameType = 'springBone';
   private _joints = new Set<VRMSpringBoneJoint>();
@@ -17,7 +13,7 @@ export class VRMSpringBoneManager {
 
   // Strength control properties
   private _limitedStrength: number = 0.3; // Strength when limited
-  private _normalStrength: number = 1.0;  // Normal strength
+  private _normalStrength: number = 1.0; // Normal strength
 
   /**
    * An ordered list of ancestors of all the SpringBone joints. Before the
@@ -30,10 +26,6 @@ export class VRMSpringBoneManager {
 
   private _objectSpringBonesMap = new Map<pc.GraphNode, Set<VRMSpringBoneJoint>>();
   private _isSortedJointsDirty = false;
-
-  constructor() {
-    this._relevantChildrenUpdated = this._relevantChildrenUpdated.bind(this);
-  }
 
   get joints() {
     return this._joints;
@@ -55,20 +47,6 @@ export class VRMSpringBoneManager {
       });
     });
     return Array.from(set);
-  }
-
-  private _relevantChildrenUpdated(object: pc.GraphNode): boolean {
-    // if the object has attached springbone, halt the traversal
-    if ((this._objectSpringBonesMap.get(object)?.size ?? 0) > 0) {
-      return true;
-    }
-
-    // otherwise update its world matrix
-    const colliderObject = object as IColliderNode;
-    if (colliderObject.updateWorldMatrix) {
-      colliderObject.updateWorldMatrix();
-    }
-    return false;
   }
 
   addJoint(joint: VRMSpringBoneJoint): void {
@@ -207,13 +185,9 @@ export class VRMSpringBoneManager {
     const currentStrength = isLimited ? this._limitedStrength : this._normalStrength;
 
     for (let i = 0; i < this._sortedJoints.length; i++) {
-      // update the springbone
+      // update the spring bone
       const springBone = this._sortedJoints[i];
       springBone.update(delta, currentStrength);
-
-      // update children world matrices
-      // it is required when the spring bone chain is sparse
-      traverseChildrenUntilConditionMet(springBone.bone, this._relevantChildrenUpdated);
     }
   }
 }

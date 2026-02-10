@@ -1,4 +1,5 @@
 import * as pc from 'playcanvas';
+import { VRMSpringBoneColliderType } from './VRMSpringBoneCollider';
 
 export interface VRMSpringBoneJointSettings {
   /**
@@ -19,7 +20,7 @@ export interface VRMSpringBoneColliderGroup {
   /**
    * The colliders of the collider group.
    */
-  colliders: any[];
+  colliders: VRMSpringBoneColliderType[];
 
   /**
    * The name of the collider.

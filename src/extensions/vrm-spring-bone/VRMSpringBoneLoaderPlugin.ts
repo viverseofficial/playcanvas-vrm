@@ -1,6 +1,5 @@
 import * as pc from 'playcanvas';
 import { POSSIBLE_SPEC_VERSIONS } from '../vrm-map-list';
-import { fromArray } from '../../math-utils';
 import { VRMSpringBoneManager } from './VRMSpringBoneManager';
 import { VRMSpringBoneColliderShapeSphere } from './VRMSpringBoneColliderShapeSphere';
 import { VRMSpringBoneColliderShapeCapsule } from './VRMSpringBoneColliderShapeCapsule';
@@ -9,6 +8,7 @@ import type * as V1SpringBoneSchema from '../../types/types-vrmc-springbone-1.0'
 import type * as V0VRM from '../../types/types-vrm-0.0';
 import { VRMSpringBoneJointSettings, VRMSpringBoneColliderGroup } from './vrm-spring-bone';
 import { createVRMSpringBoneCollider } from './VRMSpringBoneCollider';
+import { GLTF as GLTFSchema } from '../../types/gltf';
 
 export class VRMSpringBoneLoaderPlugin {
   static EXTENSION_NAME = 'VRMC_springBone';
@@ -24,10 +24,14 @@ export class VRMSpringBoneLoaderPlugin {
 
   import() {
     const resource = this.asset.resource as { data: { gltf: unknown } };
-    const gltf = resource.data.gltf;
+    const gltf = resource.data.gltf as GLTFSchema.IGLTF | undefined;
     const data = resource.data;
 
-    const v1Result = this._v1Import(gltf, data);
+    if (!gltf) {
+      return null;
+    }
+
+    const v1Result = this._v1Import(gltf);
     if (v1Result) {
       return v1Result;
     }
@@ -40,7 +44,7 @@ export class VRMSpringBoneLoaderPlugin {
     return null;
   }
 
-  _v1Import(gltf: any, resourceData: any) {
+  _v1Import(gltf: GLTFSchema.IGLTF): VRMSpringBoneManager | null {
     // early abort if it doesn't use spring bones
     const isSpringBoneUsed =
       gltf.extensionsUsed?.indexOf(VRMSpringBoneLoaderPlugin.EXTENSION_NAME) !== -1;
@@ -48,15 +52,16 @@ export class VRMSpringBoneLoaderPlugin {
       return null;
     }
 
-    const isVRMUsed = gltf?.extensionsUsed.indexOf('VRMC_vrm') !== -1;
+    const isVRMUsed = gltf?.extensionsUsed?.indexOf('VRMC_vrm') !== -1;
     if (!isVRMUsed) {
       return null;
     }
 
     const manager = new VRMSpringBoneManager();
-    const gltfNodes = gltf?.nodes;
 
-    const extension = gltf.extensions?.[VRMSpringBoneLoaderPlugin.EXTENSION_NAME];
+    const extension = gltf.extensions?.[VRMSpringBoneLoaderPlugin.EXTENSION_NAME] as
+      | V1SpringBoneSchema.VRMCSpringBone
+      | undefined;
     if (!extension) {
       return null;
     }
@@ -70,7 +75,7 @@ export class VRMSpringBoneLoaderPlugin {
       return null;
     }
 
-    const extensionColliders: V1SpringBoneSchema.SpringBoneCollider[] = extension.colliders;
+    const extensionColliders: V1SpringBoneSchema.SpringBoneCollider[] = extension.colliders || [];
     const colliders = extensionColliders?.map((schemaCollider, iCollider) => {
       // 1. schemaColliderGroup.node will map to index of gltfNodes
       // 2. VRM need to have gltf node index on the tags. Please check addExtensionTagsToRenderEntity function
@@ -87,17 +92,14 @@ export class VRMSpringBoneLoaderPlugin {
       if (schemaShape) {
         if (schemaShape.sphere) {
           return this._importSphereCollider(node, {
-            offset: fromArray(new this._pcRef.Vec3(), schemaShape.sphere.offset ?? [0.0, 0.0, 0.0]),
+            offset: new this._pcRef.Vec3().fromArray(schemaShape.sphere.offset ?? [0.0, 0.0, 0.0]),
             radius: schemaShape.sphere.radius ?? 0.0,
           });
         } else if (schemaShape.capsule) {
           return this._importCapsuleCollider(node, {
-            offset: fromArray(
-              new this._pcRef.Vec3(),
-              schemaShape.capsule.offset ?? [0.0, 0.0, 0.0],
-            ),
+            offset: new this._pcRef.Vec3().fromArray(schemaShape.capsule.offset ?? [0.0, 0.0, 0.0]),
             radius: schemaShape.capsule.radius ?? 0.0,
-            tail: fromArray(new this._pcRef.Vec3(), schemaShape.capsule.tail ?? [0.0, 0.0, 0.0]),
+            tail: new this._pcRef.Vec3().fromArray(schemaShape.capsule.tail ?? [0.0, 0.0, 0.0]),
           });
         }
       }
@@ -106,7 +108,7 @@ export class VRMSpringBoneLoaderPlugin {
     });
 
     const extensionColliderGroups: V1SpringBoneSchema.SpringBoneColliderGroup[] =
-      extension.colliderGroups;
+      extension.colliderGroups || [];
     const colliderGroups = extensionColliderGroups?.map((schemaColliderGroup, iColliderGroup) => {
       const cols = (schemaColliderGroup.colliders ?? []).map((iCollider) => {
         const col = colliders?.[iCollider];
@@ -123,7 +125,7 @@ export class VRMSpringBoneLoaderPlugin {
       };
     });
 
-    const extensionSprings: V1SpringBoneSchema.SpringBoneSpring[] = extension.springs;
+    const extensionSprings: V1SpringBoneSchema.SpringBoneSpring[] = extension.springs || [];
     extensionSprings.forEach((schemaSpring, iSpring) => {
       const schemaJoints = schemaSpring.joints;
       // prepare colliders
@@ -139,21 +141,16 @@ export class VRMSpringBoneLoaderPlugin {
         return group;
       });
 
-      // Need to use original resourceData when gltf loaded, because entity will effected when you entered room
-      const center =
-        schemaSpring.center != null ? resourceData.nodes[schemaSpring.center] : undefined;
-
+      const center = this.entity.findByTag(`node_${schemaSpring.center}`)?.[0];
       let prevSchemaJoint: V1SpringBoneSchema.SpringBoneJoint | undefined;
 
       schemaJoints.forEach((schemaJoint) => {
         if (prevSchemaJoint) {
           // prepare node
           const nodeIndex = prevSchemaJoint.node;
-          const rootNode = gltfNodes[nodeIndex];
-          const node = this.entity.findByName(rootNode.name)!;
+          const node = this.entity.findByTag(`node_${nodeIndex}`)?.[0];
           const childIndex = schemaJoint.node;
-          const rootChild = gltfNodes[childIndex];
-          const child = this.entity.findByName(rootChild.name);
+          const child = this.entity.findByTag(`node_${childIndex}`)?.[0];
 
           // prepare setting
           const setting = {
@@ -163,7 +160,7 @@ export class VRMSpringBoneLoaderPlugin {
             stiffness: prevSchemaJoint.stiffness,
             gravityDir:
               prevSchemaJoint.gravityDir != null
-                ? fromArray(new this._pcRef.Vec3(), prevSchemaJoint.gravityDir)
+                ? new this._pcRef.Vec3().fromArray(prevSchemaJoint.gravityDir)
                 : undefined,
           };
 
@@ -183,11 +180,15 @@ export class VRMSpringBoneLoaderPlugin {
     // init spring bones
     manager.setInitState();
 
+    // Debug: Uncomment to visualize joints
+    // import { addJointDebugVisualization } from './debug';
+    // addJointDebugVisualization(this._pcRef, manager);
+
     return manager;
   }
 
-  _v0Import(gltf: any, resourceData: any) {
-    const extension = gltf.extensions?.VRM;
+  _v0Import(gltf: GLTFSchema.IGLTF, resourceData: any) {
+    const extension = gltf.extensions?.VRM as V0VRM.VRM | undefined;
 
     // early abort if it doesn't use vrm
     const isVRMUsed = gltf.extensionsUsed?.indexOf('VRM') !== -1;
@@ -314,6 +315,10 @@ export class VRMSpringBoneLoaderPlugin {
 
     // init spring bones
     manager.setInitState();
+
+    // Debug: Uncomment to visualize joints
+    // import { addJointDebugVisualization } from './debug';
+    // addJointDebugVisualization(this._pcRef, manager);
 
     return manager;
   }

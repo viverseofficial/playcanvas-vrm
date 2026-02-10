@@ -8,7 +8,7 @@ export const importScript = (pcRef: typeof pc) => {
     springBoneManager!: VRMSpringBoneManager | null;
     activeSpringBone: boolean = true;
     isLimitedStrength: boolean = false;
-    updateInterval: number = 1 / 60;
+    updateInterval: number = 1 / 90;
     timeSinceLastUpdate: number = 0;
 
     initialize() {
@@ -57,6 +57,6 @@ export const importScript = (pcRef: typeof pc) => {
 
   VrmSpringBone.attributes.add('updateInterval', {
     type: 'number',
-    default: 1 / 60, // 60 FPS
+    default: 1 / 90, // 90 FPS
   });
 };
