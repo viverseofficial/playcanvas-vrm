@@ -43,13 +43,9 @@ export class Timer {
   }
 
   pause() {
-    if (this.handle) {
-      this.isPausing = true;
-
-      if (this.handle.id) {
-        delete this._timers[this.handle.id];
-      }
-    }
+    this.isPausing = true;
+    this.handle = null;
+    this._timers = {};
   }
 
   update(dt: number) {

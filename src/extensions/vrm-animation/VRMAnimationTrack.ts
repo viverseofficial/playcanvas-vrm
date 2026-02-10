@@ -98,7 +98,9 @@ export class VRMAnimationTrack {
     }
 
     // Fire expression
-    const events = new this.pcRef.AnimEvents([{ name: `anim-track:${this.stateName}`, time: 0 }]);
+    const events = new this.pcRef.AnimEvents([
+      { name: `anim-track:${this.stateName}-start`, time: 0 },
+    ]);
 
     return new this.pcRef.AnimTrack(
       this.name,

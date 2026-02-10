@@ -27,6 +27,10 @@ export interface IAnimExtraSettings {
   negativeZAnimNames?: string[];
 }
 
+export interface VRMAnimComponent extends pc.AnimComponent {
+  vrmaExpressionLayerName?: string;
+}
+
 export interface IVrmaTrack {
   curve: pc.AnimCurve;
   input: pc.AnimData; //each input represents a sequence a keyframe times

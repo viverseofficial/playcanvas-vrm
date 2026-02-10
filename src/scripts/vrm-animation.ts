@@ -8,6 +8,7 @@ import {
   IAnimationAsset,
   IAnimationResource,
   IAnimExtraSettings,
+  VRMAnimComponent,
 } from '../extensions/vrm-animation/vrm-animation-interfaces';
 import { VRMAExpression } from '../extensions/vrm-animation/VRMAExpression';
 
@@ -134,37 +135,37 @@ export function bindVRMAExpression(
   entity: pc.Entity,
   resource: IAnimationResource,
   animEntity?: pc.Entity,
-  // { animEntity, transitionInterval = 0.0 }: { animEntity?: pc.Entity; transitionInterval: number },
 ) {
   const listenerEntity = animEntity ?? entity;
+  const vrmAnim = listenerEntity.anim as VRMAnimComponent | undefined;
 
-  if (listenerEntity.anim) {
-    listenerEntity.anim.on(`anim-track:${resource.name}`, () => {
-      entity.fire('vrma-expression:clear-all');
+  if (vrmAnim) {
+    vrmAnim.on(`anim-track:${resource.name}-start`, () => {
+      if (!vrmAnim) return;
 
-      // initialize active state and transition interval with baseLayer
-      let upperBodyActiveState = listenerEntity.anim?.baseLayer?.activeState;
-      let transitionInterval =
-        (listenerEntity.anim as any).baseLayer._controller._totalTransitionTime ?? 0.0;
+      let activeState: string | undefined;
 
-      // update active state and transition interval if there is upperBodyLayer
-      listenerEntity.anim?.layers.forEach((layer) => {
-        if (layer.name === 'upperBodyLayer') {
-          upperBodyActiveState = (layer as any)._controller._activeStateName;
-          transitionInterval = (layer as any)._controller._totalTransitionTime;
-        }
-      });
-
-      if (resource.expression) {
-        entity.fire(`vrma-expression:start`, resource.expression);
-      } else if (
-        upperBodyActiveState === resource.name &&
-        upperBodyActiveState !== (listenerEntity.anim as any).lastFrameUpperBodyActiveState
-      ) {
-        entity.fire(`vrm-expression:reset`, transitionInterval);
+      // Use specified layer or default to baseLayer
+      if (vrmAnim.vrmaExpressionLayerName) {
+        const targetLayer = vrmAnim.layers.find(
+          (layer) => layer.name === vrmAnim.vrmaExpressionLayerName,
+        );
+        activeState = targetLayer?.activeState;
+      } else {
+        activeState = vrmAnim.baseLayer?.activeState;
       }
 
-      (listenerEntity.anim as any).lastFrameUpperBodyActiveState = upperBodyActiveState;
+      if (activeState !== resource.name) return;
+
+      const hasCustom = (resource.expression?.custom.size ?? 0) > 0;
+      const hasPreset = (resource.expression?.preset.size ?? 0) > 0;
+      const hasExpression = hasCustom || hasPreset;
+
+      if (hasExpression) {
+        entity.fire(`vrm-expression:vrma-start`, resource.expression);
+      } else {
+        entity.fire(`vrm-expression:vrma-reset`);
+      }
     });
   }
 }
