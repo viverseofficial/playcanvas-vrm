@@ -1,11 +1,17 @@
 import * as pc from 'playcanvas';
 import { GLTF as GLTFSchema } from '../../../types/gltf';
-import { createVRMCMtoonMaterial } from './vrmc-mtoon-material';
+import { createVRMCMtoonMaterial, VRMCMtoonMaterialType } from './vrmc-mtoon-material';
 import { EXTENSION_VRMC_MATERIALS_MTOON, MToonMaterialOutlineWidthMode } from './constants';
 
 const extensionVRMCName = EXTENSION_VRMC_MATERIALS_MTOON;
 
 type TextureAsset = pc.Asset & { resource: pc.Texture };
+
+export type MtoonMaterialMapping = {
+  meshInstance: pc.MeshInstance;
+  sourceMaterial: pc.StandardMaterial;
+  shaderMaterial: VRMCMtoonMaterialType;
+};
 
 export type GltfAssetResource = {
   data: {
@@ -30,19 +36,25 @@ export class VRMMtoonLoader {
     const resource = this.asset.resource as GltfAssetResource;
     if (!resource?.data?.gltf) {
       console.error('applyMaterialMtoon: gltf is undefined');
-      return;
+      return [];
     }
 
     const gltf: GLTFSchema.IGLTF = resource.data.gltf;
-    const outlineMaterials = this._applyVRMCOutlineShader(entity, gltf);
-    const mtoonMaterials = this._applyVRMCMtoonShader(entity, gltf);
+    const materialMappings: MtoonMaterialMapping[] = [];
 
-    return [...outlineMaterials.values(), ...mtoonMaterials.values()];
+    this._applyVRMCOutlineShader(entity, gltf, materialMappings);
+    this._applyVRMCMtoonShader(entity, gltf, materialMappings);
+
+    return materialMappings;
   }
 
-  private _applyVRMCOutlineShader(entity: pc.Entity, gltf: GLTFSchema.IGLTF) {
+  private _applyVRMCOutlineShader(
+    entity: pc.Entity,
+    gltf: GLTFSchema.IGLTF,
+    materialMappings: MtoonMaterialMapping[],
+  ) {
     const renders = entity.findComponents('render');
-    const outlineShaderMaterials = new Map<pc.StandardMaterial, any>();
+    const outlineShaderMaterials = new Map<pc.StandardMaterial, VRMCMtoonMaterialType>();
 
     renders.forEach((renderComponent) => {
       const render = renderComponent as pc.RenderComponent;
@@ -98,14 +110,22 @@ export class VRMMtoonLoader {
         }
 
         meshInstances.push(shaderMeshInstance);
+
+        materialMappings.push({
+          meshInstance: shaderMeshInstance,
+          sourceMaterial: material,
+          shaderMaterial,
+        });
       });
     });
-
-    return outlineShaderMaterials;
   }
 
-  private _applyVRMCMtoonShader(entity: pc.Entity, gltf: GLTFSchema.IGLTF) {
-    const shaderMaterials = new Map<pc.StandardMaterial, any>();
+  private _applyVRMCMtoonShader(
+    entity: pc.Entity,
+    gltf: GLTFSchema.IGLTF,
+    materialMappings: MtoonMaterialMapping[],
+  ) {
+    const shaderMaterials = new Map<pc.StandardMaterial, VRMCMtoonMaterialType>();
 
     const renders = entity.findComponents('render');
     renders.forEach((renderComponent) => {
@@ -150,10 +170,14 @@ export class VRMMtoonLoader {
           shaderMaterials.set(material, shaderMaterial);
         }
 
+        materialMappings.push({
+          meshInstance,
+          sourceMaterial: material,
+          shaderMaterial,
+        });
+
         meshInstance.material = shaderMaterial;
       });
     });
-
-    return shaderMaterials;
   }
 }
