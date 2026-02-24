@@ -19,7 +19,7 @@ export default defineConfig(() => {
           entryRoot: 'src',
           outputDir: 'dist',
           exclude: ['examples', 'dist'],
-          rollupTypes: true,
+          rollupTypes: false,
         }),
       mkcert(),
       banner(`/**\n * name: ${pkg.name}\n * version: v${pkg.version}\n */`),

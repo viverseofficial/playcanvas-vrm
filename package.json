@@ -8,7 +8,7 @@
     "dist"
   ],
   "main": "dist/playcanvas-vrm.js",
-  "types": "dist/playcanvas-vrm.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "watch": "nodemon --watch src --ext '*' --exec 'pnpm build' --verbose",
     "build": "tsc && pnpm run build:js && pnpm run build:min",
@@ -23,7 +23,7 @@
   "exports": {
     ".": {
       "import": "./dist/playcanvas-vrm.js",
-      "types": "./dist/playcanvas-vrm.d.ts"
+      "types": "./dist/index.d.ts"
     }
   },
   "devDependencies": {
