@@ -14,11 +14,11 @@ export const importScript = (pcRef: typeof pc) => {
 
     initialize() {
       this._initializeMtoon();
-      this._toggleEnabled(this.autoInitialize);
-      this.entity.on('toggle-mtoon', this._toggleEnabled, this);
+      this._setEnabled(this.autoInitialize);
+      this.entity.on('vrm-mtoon:set-enabled', this._setEnabled, this);
 
       this.on('destroy', () => {
-        this.entity.off('toggle-mtoon', this._toggleEnabled, this);
+        this.entity.off('vrm-mtoon:set-enabled', this._setEnabled, this);
       });
     }
 
@@ -29,12 +29,14 @@ export const importScript = (pcRef: typeof pc) => {
       this.materialMappings = materialMappings;
     }
 
-    private _toggleEnabled(isActive: boolean) {
-      if (isActive) {
+    private _setEnabled(enabled: boolean) {
+      if (enabled) {
         this._activateMtoon();
       } else {
         this._deactivateMtoon();
       }
+
+      this.entity.fire('vrm-mtoon:materials-changed', enabled);
     }
 
     private _activateMtoon() {
