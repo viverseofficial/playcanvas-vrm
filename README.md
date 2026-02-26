@@ -58,9 +58,18 @@ pnpm build
 
 This generates both unminified and minified versions in `dist/`.
 
-## Installation & Usage
+## Installation
+
+Install the package using pnpm:
+
+```bash
+pnpm add @viverse/playcanvas-vrm@github:viverseofficial/playcanvas-vrm
+```
+
+## Usage
 
 ### Method A: ES Module Import (Recommended for npm packages)
+Import the library and use the provided classes and functions:
 
 ```typescript
 import {
@@ -75,6 +84,7 @@ import {
 ```
 
 ### Method B: Script Tag (CDN)
+CDN hosting is not currently available. Please build the library and host the script yourself or use a local copy.
 
 Load the script and access via `window.VRMLoader`:
 
