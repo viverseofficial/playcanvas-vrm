@@ -16,21 +16,23 @@ export const importScript = (pcRef: typeof pc) => {
       this.springBoneManager = springBoneLoader.import();
       this.isLimitedStrength = false;
 
-      this.entity.on('toggle-spring-bone', this.toggleSpringBone, this);
-      this.entity.on('toggle-strength-limit', this.toggleStrengthLimit, this);
+      this.entity.on('vrm-spring-bone:set-enabled ', this.setEnabled, this);
+      this.entity.on('toggle-spring-bone', this.setEnabled, this); // deprecated
+      this.entity.on('vrm-spring-bone:set-strength-limit', this.setStrengthLimit, this);
 
       this.on('destroy', () => {
-        this.entity.off('toggle-spring-bone', this.toggleSpringBone, this);
-        this.entity.off('toggle-strength-limit', this.toggleStrengthLimit, this);
+        this.entity.on('vrm-spring-bone:set-enabled ', this.setEnabled, this);
+        this.entity.off('toggle-spring-bone', this.setEnabled, this); // deprecated
+        this.entity.off('vrm-spring-bone:set-strength-limit', this.setStrengthLimit, this);
       });
     }
 
-    toggleSpringBone(isActive: boolean) {
-      this.activeSpringBone = isActive;
+    setEnabled(enabled: boolean) {
+      this.activeSpringBone = enabled;
     }
 
-    toggleStrengthLimit(isLimited: boolean) {
-      this.isLimitedStrength = isLimited;
+    setStrengthLimit(limited: boolean) {
+      this.isLimitedStrength = limited;
     }
 
     update(dt: number) {

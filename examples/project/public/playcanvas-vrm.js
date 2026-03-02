@@ -1588,13 +1588,15 @@ const importScript$2 = (pcRef) => {
       this.talkTimer = new Timer("talk");
       this.startBlink();
       this.entity.on("vrm-expression:start-emotion", this.startEmotion, this);
-      this.entity.on("audio:is-talking-change", this.onIsTalkingChange, this);
       this.entity.on("vrm-expression:vrma-start", this._startVRMAExpression, this);
+      this.entity.on("vrm-expression:talking-state-changed", this.onTalkingStateChanged, this);
+      this.entity.on("audio:is-talking-change", this.onTalkingStateChanged, this);
       this.on("destroy", () => {
         this.entity.off("vrm-expression:start-emotion", this.startEmotion, this);
-        this.entity.off("audio:is-talking-change", this.onIsTalkingChange, this);
         this.entity.off("vrm-expression:vrma-start", this._startVRMAExpression, this);
         this.entity.off("vrm-expression:vrma-reset", this._resetVRMAExpression, this);
+        this.entity.off("vrm-expression:talking-state-changed", this.onTalkingStateChanged, this);
+        this.entity.off("audio:is-talking-change", this.onTalkingStateChanged, this);
       });
     }
     // Specific Automatic Start Expressions
@@ -1635,7 +1637,7 @@ const importScript$2 = (pcRef) => {
         this.talkTimer.add(restartSecond, this.startTalking, this);
       }
     }
-    onIsTalkingChange(state) {
+    onTalkingStateChanged(state) {
       const timerAvailable = this.talkTimer.isPausing || !this.talkTimer.handle;
       if (state && timerAvailable) {
         this.startTalking();
@@ -2364,18 +2366,20 @@ const importScript$1 = (pcRef) => {
       const springBoneLoader = new VRMSpringBoneLoaderPlugin(pcRef, this.asset, this.entity);
       this.springBoneManager = springBoneLoader.import();
       this.isLimitedStrength = false;
-      this.entity.on("toggle-spring-bone", this.toggleSpringBone, this);
-      this.entity.on("toggle-strength-limit", this.toggleStrengthLimit, this);
+      this.entity.on("vrm-spring-bone:set-enabled ", this.setEnabled, this);
+      this.entity.on("toggle-spring-bone", this.setEnabled, this);
+      this.entity.on("vrm-spring-bone:set-strength-limit", this.setStrengthLimit, this);
       this.on("destroy", () => {
-        this.entity.off("toggle-spring-bone", this.toggleSpringBone, this);
-        this.entity.off("toggle-strength-limit", this.toggleStrengthLimit, this);
+        this.entity.on("vrm-spring-bone:set-enabled ", this.setEnabled, this);
+        this.entity.off("toggle-spring-bone", this.setEnabled, this);
+        this.entity.off("vrm-spring-bone:set-strength-limit", this.setStrengthLimit, this);
       });
     }
-    toggleSpringBone(isActive) {
-      this.activeSpringBone = isActive;
+    setEnabled(enabled) {
+      this.activeSpringBone = enabled;
     }
-    toggleStrengthLimit(isLimited) {
-      this.isLimitedStrength = isLimited;
+    setStrengthLimit(limited) {
+      this.isLimitedStrength = limited;
     }
     update(dt) {
       if (!this.springBoneManager || !this.activeSpringBone)
@@ -4140,10 +4144,10 @@ const importScript = (pcRef) => {
     }
     initialize() {
       this._initializeMtoon();
-      this._toggleEnabled(this.autoInitialize);
-      this.entity.on("toggle-mtoon", this._toggleEnabled, this);
+      this._setEnabled(this.autoInitialize);
+      this.entity.on("vrm-mtoon:set-enabled", this._setEnabled, this);
       this.on("destroy", () => {
-        this.entity.off("toggle-mtoon", this._toggleEnabled, this);
+        this.entity.off("vrm-mtoon:set-enabled", this._setEnabled, this);
       });
     }
     _initializeMtoon() {
@@ -4152,12 +4156,13 @@ const importScript = (pcRef) => {
       const materialMappings = mtoonLoader.instantiated(this.entity);
       this.materialMappings = materialMappings;
     }
-    _toggleEnabled(isActive) {
-      if (isActive) {
+    _setEnabled(enabled) {
+      if (enabled) {
         this._activateMtoon();
       } else {
         this._deactivateMtoon();
       }
+      this.entity.fire("vrm-mtoon:materials-changed", enabled);
     }
     _activateMtoon() {
       this.materialMappings.forEach(({ meshInstance, shaderMaterial }) => {

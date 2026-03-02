@@ -27,14 +27,17 @@ export const importScript = (pcRef: typeof pc) => {
       this.startBlink();
 
       this.entity.on('vrm-expression:start-emotion', this.startEmotion, this);
-      this.entity.on('audio:is-talking-change', this.onIsTalkingChange, this);
       this.entity.on('vrm-expression:vrma-start', this._startVRMAExpression, this);
+
+      this.entity.on('vrm-expression:talking-state-changed', this.onTalkingStateChanged, this);
+      this.entity.on('audio:is-talking-change', this.onTalkingStateChanged, this); // deprecated
 
       this.on('destroy', () => {
         this.entity.off('vrm-expression:start-emotion', this.startEmotion, this);
-        this.entity.off('audio:is-talking-change', this.onIsTalkingChange, this);
         this.entity.off('vrm-expression:vrma-start', this._startVRMAExpression, this);
         this.entity.off('vrm-expression:vrma-reset', this._resetVRMAExpression, this);
+        this.entity.off('vrm-expression:talking-state-changed', this.onTalkingStateChanged, this);
+        this.entity.off('audio:is-talking-change', this.onTalkingStateChanged, this); // deprecated
       });
     }
 
@@ -82,7 +85,7 @@ export const importScript = (pcRef: typeof pc) => {
       }
     }
 
-    onIsTalkingChange(state: boolean) {
+    onTalkingStateChanged(state: boolean) {
       const timerAvailable = this.talkTimer.isPausing || !this.talkTimer.handle;
       if (state && timerAvailable) {
         this.startTalking();
