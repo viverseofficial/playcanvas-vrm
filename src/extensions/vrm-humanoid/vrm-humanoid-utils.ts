@@ -120,13 +120,9 @@ export function createFormattedVRMHumanoid(
   }
 
   if (humanBones) {
-    const autoUpdateHumanBones = !!options?.autoUpdateHumanBones;
+    const autoUpdateHumanBones = options?.autoUpdateHumanBones ?? true;
     const humanoid = new VRMHumanoid(pcRef, humanBones, { autoUpdateHumanBones });
-
-    if (VRMC_vrm) {
-      // v1Import
-      renderEntity.addChild(humanoid.normalizedHumanBonesRoot);
-    }
+    renderEntity.addChild(humanoid.normalizedHumanBonesRoot);
     return humanoid;
   }
 

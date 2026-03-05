@@ -64,7 +64,7 @@ export class VRMViverseAnimationTrack {
         (node: pc.GraphNode) => node.name === VRMRigMap.hips,
       );
       if (motionHipsNode) {
-        nodeMotionHipsHeight = motionHipsNode.getPosition().y;
+        nodeMotionHipsHeight = motionHipsNode.getLocalPosition().y;
       }
     }
 

@@ -126,7 +126,7 @@ export class VRMAnimationTrack {
         // Scale animation to match the humanoid
         const animationY = this.vrmAnimation.restHipsPosition.y;
         const humanoidHipsPosition =
-          this.humanoid.rawHumanBones.hips?.node.getPosition() || new this.pcRef.Vec3();
+          this.humanoid.normalizedHumanBones.hips?.node.getLocalPosition() || new this.pcRef.Vec3();
         const humanoidY = humanoidHipsPosition.y;
         const scale = humanoidY / animationY;
         const outputData = origTrack.output.data.map(
