@@ -77,11 +77,9 @@ const animationAssets = [{ stateName: 'Idle', asset: vrmaAsset }];
 **Implementation** (Inside asset load callback)
 ```typescript
 const version = VRMLoader.getVersion(asset);
-const humanoid = VRMLoader.createFormattedVRMHumanoid(pc, asset, rootEntity, {
-    autoUpdateHumanBones: version === 'v1',
-});
+const humanoid = VRMLoader.createFormattedVRMHumanoid(pc, asset, rootEntity);
 
-const animatedEntity = version === 'v1' ? humanoid.normalizedHumanBonesRoot : rootEntity;
+const animatedEntity = humanoid.animatedEntity;
 animatedEntity.addComponent('anim', { activate: true });
 
 const resources = VrmAnimation.createVRMAnimResources(pc, animationAssets, asset, humanoid);

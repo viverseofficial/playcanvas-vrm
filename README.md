@@ -143,15 +143,10 @@ asset.on('load', (asset) => {
   }
   
   // Create humanoid rig
-  const humanoid = VRMLoader.createFormattedVRMHumanoid(pc, asset, rootEntity, {
-    autoUpdateHumanBones: version === 'v1',
-  });
+  const humanoid = VRMLoader.createFormattedVRMHumanoid(pc, asset, rootEntity);
   
   // Add animation component
-  const animatedEntity = version === 'v1' 
-    ? humanoid.normalizedHumanBonesRoot 
-    : rootEntity;
-    
+  const animatedEntity = humanoid.animatedEntity;
   animatedEntity.addComponent('anim', {
     activate: true,
   });

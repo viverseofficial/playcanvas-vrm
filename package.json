@@ -1,6 +1,6 @@
 {
   "name": "@viverseofficial/playcanvas-vrm",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "PlayCanvas VRM library for loading and manipulating VRM models",
   "license": "UNLICENSED",
   "type": "module",

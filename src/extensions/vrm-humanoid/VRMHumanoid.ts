@@ -34,6 +34,10 @@ export class VRMHumanoid {
     return this._normalizedHumanBones.root;
   }
 
+  get animatedEntity() {
+    return this.normalizedHumanBonesRoot;
+  }
+
   /**
    * Return a raw {@link VRMHumanBone} bound to a specified {@link VRMHumanBoneName}.
    *
@@ -78,6 +82,7 @@ export class VRMHumanoid {
    * Update the humanoid component.
    *
    * If {@link autoUpdateHumanBones} is `true`, it transfers the pose of normalized human bones to raw human bones.
+   * Default is `true` to follow the animation set to normalized human bones
    */
   public update(): void {
     if (this.autoUpdateHumanBones) {

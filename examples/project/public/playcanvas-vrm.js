@@ -1,6 +1,6 @@
 /**
  * name: @viverseofficial/playcanvas-vrm
- * version: v1.6.0
+ * version: v1.7.0
  */
 const VRMHumanBoneList = [
   "hips",
@@ -599,7 +599,7 @@ class VRMAnimationTrack {
       const nodeName = (_a = this.humanoid.getNormalizedBoneNode(name)) == null ? void 0 : _a.name;
       if (nodeName != null) {
         const animationY = this.vrmAnimation.restHipsPosition.y;
-        const humanoidHipsPosition = ((_b = this.humanoid.rawHumanBones.hips) == null ? void 0 : _b.node.getPosition()) || new this.pcRef.Vec3();
+        const humanoidHipsPosition = ((_b = this.humanoid.normalizedHumanBones.hips) == null ? void 0 : _b.node.getLocalPosition()) || new this.pcRef.Vec3();
         const humanoidY = humanoidHipsPosition.y;
         const scale = humanoidY / animationY;
         const outputData = origTrack.output.data.map(
@@ -742,7 +742,7 @@ class VRMViverseAnimationTrack {
         (node) => node.name === VRMRigMap.hips
       );
       if (motionHipsNode) {
-        nodeMotionHipsHeight = motionHipsNode.getPosition().y;
+        nodeMotionHipsHeight = motionHipsNode.getLocalPosition().y;
       }
     }
     motionHipsHeight = motionHipsHeight || nodeMotionHipsHeight || 0.855;
@@ -4343,6 +4343,9 @@ class VRMHumanoid {
   get normalizedHumanBonesRoot() {
     return this._normalizedHumanBones.root;
   }
+  get animatedEntity() {
+    return this.normalizedHumanBonesRoot;
+  }
   /**
    * Return a raw {@link VRMHumanBone} bound to a specified {@link VRMHumanBoneName}.
    *
@@ -4383,6 +4386,7 @@ class VRMHumanoid {
    * Update the humanoid component.
    *
    * If {@link autoUpdateHumanBones} is `true`, it transfers the pose of normalized human bones to raw human bones.
+   * Default is `true` to follow the animation set to normalized human bones
    */
   update() {
     if (this.autoUpdateHumanBones) {
@@ -4470,11 +4474,9 @@ function createFormattedVRMHumanoid(pcRef, vrmAsset, renderEntity, options) {
     humanBones = createVRMCHumanBones(schemaHumanoid, vrmAsset, renderEntity);
   }
   if (humanBones) {
-    const autoUpdateHumanBones = !!(options == null ? void 0 : options.autoUpdateHumanBones);
+    const autoUpdateHumanBones = (options == null ? void 0 : options.autoUpdateHumanBones) ?? true;
     const humanoid = new VRMHumanoid(pcRef, humanBones, { autoUpdateHumanBones });
-    if (VRMC_vrm) {
-      renderEntity.addChild(humanoid.normalizedHumanBonesRoot);
-    }
+    renderEntity.addChild(humanoid.normalizedHumanBonesRoot);
     return humanoid;
   }
   return null;

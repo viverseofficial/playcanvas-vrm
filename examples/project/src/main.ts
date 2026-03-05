@@ -45,11 +45,9 @@ const createAvatar = (url: string) => {
       if (version === 'v0') rootEntity.rotateLocal(0, 180, 0);
 
       const humanoid = VRMLoader.createFormattedVRMHumanoid(pc, asset, rootEntity, {
-        autoUpdateHumanBones: version === 'v1',
+        autoUpdateHumanBones: true,
       });
-      const normalizedRootEntity = humanoid.normalizedHumanBonesRoot;
-      const animatedEntity = version === 'v1' ? normalizedRootEntity : rootEntity;
-
+      const animatedEntity = humanoid.animatedEntity;
       animatedEntity.addComponent('anim', {
         activate: true,
       });
@@ -102,7 +100,7 @@ const createAvatar = (url: string) => {
 
 const setupAvatar = async (app: pc.Application) => {
   const { avatarEntity, animatedEntity, asset, humanoid } = await createAvatar(avatarUrl);
-  window.avatar = animatedEntity;
+  window.avatar = avatarEntity;
   createWindowTestAnimation(avatarEntity, animatedEntity, asset, humanoid, VRMLoader);
   app.root.addChild(avatarEntity);
 
