@@ -59,6 +59,8 @@ export class VRMMtoonLoader {
     renders.forEach((renderComponent) => {
       const render = renderComponent as pc.RenderComponent;
       const meshInstances = render.meshInstances;
+      const outlineMeshInstances: pc.MeshInstance[] = [];
+
       meshInstances.forEach((meshInstance) => {
         const material = meshInstance.material as pc.StandardMaterial;
         let shaderMaterial = outlineShaderMaterials.get(material);
@@ -101,7 +103,7 @@ export class VRMMtoonLoader {
         const shaderMeshInstance = new this._pcRef.MeshInstance(
           meshInstance.mesh,
           shaderMaterial,
-          render.entity,
+          meshInstance.node,
         );
 
         if (meshInstance.morphInstance) {
@@ -109,7 +111,7 @@ export class VRMMtoonLoader {
           shaderMeshInstance.morphInstance = morphInstance;
         }
 
-        meshInstances.push(shaderMeshInstance);
+        outlineMeshInstances.push(shaderMeshInstance);
 
         materialMappings.push({
           meshInstance: shaderMeshInstance,
@@ -117,6 +119,27 @@ export class VRMMtoonLoader {
           shaderMaterial,
         });
       });
+
+      if (outlineMeshInstances.length === 0) {
+        return;
+      }
+
+      const outlineEntity = new this._pcRef.Entity(`${render.entity.name}_MToonOutline`);
+      outlineEntity.enabled = false;
+      render.entity.addChild(outlineEntity);
+      outlineEntity.addComponent('render');
+
+      const outlineRender = outlineEntity.render!;
+      outlineRender.layers = [...render.layers];
+      outlineRender.castShadows = render.castShadows;
+      outlineRender.receiveShadows = render.receiveShadows;
+      outlineRender.castShadowsLightmap = render.castShadowsLightmap;
+      outlineRender.lightmapped = render.lightmapped;
+      outlineRender.renderStyle = render.renderStyle;
+      outlineRender.meshInstances = outlineMeshInstances;
+      outlineRender.rootBone = render.rootBone;
+      outlineRender.enabled = render.enabled;
+      outlineEntity.enabled = true;
     });
   }
 

@@ -24,7 +24,6 @@ export default /* glsl */ `
 	vec3 getIBLIrradiance( const in vec3 envMapColor ) {
         return envMapColor.rgb;
 	}
-
     // Point Lights
     #ifdef USE_POINT_LIGHTS
     #ifndef NUM_POINT_LIGHTS
@@ -37,7 +36,10 @@ export default /* glsl */ `
         float decay;
     };
     #if NUM_POINT_LIGHTS > 0
-    uniform PointLight pointLights[NUM_POINT_LIGHTS];
+    uniform vec3 pointLightPositions[NUM_POINT_LIGHTS];
+    uniform vec3 pointLightColors[NUM_POINT_LIGHTS];
+    uniform float pointLightDistances[NUM_POINT_LIGHTS];
+    uniform float pointLightDecays[NUM_POINT_LIGHTS];
     #endif
 
     void getPointLightInfo( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight light ) {
@@ -66,7 +68,13 @@ export default /* glsl */ `
         float penumbraCos;
     };
     #if NUM_SPOT_LIGHTS > 0
-    uniform SpotLight spotLights[NUM_SPOT_LIGHTS];
+    uniform vec3 spotLightPositions[NUM_SPOT_LIGHTS];
+    uniform vec3 spotLightDirections[NUM_SPOT_LIGHTS];
+    uniform vec3 spotLightColors[NUM_SPOT_LIGHTS];
+    uniform float spotLightDistances[NUM_SPOT_LIGHTS];
+    uniform float spotLightDecays[NUM_SPOT_LIGHTS];
+    uniform float spotLightConeCos[NUM_SPOT_LIGHTS];
+    uniform float spotLightPenumbraCos[NUM_SPOT_LIGHTS];
     #endif
 
     void getSpotLightInfo( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight light ) {
@@ -98,7 +106,8 @@ export default /* glsl */ `
         vec3 color;
     };
     #if NUM_DIR_LIGHTS > 0
-        uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+    uniform vec3 directionalLightDirections[NUM_DIR_LIGHTS];
+    uniform vec3 directionalLightColors[NUM_DIR_LIGHTS];
     #endif
 
     void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {

@@ -2781,28 +2781,6 @@ const litUserMainEndVS = (
             vec3 outlineOffset = outlineWidthFactor * outlineTex * worldNormalLength * objectNormal;
             vec3 localPos = getLocalPosition(vertex_position.xyz);
 
-            // From playcanvas transform.js vertex shader
-            #ifdef MORPHING
-            #ifdef MORPHING_POS03
-            localPos.xyz += morph_weights_a[0] * morph_pos0;
-            localPos.xyz += morph_weights_a[1] * morph_pos1;
-            localPos.xyz += morph_weights_a[2] * morph_pos2;
-            localPos.xyz += morph_weights_a[3] * morph_pos3;
-            #endif // MORPHING_POS03
-            #ifdef MORPHING_POS47
-            localPos.xyz += morph_weights_b[0] * morph_pos4;
-            localPos.xyz += morph_weights_b[1] * morph_pos5;
-            localPos.xyz += morph_weights_b[2] * morph_pos6;
-            localPos.xyz += morph_weights_b[3] * morph_pos7;
-            #endif // MORPHING_POS47
-            #endif // MORPHING
-
-            #ifdef MORPHING_TEXTURE_BASED_POSITION
-                vec2 morphUV = getTextureMorphCoords();
-                    vec3 morphPos = texture2D(morphPositionTex, morphUV).xyz;
-                localPos += morphPos;
-            #endif
-
             gl_Position = matrix_viewProjection * getModelMatrix() * vec4( localPos + outlineOffset, 1.0 );
         #endif
 
@@ -3075,7 +3053,6 @@ const lightPS = (
 	vec3 getIBLIrradiance( const in vec3 envMapColor ) {
         return envMapColor.rgb;
 	}
-
     // Point Lights
     #ifdef USE_POINT_LIGHTS
     #ifndef NUM_POINT_LIGHTS
@@ -3088,7 +3065,10 @@ const lightPS = (
         float decay;
     };
     #if NUM_POINT_LIGHTS > 0
-    uniform PointLight pointLights[NUM_POINT_LIGHTS];
+    uniform vec3 pointLightPositions[NUM_POINT_LIGHTS];
+    uniform vec3 pointLightColors[NUM_POINT_LIGHTS];
+    uniform float pointLightDistances[NUM_POINT_LIGHTS];
+    uniform float pointLightDecays[NUM_POINT_LIGHTS];
     #endif
 
     void getPointLightInfo( const in PointLight pointLight, const in GeometricContext geometry, out IncidentLight light ) {
@@ -3117,7 +3097,13 @@ const lightPS = (
         float penumbraCos;
     };
     #if NUM_SPOT_LIGHTS > 0
-    uniform SpotLight spotLights[NUM_SPOT_LIGHTS];
+    uniform vec3 spotLightPositions[NUM_SPOT_LIGHTS];
+    uniform vec3 spotLightDirections[NUM_SPOT_LIGHTS];
+    uniform vec3 spotLightColors[NUM_SPOT_LIGHTS];
+    uniform float spotLightDistances[NUM_SPOT_LIGHTS];
+    uniform float spotLightDecays[NUM_SPOT_LIGHTS];
+    uniform float spotLightConeCos[NUM_SPOT_LIGHTS];
+    uniform float spotLightPenumbraCos[NUM_SPOT_LIGHTS];
     #endif
 
     void getSpotLightInfo( const in SpotLight spotLight, const in GeometricContext geometry, out IncidentLight light ) {
@@ -3149,7 +3135,8 @@ const lightPS = (
         vec3 color;
     };
     #if NUM_DIR_LIGHTS > 0
-        uniform DirectionalLight directionalLights[NUM_DIR_LIGHTS];
+    uniform vec3 directionalLightDirections[NUM_DIR_LIGHTS];
+    uniform vec3 directionalLightColors[NUM_DIR_LIGHTS];
     #endif
 
     void getDirectionalLightInfo( const in DirectionalLight directionalLight, out IncidentLight light ) {
@@ -3256,7 +3243,10 @@ const litUserMainEndPS = (
     {
         PointLight pointLight;
         for ( int i = 0; i < NUM_POINT_LIGHTS; i++ ) {
-            pointLight = pointLights[i];
+            pointLight.position = pointLightPositions[ i ];
+            pointLight.color = pointLightColors[ i ];
+            pointLight.distance = pointLightDistances[ i ];
+            pointLight.decay = pointLightDecays[ i ];
             getPointLightInfo( pointLight, geometry, directLight );
             RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
@@ -3270,7 +3260,13 @@ const litUserMainEndPS = (
     {
         SpotLight spotLight;
         for ( int i = 0; i < NUM_SPOT_LIGHTS; i++ ) {
-            spotLight = spotLights[i];
+            spotLight.position = spotLightPositions[ i ];
+            spotLight.direction = spotLightDirections[ i ];
+            spotLight.color = spotLightColors[ i ];
+            spotLight.distance = spotLightDistances[ i ];
+            spotLight.decay = spotLightDecays[ i ];
+            spotLight.coneCos = spotLightConeCos[ i ];
+            spotLight.penumbraCos = spotLightPenumbraCos[ i ];
             getSpotLightInfo( spotLight, geometry, directLight );
             RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
@@ -3284,7 +3280,8 @@ const litUserMainEndPS = (
     {
         DirectionalLight directionalLight;
         for ( int i = 0; i < NUM_DIR_LIGHTS; i++ ) {
-            directionalLight = directionalLights[i];
+            directionalLight.direction = directionalLightDirections[ i ];
+            directionalLight.color = directionalLightColors[ i ];
             getDirectionalLightInfo( directionalLight, directLight );  
             RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
@@ -3452,7 +3449,7 @@ class RenderStates {
         component.color.b * component.intensity
       );
       return {
-        direction: light._direction,
+        direction: light._node.forward,
         color
       };
     });
@@ -3843,7 +3840,7 @@ function createVRMCMtoonMaterial(options) {
     return options2;
   };
   material._setShaderChunks = function() {
-    this.shaderChunksVersion = "2.8";
+    this.shaderChunksVersion = "2.21";
     const glsl = pcRef.SHADERLANGUAGE_GLSL;
     this.getShaderChunks(glsl).set("litUserDeclarationVS", shaderChunksMtoon.litUserDeclarationVS);
     this.getShaderChunks(glsl).set("litUserMainEndVS", shaderChunksMtoon.litUserMainEndVS);
@@ -3925,45 +3922,61 @@ function createVRMCMtoonMaterial(options) {
   material.updateLightState = function(lightStateInfo) {
     const { directionalLights, spotLights, pointLights, scene } = lightStateInfo;
     this._updateIndirectLightUniforms(scene);
-    directionalLights.forEach((info, i) => {
+    const directionalLightColors = [];
+    const directionalLightDirections = [];
+    directionalLights.forEach((info) => {
       const direction = info.direction;
       this._vec3A.copy(direction);
       this._vec3A.mulScalar(-1);
       this._vec3A.normalize();
       const color = info.color;
-      this.setParameter(`directionalLights[${i}].color`, [color.r, color.g, color.b]);
-      this.setParameter(`directionalLights[${i}].direction`, [
-        this._vec3A.x,
-        this._vec3A.y,
-        this._vec3A.z
-      ]);
+      directionalLightColors.push(color.r, color.g, color.b);
+      directionalLightDirections.push(this._vec3A.x, this._vec3A.y, this._vec3A.z);
     });
-    spotLights.forEach((info, i) => {
+    this.setParameter("directionalLightColors[0]", directionalLightColors);
+    this.setParameter("directionalLightDirections[0]", directionalLightDirections);
+    const spotLightPositions = [];
+    const spotLightDirections = [];
+    const spotLightColors = [];
+    const spotLightDistances = [];
+    const spotLightDecays = [];
+    const spotLightConeCos = [];
+    const spotLightPenumbraCos = [];
+    spotLights.forEach((info) => {
       const position = info.position;
       const direction = info.direction;
       const color = info.color;
-      const distance = info.distance;
-      const decay = info.decay;
-      const coneCos = info.coneCos;
-      const penumbraCos = info.penumbraCos;
-      this.setParameter(`spotLights[${i}].position`, [position.x, position.y, position.z]);
-      this.setParameter(`spotLights[${i}].direction`, [direction.x, direction.y, direction.z]);
-      this.setParameter(`spotLights[${i}].color`, [color.r, color.g, color.b]);
-      this.setParameter(`spotLights[${i}].distance`, distance);
-      this.setParameter(`spotLights[${i}].decay`, decay);
-      this.setParameter(`spotLights[${i}].coneCos`, coneCos);
-      this.setParameter(`spotLights[${i}].penumbraCos`, penumbraCos);
+      spotLightPositions.push(position.x, position.y, position.z);
+      spotLightDirections.push(direction.x, direction.y, direction.z);
+      spotLightColors.push(color.r, color.g, color.b);
+      spotLightDistances.push(info.distance);
+      spotLightDecays.push(info.decay);
+      spotLightConeCos.push(info.coneCos);
+      spotLightPenumbraCos.push(info.penumbraCos);
     });
-    pointLights.forEach((info, i) => {
+    this.setParameter("spotLightPositions[0]", spotLightPositions);
+    this.setParameter("spotLightDirections[0]", spotLightDirections);
+    this.setParameter("spotLightColors[0]", spotLightColors);
+    this.setParameter("spotLightDistances[0]", spotLightDistances);
+    this.setParameter("spotLightDecays[0]", spotLightDecays);
+    this.setParameter("spotLightConeCos[0]", spotLightConeCos);
+    this.setParameter("spotLightPenumbraCos[0]", spotLightPenumbraCos);
+    const pointLightPositions = [];
+    const pointLightColors = [];
+    const pointLightDistances = [];
+    const pointLightDecays = [];
+    pointLights.forEach((info) => {
       const position = info.position;
       const color = info.color;
-      const distance = info.distance;
-      const decay = info.decay;
-      this.setParameter(`pointLights[${i}].position`, [position.x, position.y, position.z]);
-      this.setParameter(`pointLights[${i}].color`, [color.r, color.g, color.b]);
-      this.setParameter(`pointLights[${i}].distance`, distance);
-      this.setParameter(`pointLights[${i}].decay`, decay);
+      pointLightPositions.push(position.x, position.y, position.z);
+      pointLightColors.push(color.r, color.g, color.b);
+      pointLightDistances.push(info.distance);
+      pointLightDecays.push(info.decay);
     });
+    this.setParameter("pointLightPositions[0]", pointLightPositions);
+    this.setParameter("pointLightColors[0]", pointLightColors);
+    this.setParameter("pointLightDistances[0]", pointLightDistances);
+    this.setParameter("pointLightDecays[0]", pointLightDecays);
     const dirNum = directionalLights.length;
     const spotNum = spotLights.length;
     const pointNum = pointLights.length;
@@ -4036,6 +4049,7 @@ class VRMMtoonLoader {
     renders.forEach((renderComponent) => {
       const render = renderComponent;
       const meshInstances = render.meshInstances;
+      const outlineMeshInstances = [];
       meshInstances.forEach((meshInstance) => {
         var _a, _b, _c;
         const material = meshInstance.material;
@@ -4072,19 +4086,37 @@ class VRMMtoonLoader {
         const shaderMeshInstance = new this._pcRef.MeshInstance(
           meshInstance.mesh,
           shaderMaterial,
-          render.entity
+          meshInstance.node
         );
         if (meshInstance.morphInstance) {
           const morphInstance = meshInstance.morphInstance.clone();
           shaderMeshInstance.morphInstance = morphInstance;
         }
-        meshInstances.push(shaderMeshInstance);
+        outlineMeshInstances.push(shaderMeshInstance);
         materialMappings.push({
           meshInstance: shaderMeshInstance,
           sourceMaterial: material,
           shaderMaterial
         });
       });
+      if (outlineMeshInstances.length === 0) {
+        return;
+      }
+      const outlineEntity = new this._pcRef.Entity(`${render.entity.name}_MToonOutline`);
+      outlineEntity.enabled = false;
+      render.entity.addChild(outlineEntity);
+      outlineEntity.addComponent("render");
+      const outlineRender = outlineEntity.render;
+      outlineRender.layers = [...render.layers];
+      outlineRender.castShadows = render.castShadows;
+      outlineRender.receiveShadows = render.receiveShadows;
+      outlineRender.castShadowsLightmap = render.castShadowsLightmap;
+      outlineRender.lightmapped = render.lightmapped;
+      outlineRender.renderStyle = render.renderStyle;
+      outlineRender.meshInstances = outlineMeshInstances;
+      outlineRender.rootBone = render.rootBone;
+      outlineRender.enabled = render.enabled;
+      outlineEntity.enabled = true;
     });
   }
   _applyVRMCMtoonShader(entity, gltf, materialMappings) {

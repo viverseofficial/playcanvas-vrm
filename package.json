@@ -41,6 +41,6 @@
     "vite-plugin-static-copy": "^1.0.6"
   },
   "peerDependencies": {
-    "playcanvas": "^2.10.3"
+    "playcanvas": "^2.21.4"
   }
 }
