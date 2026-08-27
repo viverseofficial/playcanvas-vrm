@@ -512,46 +512,63 @@ export function createVRMCMtoonMaterial(options: MtoonMaterialOptions): VRMCMtoo
     const { directionalLights, spotLights, pointLights, scene } = lightStateInfo;
     this._updateIndirectLightUniforms(scene);
 
-    // Update light data
-    directionalLights.forEach((info: IDirectionalLightInfo, i: number) => {
+    const directionalLightColors: number[] = [];
+    const directionalLightDirections: number[] = [];
+    directionalLights.forEach((info: IDirectionalLightInfo) => {
       const direction = info.direction;
       this._vec3A.copy(direction);
       this._vec3A.mulScalar(-1);
       this._vec3A.normalize();
       const color = info.color;
-      this.setParameter(`directionalLights[${i}].color`, [color.r, color.g, color.b]);
-      this.setParameter(`directionalLights[${i}].direction`, [
-        this._vec3A.x,
-        this._vec3A.y,
-        this._vec3A.z,
-      ]);
+      directionalLightColors.push(color.r, color.g, color.b);
+      directionalLightDirections.push(this._vec3A.x, this._vec3A.y, this._vec3A.z);
     });
-    spotLights.forEach((info: ISpotLightInfo, i: number) => {
+    this.setParameter('directionalLightColors[0]', directionalLightColors);
+    this.setParameter('directionalLightDirections[0]', directionalLightDirections);
+
+    const spotLightPositions: number[] = [];
+    const spotLightDirections: number[] = [];
+    const spotLightColors: number[] = [];
+    const spotLightDistances: number[] = [];
+    const spotLightDecays: number[] = [];
+    const spotLightConeCos: number[] = [];
+    const spotLightPenumbraCos: number[] = [];
+    spotLights.forEach((info: ISpotLightInfo) => {
       const position = info.position;
       const direction = info.direction;
       const color = info.color;
-      const distance = info.distance;
-      const decay = info.decay;
-      const coneCos = info.coneCos;
-      const penumbraCos = info.penumbraCos;
-      this.setParameter(`spotLights[${i}].position`, [position.x, position.y, position.z]);
-      this.setParameter(`spotLights[${i}].direction`, [direction.x, direction.y, direction.z]);
-      this.setParameter(`spotLights[${i}].color`, [color.r, color.g, color.b]);
-      this.setParameter(`spotLights[${i}].distance`, distance);
-      this.setParameter(`spotLights[${i}].decay`, decay);
-      this.setParameter(`spotLights[${i}].coneCos`, coneCos);
-      this.setParameter(`spotLights[${i}].penumbraCos`, penumbraCos);
+      spotLightPositions.push(position.x, position.y, position.z);
+      spotLightDirections.push(direction.x, direction.y, direction.z);
+      spotLightColors.push(color.r, color.g, color.b);
+      spotLightDistances.push(info.distance);
+      spotLightDecays.push(info.decay);
+      spotLightConeCos.push(info.coneCos);
+      spotLightPenumbraCos.push(info.penumbraCos);
     });
-    pointLights.forEach((info: IPointLightInfo, i: number) => {
+    this.setParameter('spotLightPositions[0]', spotLightPositions);
+    this.setParameter('spotLightDirections[0]', spotLightDirections);
+    this.setParameter('spotLightColors[0]', spotLightColors);
+    this.setParameter('spotLightDistances[0]', spotLightDistances);
+    this.setParameter('spotLightDecays[0]', spotLightDecays);
+    this.setParameter('spotLightConeCos[0]', spotLightConeCos);
+    this.setParameter('spotLightPenumbraCos[0]', spotLightPenumbraCos);
+
+    const pointLightPositions: number[] = [];
+    const pointLightColors: number[] = [];
+    const pointLightDistances: number[] = [];
+    const pointLightDecays: number[] = [];
+    pointLights.forEach((info: IPointLightInfo) => {
       const position = info.position;
       const color = info.color;
-      const distance = info.distance;
-      const decay = info.decay;
-      this.setParameter(`pointLights[${i}].position`, [position.x, position.y, position.z]);
-      this.setParameter(`pointLights[${i}].color`, [color.r, color.g, color.b]);
-      this.setParameter(`pointLights[${i}].distance`, distance);
-      this.setParameter(`pointLights[${i}].decay`, decay);
+      pointLightPositions.push(position.x, position.y, position.z);
+      pointLightColors.push(color.r, color.g, color.b);
+      pointLightDistances.push(info.distance);
+      pointLightDecays.push(info.decay);
     });
+    this.setParameter('pointLightPositions[0]', pointLightPositions);
+    this.setParameter('pointLightColors[0]', pointLightColors);
+    this.setParameter('pointLightDistances[0]', pointLightDistances);
+    this.setParameter('pointLightDecays[0]', pointLightDecays);
 
     // Check if light counts have changed
     const dirNum = directionalLights.length;

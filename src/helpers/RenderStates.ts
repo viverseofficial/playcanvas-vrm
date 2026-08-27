@@ -110,7 +110,7 @@ export class RenderStates {
         component.color.b * component.intensity,
       );
       return {
-        direction: light._direction,
+        direction: light._node.forward,
         color,
       };
     });

@@ -89,7 +89,10 @@ export default /* glsl */ `
     {
         PointLight pointLight;
         for ( int i = 0; i < NUM_POINT_LIGHTS; i++ ) {
-            pointLight = pointLights[i];
+            pointLight.position = pointLightPositions[ i ];
+            pointLight.color = pointLightColors[ i ];
+            pointLight.distance = pointLightDistances[ i ];
+            pointLight.decay = pointLightDecays[ i ];
             getPointLightInfo( pointLight, geometry, directLight );
             RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
@@ -103,7 +106,13 @@ export default /* glsl */ `
     {
         SpotLight spotLight;
         for ( int i = 0; i < NUM_SPOT_LIGHTS; i++ ) {
-            spotLight = spotLights[i];
+            spotLight.position = spotLightPositions[ i ];
+            spotLight.direction = spotLightDirections[ i ];
+            spotLight.color = spotLightColors[ i ];
+            spotLight.distance = spotLightDistances[ i ];
+            spotLight.decay = spotLightDecays[ i ];
+            spotLight.coneCos = spotLightConeCos[ i ];
+            spotLight.penumbraCos = spotLightPenumbraCos[ i ];
             getSpotLightInfo( spotLight, geometry, directLight );
             RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
@@ -117,7 +126,8 @@ export default /* glsl */ `
     {
         DirectionalLight directionalLight;
         for ( int i = 0; i < NUM_DIR_LIGHTS; i++ ) {
-            directionalLight = directionalLights[i];
+            directionalLight.direction = directionalLightDirections[ i ];
+            directionalLight.color = directionalLightColors[ i ];
             getDirectionalLightInfo( directionalLight, directLight );  
             RE_Direct( directLight, geometry, material, shadow, reflectedLight );
         }
