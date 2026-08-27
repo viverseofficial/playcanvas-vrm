@@ -2781,28 +2781,6 @@ const litUserMainEndVS = (
             vec3 outlineOffset = outlineWidthFactor * outlineTex * worldNormalLength * objectNormal;
             vec3 localPos = getLocalPosition(vertex_position.xyz);
 
-            // From playcanvas transform.js vertex shader
-            #ifdef MORPHING
-            #ifdef MORPHING_POS03
-            localPos.xyz += morph_weights_a[0] * morph_pos0;
-            localPos.xyz += morph_weights_a[1] * morph_pos1;
-            localPos.xyz += morph_weights_a[2] * morph_pos2;
-            localPos.xyz += morph_weights_a[3] * morph_pos3;
-            #endif // MORPHING_POS03
-            #ifdef MORPHING_POS47
-            localPos.xyz += morph_weights_b[0] * morph_pos4;
-            localPos.xyz += morph_weights_b[1] * morph_pos5;
-            localPos.xyz += morph_weights_b[2] * morph_pos6;
-            localPos.xyz += morph_weights_b[3] * morph_pos7;
-            #endif // MORPHING_POS47
-            #endif // MORPHING
-
-            #ifdef MORPHING_TEXTURE_BASED_POSITION
-                vec2 morphUV = getTextureMorphCoords();
-                    vec3 morphPos = texture2D(morphPositionTex, morphUV).xyz;
-                localPos += morphPos;
-            #endif
-
             gl_Position = matrix_viewProjection * getModelMatrix() * vec4( localPos + outlineOffset, 1.0 );
         #endif
 
@@ -3862,7 +3840,7 @@ function createVRMCMtoonMaterial(options) {
     return options2;
   };
   material._setShaderChunks = function() {
-    this.shaderChunksVersion = "2.8";
+    this.shaderChunksVersion = "2.21";
     const glsl = pcRef.SHADERLANGUAGE_GLSL;
     this.getShaderChunks(glsl).set("litUserDeclarationVS", shaderChunksMtoon.litUserDeclarationVS);
     this.getShaderChunks(glsl).set("litUserMainEndVS", shaderChunksMtoon.litUserMainEndVS);
@@ -4071,6 +4049,7 @@ class VRMMtoonLoader {
     renders.forEach((renderComponent) => {
       const render = renderComponent;
       const meshInstances = render.meshInstances;
+      const outlineMeshInstances = [];
       meshInstances.forEach((meshInstance) => {
         var _a, _b, _c;
         const material = meshInstance.material;
@@ -4107,19 +4086,37 @@ class VRMMtoonLoader {
         const shaderMeshInstance = new this._pcRef.MeshInstance(
           meshInstance.mesh,
           shaderMaterial,
-          render.entity
+          meshInstance.node
         );
         if (meshInstance.morphInstance) {
           const morphInstance = meshInstance.morphInstance.clone();
           shaderMeshInstance.morphInstance = morphInstance;
         }
-        meshInstances.push(shaderMeshInstance);
+        outlineMeshInstances.push(shaderMeshInstance);
         materialMappings.push({
           meshInstance: shaderMeshInstance,
           sourceMaterial: material,
           shaderMaterial
         });
       });
+      if (outlineMeshInstances.length === 0) {
+        return;
+      }
+      const outlineEntity = new this._pcRef.Entity(`${render.entity.name}_MToonOutline`);
+      outlineEntity.enabled = false;
+      render.entity.addChild(outlineEntity);
+      outlineEntity.addComponent("render");
+      const outlineRender = outlineEntity.render;
+      outlineRender.layers = [...render.layers];
+      outlineRender.castShadows = render.castShadows;
+      outlineRender.receiveShadows = render.receiveShadows;
+      outlineRender.castShadowsLightmap = render.castShadowsLightmap;
+      outlineRender.lightmapped = render.lightmapped;
+      outlineRender.renderStyle = render.renderStyle;
+      outlineRender.meshInstances = outlineMeshInstances;
+      outlineRender.rootBone = render.rootBone;
+      outlineRender.enabled = render.enabled;
+      outlineEntity.enabled = true;
     });
   }
   _applyVRMCMtoonShader(entity, gltf, materialMappings) {

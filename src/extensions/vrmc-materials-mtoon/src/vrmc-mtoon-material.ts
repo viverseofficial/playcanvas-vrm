@@ -425,7 +425,7 @@ export function createVRMCMtoonMaterial(options: MtoonMaterialOptions): VRMCMtoo
   };
 
   material._setShaderChunks = function () {
-    this.shaderChunksVersion = '2.8';
+    this.shaderChunksVersion = '2.21';
     const glsl = pcRef.SHADERLANGUAGE_GLSL;
     this.getShaderChunks(glsl).set('litUserDeclarationVS', shaderChunksMtoon.litUserDeclarationVS);
     this.getShaderChunks(glsl).set('litUserMainEndVS', shaderChunksMtoon.litUserMainEndVS);

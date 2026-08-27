@@ -30,28 +30,6 @@ export default /* glsl */ `
             vec3 outlineOffset = outlineWidthFactor * outlineTex * worldNormalLength * objectNormal;
             vec3 localPos = getLocalPosition(vertex_position.xyz);
 
-            // From playcanvas transform.js vertex shader
-            #ifdef MORPHING
-            #ifdef MORPHING_POS03
-            localPos.xyz += morph_weights_a[0] * morph_pos0;
-            localPos.xyz += morph_weights_a[1] * morph_pos1;
-            localPos.xyz += morph_weights_a[2] * morph_pos2;
-            localPos.xyz += morph_weights_a[3] * morph_pos3;
-            #endif // MORPHING_POS03
-            #ifdef MORPHING_POS47
-            localPos.xyz += morph_weights_b[0] * morph_pos4;
-            localPos.xyz += morph_weights_b[1] * morph_pos5;
-            localPos.xyz += morph_weights_b[2] * morph_pos6;
-            localPos.xyz += morph_weights_b[3] * morph_pos7;
-            #endif // MORPHING_POS47
-            #endif // MORPHING
-
-            #ifdef MORPHING_TEXTURE_BASED_POSITION
-                vec2 morphUV = getTextureMorphCoords();
-                    vec3 morphPos = texture2D(morphPositionTex, morphUV).xyz;
-                localPos += morphPos;
-            #endif
-
             gl_Position = matrix_viewProjection * getModelMatrix() * vec4( localPos + outlineOffset, 1.0 );
         #endif
 
