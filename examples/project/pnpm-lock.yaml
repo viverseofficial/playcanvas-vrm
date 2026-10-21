@@ -12,8 +12,8 @@ importers:
         specifier: ^8.57.0
         version: 8.57.0(supports-color@7.2.0)
       playcanvas:
-        specifier: ^2.21.4
-        version: 2.21.4
+        specifier: ^2.23.3
+        version: 2.23.3
       vite-plugin-mkcert:
         specifier: ^1.17.5
         version: 1.17.5(supports-color@7.2.0)(vite@5.2.2)
@@ -665,8 +665,8 @@ packages:
   picocolors@1.0.0:
     resolution: {integrity: sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==}
 
-  playcanvas@2.21.4:
-    resolution: {integrity: sha512-L4UGy3z/YT8AaNBEY4ITsZup548UFMabF7loh0YQ0DRwQLdjIW8grmZPoQ1+B83+N6sejRS0/XlXV2Vfb11+fw==}
+  playcanvas@2.23.3:
+    resolution: {integrity: sha512-hjDdo5yFtVr/WmDh59pRrT1LC+Rfpq4VXB8Xt3AMB8GfWXj9JzOMq3x+3FTmq/2L2gN37q9V1LMZaLuYshzMXQ==}
     engines: {node: '>=18.3.0'}
 
   postcss@8.4.38:
@@ -1375,7 +1375,7 @@ snapshots:
 
   picocolors@1.0.0: {}
 
-  playcanvas@2.21.4:
+  playcanvas@2.23.3:
     dependencies:
       '@types/webxr': 0.5.24
       '@webgpu/types': 0.1.72

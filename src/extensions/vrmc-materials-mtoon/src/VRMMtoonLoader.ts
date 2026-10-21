@@ -62,6 +62,8 @@ export class VRMMtoonLoader {
       const outlineMeshInstances: pc.MeshInstance[] = [];
 
       meshInstances.forEach((meshInstance) => {
+        if (!meshInstance.mesh) return;
+
         const material = meshInstance.material as pc.StandardMaterial;
         let shaderMaterial = outlineShaderMaterials.get(material);
 
