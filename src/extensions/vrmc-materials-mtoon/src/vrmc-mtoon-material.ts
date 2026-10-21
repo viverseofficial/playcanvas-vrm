@@ -436,7 +436,7 @@ export function createVRMCMtoonMaterial(options: MtoonMaterialOptions): VRMCMtoo
   };
 
   material._setShaderUniforms = function () {
-    this.setParameters('giEqualizationFactor', this.giEqualizationFactor);
+    this.setParameter('giEqualizationFactor', this.giEqualizationFactor);
     this.setParameter('shadeColorFactor', [
       this.shadeColorFactor.r,
       this.shadeColorFactor.g,

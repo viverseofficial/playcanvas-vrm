@@ -3497,7 +3497,13 @@ class RenderStates {
       return;
     const worldLayer = this._app.scene.layers.getLayerById(this._pcRef.LAYERID_WORLD);
     if (worldLayer) {
-      const lights = worldLayer.splitLights;
+      const layerLights = worldLayer._lights;
+      const lights = [[], [], []];
+      for (const light of layerLights) {
+        if (light.enabled) {
+          lights[light.type].push(light);
+        }
+      }
       this._updateLightInfo(lights);
     }
   }
@@ -3850,7 +3856,7 @@ function createVRMCMtoonMaterial(options) {
     this.getShaderChunks(glsl).set("opacityPS", shaderChunksMtoon.opacityPS);
   };
   material._setShaderUniforms = function() {
-    this.setParameters("giEqualizationFactor", this.giEqualizationFactor);
+    this.setParameter("giEqualizationFactor", this.giEqualizationFactor);
     this.setParameter("shadeColorFactor", [
       this.shadeColorFactor.r,
       this.shadeColorFactor.g,
@@ -4052,6 +4058,8 @@ class VRMMtoonLoader {
       const outlineMeshInstances = [];
       meshInstances.forEach((meshInstance) => {
         var _a, _b, _c;
+        if (!meshInstance.mesh)
+          return;
         const material = meshInstance.material;
         let shaderMaterial = outlineShaderMaterials.get(material);
         if (!shaderMaterial) {

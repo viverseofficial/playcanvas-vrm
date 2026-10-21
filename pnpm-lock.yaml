@@ -10,7 +10,7 @@ importers:
     dependencies:
       playcanvas:
         specifier: ^2.21.4
-        version: 2.21.4
+        version: 2.23.3
     devDependencies:
       '@typescript-eslint/eslint-plugin':
         specifier: ^7.3.1
@@ -1109,8 +1109,8 @@ packages:
   pkg-types@2.2.0:
     resolution: {integrity: sha512-2SM/GZGAEkPp3KWORxQZns4M+WSeXbC2HEvmOIJe3Cmiv6ieAJvdVhDldtHqM5J1Y7MrR1XhkBT/rMlhh9FdqQ==}
 
-  playcanvas@2.21.4:
-    resolution: {integrity: sha512-L4UGy3z/YT8AaNBEY4ITsZup548UFMabF7loh0YQ0DRwQLdjIW8grmZPoQ1+B83+N6sejRS0/XlXV2Vfb11+fw==}
+  playcanvas@2.23.3:
+    resolution: {integrity: sha512-hjDdo5yFtVr/WmDh59pRrT1LC+Rfpq4VXB8Xt3AMB8GfWXj9JzOMq3x+3FTmq/2L2gN37q9V1LMZaLuYshzMXQ==}
     engines: {node: '>=18.3.0'}
 
   postcss@8.4.36:
@@ -2441,7 +2441,7 @@ snapshots:
       exsolve: 1.0.7
       pathe: 2.0.3
 
-  playcanvas@2.21.4:
+  playcanvas@2.23.3:
     dependencies:
       '@types/webxr': 0.5.24
       '@webgpu/types': 0.1.72

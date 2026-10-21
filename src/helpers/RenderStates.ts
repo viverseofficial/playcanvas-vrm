@@ -168,7 +168,14 @@ export class RenderStates {
     // Assume that the world layer is always be the main part and use the light data from it
     const worldLayer = this._app.scene.layers.getLayerById(this._pcRef.LAYERID_WORLD);
     if (worldLayer) {
-      const lights = worldLayer.splitLights;
+      // Layer#_lights is a private PlayCanvas field with no public equivalent.
+      const layerLights = (worldLayer as unknown as { _lights: pc.Light[] })._lights;
+      const lights: pc.Light[][] = [[], [], []];
+      for (const light of layerLights) {
+        if (light.enabled) {
+          lights[light.type].push(light);
+        }
+      }
       this._updateLightInfo(lights);
     }
   }

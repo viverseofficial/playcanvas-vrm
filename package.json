@@ -11,6 +11,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "watch": "nodemon --watch src --ext '*' --exec 'pnpm build' --verbose",
+    "test": "node --test tests/*.test.mjs",
     "build": "tsc && pnpm run build:js && pnpm run build:min",
     "build:js": "vite build",
     "build:min": "MINIFY_MODE=true vite build",
