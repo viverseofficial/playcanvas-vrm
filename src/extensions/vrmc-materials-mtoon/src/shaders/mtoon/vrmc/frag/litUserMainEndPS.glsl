@@ -62,7 +62,9 @@ export default /* glsl */ `
     #ifdef USE_SHADEMULTIPLYTEXTURE
         vec2 shadeMultiplyTextureUv = ( shadeMultiplyTextureUvTransform * vec3( uv, 1 ) ).xy;
         vec3 shadeMultiply = texture2D( shadeMultiplyTexture, shadeMultiplyTextureUv ).rgb;
-        shadeMultiply = decodeGamma(shadeMultiply); // convert to linear
+        #ifdef SHADEMULTIPLYTEXTURE_DECODE_GAMMA
+        shadeMultiply = decodeSrgbExact(shadeMultiply);
+        #endif
         material.shadeColor *= shadeMultiply;
     #endif
 
@@ -173,7 +175,9 @@ export default /* glsl */ `
           vec2 sphereUv = vec2(dot(x, normal), dot(y, normal)) * 0.5 + 0.5;
           sphereUv = ( matcapTextureUvTransform * vec3( sphereUv, 1 ) ).xy;
           vec3 matcap = texture2D( matcapTexture, sphereUv ).rgb;
-          matcap = decodeGamma(matcap); // convert to linear
+          #ifdef MATCAPTEXTURE_DECODE_GAMMA
+          matcap = decodeSrgbExact(matcap);
+          #endif
           rim += matcapFactor * matcap;
         }
     #endif
@@ -182,7 +186,9 @@ export default /* glsl */ `
     #ifdef USE_RIMMULTIPLYTEXTURE
         vec2 rimMultiplyTextureUv = ( rimMultiplyTextureUvTransform * vec3( uv, 1 ) ).xy;
         vec3 rimMultiply = texture2D( rimMultiplyTexture, rimMultiplyTextureUv ).rgb;
-        rimMultiply = decodeGamma(rimMultiply); // convert to linear
+        #ifdef RIMMULTIPLYTEXTURE_DECODE_GAMMA
+        rimMultiply = decodeSrgbExact(rimMultiply);
+        #endif
         rim *= rimMultiply;
     #endif
 

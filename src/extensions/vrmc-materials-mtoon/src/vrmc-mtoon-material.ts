@@ -366,6 +366,20 @@ export function createVRMCMtoonMaterial(options: MtoonMaterialOptions): VRMCMtoo
       options.defines.set('USE_MATCAPTEXTURE', '');
     }
 
+    // encoding is 'srgb' only for 8-bit textures without a hardware sRGB format; those must be decoded
+    // in the shader. The glTF parser gives a hardware sRGB format only to images it sees used as colour
+    // (e.g. baseColor), so a shade texture sharing that image is already linear when sampled.
+    const needsManualDecode = (texture: pc.Texture | null) => texture?.encoding === 'srgb';
+    if (needsManualDecode(this.shadeMultiplyTexture)) {
+      options.defines.set('SHADEMULTIPLYTEXTURE_DECODE_GAMMA', '');
+    }
+    if (needsManualDecode(this.matcapTexture)) {
+      options.defines.set('MATCAPTEXTURE_DECODE_GAMMA', '');
+    }
+    if (needsManualDecode(this.rimMultiplyTexture)) {
+      options.defines.set('RIMMULTIPLYTEXTURE_DECODE_GAMMA', '');
+    }
+
     if (this.v0CompatShade) {
       options.defines.set('V0_COMPAT_SHADE', '');
     }
