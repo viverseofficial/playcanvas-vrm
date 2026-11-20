@@ -67,6 +67,14 @@ export default /* glsl */ `
         return clamp( ( t - a ) / ( b - a ), 0.0, 1.0 );
     }
 
+    // Exact piecewise sRGB decode. The engine's decodeGamma() is pow(x, 2.2), which
+    // under-decodes dark tones compared with hardware sRGB sampling.
+    vec3 decodeSrgbExact( vec3 c ) {
+        vec3 lo = c / 12.92;
+        vec3 hi = pow( ( c + 0.055 ) / 1.055, vec3( 2.4 ) );
+        return mix( lo, hi, step( vec3( 0.04045 ), c ) );
+    }
+
     vec3 BRDF_Lambert( const in vec3 diffuseColor ) {
         return RECIPROCAL_PI * diffuseColor;
     }
