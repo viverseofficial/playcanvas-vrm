@@ -2864,6 +2864,14 @@ const litUserDeclarationPS = (
         return clamp( ( t - a ) / ( b - a ), 0.0, 1.0 );
     }
 
+    // Exact piecewise sRGB decode. The engine's decodeGamma() is pow(x, 2.2), which
+    // under-decodes dark tones compared with hardware sRGB sampling.
+    vec3 decodeSrgbExact( vec3 c ) {
+        vec3 lo = c / 12.92;
+        vec3 hi = pow( ( c + 0.055 ) / 1.055, vec3( 2.4 ) );
+        return mix( lo, hi, step( vec3( 0.04045 ), c ) );
+    }
+
     vec3 BRDF_Lambert( const in vec3 diffuseColor ) {
         return RECIPROCAL_PI * diffuseColor;
     }
@@ -3216,7 +3224,9 @@ const litUserMainEndPS = (
     #ifdef USE_SHADEMULTIPLYTEXTURE
         vec2 shadeMultiplyTextureUv = ( shadeMultiplyTextureUvTransform * vec3( uv, 1 ) ).xy;
         vec3 shadeMultiply = texture2D( shadeMultiplyTexture, shadeMultiplyTextureUv ).rgb;
-        shadeMultiply = decodeGamma(shadeMultiply); // convert to linear
+        #ifdef SHADEMULTIPLYTEXTURE_DECODE_GAMMA
+        shadeMultiply = decodeSrgbExact(shadeMultiply);
+        #endif
         material.shadeColor *= shadeMultiply;
     #endif
 
@@ -3327,7 +3337,9 @@ const litUserMainEndPS = (
           vec2 sphereUv = vec2(dot(x, normal), dot(y, normal)) * 0.5 + 0.5;
           sphereUv = ( matcapTextureUvTransform * vec3( sphereUv, 1 ) ).xy;
           vec3 matcap = texture2D( matcapTexture, sphereUv ).rgb;
-          matcap = decodeGamma(matcap); // convert to linear
+          #ifdef MATCAPTEXTURE_DECODE_GAMMA
+          matcap = decodeSrgbExact(matcap);
+          #endif
           rim += matcapFactor * matcap;
         }
     #endif
@@ -3336,7 +3348,9 @@ const litUserMainEndPS = (
     #ifdef USE_RIMMULTIPLYTEXTURE
         vec2 rimMultiplyTextureUv = ( rimMultiplyTextureUvTransform * vec3( uv, 1 ) ).xy;
         vec3 rimMultiply = texture2D( rimMultiplyTexture, rimMultiplyTextureUv ).rgb;
-        rimMultiply = decodeGamma(rimMultiply); // convert to linear
+        #ifdef RIMMULTIPLYTEXTURE_DECODE_GAMMA
+        rimMultiply = decodeSrgbExact(rimMultiply);
+        #endif
         rim *= rimMultiply;
     #endif
 
@@ -3801,6 +3815,16 @@ function createVRMCMtoonMaterial(options) {
     }
     if (this.matcapTexture) {
       options2.defines.set("USE_MATCAPTEXTURE", "");
+    }
+    const needsManualDecode = (texture) => (texture == null ? void 0 : texture.encoding) === "srgb";
+    if (needsManualDecode(this.shadeMultiplyTexture)) {
+      options2.defines.set("SHADEMULTIPLYTEXTURE_DECODE_GAMMA", "");
+    }
+    if (needsManualDecode(this.matcapTexture)) {
+      options2.defines.set("MATCAPTEXTURE_DECODE_GAMMA", "");
+    }
+    if (needsManualDecode(this.rimMultiplyTexture)) {
+      options2.defines.set("RIMMULTIPLYTEXTURE_DECODE_GAMMA", "");
     }
     if (this.v0CompatShade) {
       options2.defines.set("V0_COMPAT_SHADE", "");
