@@ -1,6 +1,6 @@
 /**
  * name: @viverseofficial/playcanvas-vrm
- * version: v1.9.0
+ * version: v1.9.1
  */
 const VRMHumanBoneList = [
   "hips",
